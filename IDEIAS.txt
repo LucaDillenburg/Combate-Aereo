@@ -1,0 +1,2 @@
+Personagem pode tomar poção para diminuir de tamanho
+Poção para andar mais rápido

@@ -1,0 +1,2 @@
+﻿ - deixar o canvas do tamanho certo
+ - fazer colisao de tiros, inimigos(??) e obstaculos
