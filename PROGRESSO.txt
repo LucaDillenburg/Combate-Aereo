@@ -1,0 +1,4 @@
+Progressos:
+ - reestruturação de alguns métodos e nome de arquivos
+ - tiro pode andar para qualquer direção inclusive oblíquo
+ - tiro para no personagem, obstáculos e inimigos

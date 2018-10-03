@@ -1,2 +1,5 @@
 Personagem pode tomar poção para diminuir de tamanho
 Poção para andar mais rápido
+Pocao para tiro ficar mais mortal (tiros de cores diferentes)
+
+Aumentar velocidade e mortalidade do tiro definitivo?

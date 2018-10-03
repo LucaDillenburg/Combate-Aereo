@@ -1,2 +1,15 @@
-﻿ - deixar o canvas do tamanho certo
- - fazer colisao de tiros, inimigos(??) e obstaculos
+ - fazer colisao de objetos
+   . tiros (se de pers: com obstaculos e inimigos, se nao: com personagem). OK
+   . personagem (com tiros dos inimigos e normal, com inimigos(soh perde vida) e com obstaculos)
+   . inimigos (com personagens, tiros do pers)
+   . obstaculos (com personagens e tiros do pers)
+
+opcao de soh colocar vida na inimigo na tela quando ele eh atingido (por um certo tempo):
+setTimeout(funcao, tempo); -> this._numTiroAtingido++ e vidaNaTela = true
+funcao(){
+  this._numTiroAtingido--;
+  if(this._numTiroAtingido == 0)
+     ...tirar da tela a vida (vidaNaTela = false;)
+}
+
+ - deixar o canvas do tamanho certo
