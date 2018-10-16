@@ -1,8 +1,2 @@
 Personagem pode tomar poção para diminuir de tamanho
-Poção para andar mais rápido e mais mortal (triangulo de cores diferentes)
-Poção para ganhar vida
-Obstaculo (triangulo) que congela o personagem por alguns segundos
-
-mortalidade negativa? dar vida para algo
-
-Aumentar velocidade e mortalidade do tiro definitivo?
+Poção para andar mais rápido
