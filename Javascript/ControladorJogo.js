@@ -1,5 +1,4 @@
 const EstadoJogo = {"NaoComecou":0, "Jogando":1, "Pausado":2, "Morto":3};
-const Direcao = {"Direita":1, "Esquerda":2, "Cima":3, "Baixo":4};
 
 const heightVidaUsuario = 30;
 class ControladorJogo
@@ -9,9 +8,11 @@ class ControladorJogo
     this._personagemPrincipal = null;
     this._inimigos = null;
     this._obstaculos = null;
-    this._tiros = null;
+    this._controladorTiros = null;
 
     this._estadoJogo = EstadoJogo.NaoComecou;
+    this._estadoJogoAnterior = null;
+
     this._level = 1;
     this._passandoLevel = false;
   }
@@ -20,15 +21,29 @@ class ControladorJogo
   get estadoJogo()
   { return this._estadoJogo; }
 
+  static personagemPrincPadrao()
+  {
+    let tamPersPrinc = 30;
+    let corPers = color(0, 51, 153);
+    let forma = new Quadrado(0, 0, tamPer, corPers, corPers, null);
+
+    let pers = new PersonagemPrincipal(forma, 100, ControladorJogo.tiroPersPadrao, 8);
+    pers.colocarLugarInicial();
+    return
+  }
+  static tiroPersPadrao()
+  {
+    let corTiro = color(0, 0, 102);
+    let tiro = new Tiro(new Retangulo(0, 0, 5, 8, corTiro, corTiro, null),
+                    {fill: color("black"), stroke: color("black")}, 0, -15, true, 5);
+    tiro.colocarNoMeioX();
+    return tiro;
+  }
+
   //inicializacao
   comecarJogo()
   {
-    let tamPersPrinc = 30;
-
-    //                                                 (x,                      y,           tamLado       qtdAndar, cor,               vida,
-    this._personagemPrincipal = new PersonagemPrincipal((width-tamPersPrinc)/2, 0.75*height, tamPersPrinc, 8,        color(0, 51, 153), 100,
-    //widthTiroPadrao, heightTiroPadrao, corTiroPadrao,   qtdAndarXTiroPadrao, qtdAndarYTiroPadrao, qtdMortalidadeTiroPadrao)
-      5,               8,                color(0, 0, 102), 0,                  -15,                 5);
+    this._personagemPrincipal = ControladorJogo.personagemPrincPadrao();
 
     this._level = 1;
     this._iniciarLevel();
@@ -46,11 +61,11 @@ class ControladorJogo
       case 1:
         this._inimigos = new Array(1);
         let tamInimigo = 50;
+        let corInim = color("red");
 
-        //                              (x,                     y,               width,      height,     cor,
-        this._inimigos[0] = new Inimigo((width - tamInimigo)/2, tamInimigo + 10, tamInimigo, tamInimigo, color("red"),
-        //vida, corVida,      widthTiroPadrao, heightTiroPadrao, corTiroPadrao, qtdAndarXTiroPadrao, qtdAndarYTiroPadrao, qtdMortalidadeTiroPadrao)
-          250,  color("red"), 5,               5,                color("red"),  0,                   0,                   0);
+        let formaInimigo = new Quadrado(0, 0, tamInimigo, corInim, corInim, null);
+
+        this._inimigos[0] = new Inimigo(formaInimigo, 250, corInim, null, 8, false);
         break;
     }
 
@@ -78,27 +93,27 @@ class ControladorJogo
 
 
   //funcionalidades personagem
-  andarPers(direcao)
+  andarPers(direcaoX, direcaoY) //setinhas
   {
-    switch (direcao)
-    {
-      case Direcao.Cima:
-        this._personagemPrincipal.andarY(false);
-        break;
-      case Direcao.Baixo:
-        this._personagemPrincipal.andarY(true);
-        break;
-      case Direcao.Direita:
-        this._personagemPrincipal.andarX(true);
-        break;
-      case Direcao.Esquerda:
-        this._personagemPrincipal.andarX(false);
-        break;
-    }
+    //se estah jogando (jah comecou, nao estah pausado e o personagem nao morreu)
+    if (this._estadoJogo == EstadoJogo.Jogando)
+      this._personagemPrincipal.andar(direcaoX, direcaoY, this._obstaculos, this._inimigos, this._controladorTiros);
   }
-  atirar()
+  atirar() //espaco
   {
     this._personagemPrincipal.adicionarTiro();
+  }
+  mudarPausado() //enter
+  {
+    if (this._estadoJogo == EstadoJogo.Pausado)
+    {
+      this._estadoJogo = this._estadoJogoAnterior;
+      this._estadoJogoAnterior = null;
+    }else
+    {
+      this._estadoJogoAnterior = this._estadoJogo;l
+      this._estadoJogo = EstadoJogo.Pausado;
+    }
   }
 
 
@@ -108,13 +123,19 @@ class ControladorJogo
     if (this._estadoJogo == EstadoJogo.NaoComecou)
     {
       background(255);
+      stroke(0);
       fill(0);
+      textSize(40);
       text("Pressione [ESC] para começar a jogar", 50, 50);
       return;
     }
     if (this._estadoJogo == EstadoJogo.Pausado) //pausa-se com [ENTER]
     {
-
+      //deixa o que estava na tela de fundo mesmo
+      stroke(0);
+      fill(0);
+      textSize(40);
+      text("PAUSADO: Pressione [ENTER] para despausar", 50, 50);
       return;
     }
     if (this._estadoJogo == EstadoJogo.Morto) //animacao dele morrendo
@@ -149,7 +170,7 @@ class ControladorJogo
       textAlign(LEFT, BASELINE);
     }
 
-    this._colocacarVidaUsuarioTela();
+    this._personagemPrincipal.colocacarVidaTela();
 
     if (this._acabouLevel())
       this._passarLevel();
@@ -174,21 +195,5 @@ class ControladorJogo
       default:
         return false;
     }
-  }
-
-  _colocacarVidaUsuarioTela()
-  {
-    stroke(0);
-    fill(color("black"));
-    rect(0, height - heightVidaUsuario, width, heightVidaUsuario);
-
-    noStroke(0);
-    fill(color("green"));
-    rect(0, height - heightVidaUsuario, width*(this._personagemPrincipal._vida/this._personagemPrincipal._vidaMAX), heightVidaUsuario);
-
-    fill(0);
-    let fontSize = 22;
-    textSize(fontSize);
-    text("Vida: " + this._personagemPrincipal._vida + "/" + this._personagemPrincipal._vidaMAX, 5, height - heightVidaUsuario + fontSize);
   }
 }

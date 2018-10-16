@@ -1,10 +1,41 @@
- - fazer colisao de objetos
-   . tiros (se de pers: com obstaculos e inimigos, se nao: com personagem). OK
-   . personagem (com tiros dos inimigos e normal, com inimigos(soh perde vida) e com obstaculos)
-   . inimigos (com personagens, tiros do pers)
-   . obstaculos (com personagens e tiros do pers)
+comentarios //TODO
 
-opcao de soh colocar vida na inimigo na tela quando ele eh atingido (por um certo tempo):
+ARQUIVOS:
+ .FormasGeomtricas. OK
+1.GeometriaBasica. Interseccao.VaiTerInterseccao
+ .ObjetosSimples. OK
+ .ObjetosComplexos. OK
+ .ControladorJogo. OK
+ .Script. OK
+ .ListaLigada. OK
+
+CLASSE OBSTACULO COM VIDA
+
+ - fazer colisão de objetos
+   . tiros (se de pers: com obstáculos e inimigos, se não: com personagem). OK
+   . personagem (com tiros dos inimigos e normal, com inimigos(só perde vida:
+timer que toda vez vê se ele ainda não se mexeu e está dentro do inimigo) e com obstáculos). OK
+            (mudarXY() do personagem principal. OK
+             mudar andar personagem no script.js de acordo com mudanca no PersonagemPrincipal. OK
+             fazer ControladorTiros.procedimentoPersComVidaAndar(). OK
+             adicionar em Inimigo: propriedade qtdTiraVidaPersQndIntersec (getter, construtor, mudar criar inimigo em ControladorJogo) e metodo tirarVidaPersIntersec(pers). OK)
+verificar isso no mudarWidth e mudarHeight para maior. VER FINAL ARQUIVO!!
+   . inimigos (com personagens, tiros do pers). verificar isso no mudarWidth e mudarHeight tbm para maior
+   . obstáculos (com personagens e tiros do pers). verificar isso no mudarWidth e mudarHeight tbm para maior
+
+ - quando obstaculo empurra personagem pra parede, ele leva um dano e o obstaculo "explode"
+
+ - fazer classes?? (fazer sem por enquanto)
+   .controlador de tiro (colocar ela no personagem com tiro e no ControladorJogo). OK
+   .controlador obstáculos (só no ControladorJogo). ??
+   .controlador inimigos (só no ControladorJogo). ??
+ps: nesses dois últimos, saberá em qual level que está e as ações tomadas a partir dela estará na classe (switch)
+num método chamado após o draw do ControladorObjeto
+ps2: no ControladorJogo haverá um método que verificará através de métodos das classes ControladorObstaculos e ControladorInimigos,
+se o usuário já passou de level
+
+opção de só colocar vida na inimigo na tela quando ele eh atingido (por um certo tempo):
+//PS: ISSO DEVE SER USADO EM INIMIGOS MENORES PRINCIPALMENTE
 setTimeout(funcao, tempo); -> this._numTiroAtingido++ e vidaNaTela = true
 funcao(){
   this._numTiroAtingido--;
@@ -12,4 +43,15 @@ funcao(){
      ...tirar da tela a vida (vidaNaTela = false;)
 }
 
- - deixar o canvas do tamanho certo
+ - CreateCanvas de um tamanho mínimo: metade de toda tela (resize() mudar o tamanho dele?)
+
+
+
+COLIDIR PERSONAGEM:
+verificar se quando ele for andar n vai passar por cima de obstáculo (fazer ele parar um pouco antes de passar e mudar qtdAndar de acordo com quanto andou)
+
+se qtdAndar != 0, verifica se vai ficar dentro da tela (se nao for ficar, muda qtdAndar)
+
+se qtdAndar != 0, verificar se ele nao vai passar por cima do inimigo (leva dano) ou de tiros dele (leva dano)
+
+se qtdAndar != 0, verificar se ele nao vai passar em cima de algum tiro

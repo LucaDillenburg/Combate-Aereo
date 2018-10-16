@@ -45,6 +45,12 @@ class ListaDuplamenteLigada
       this._ultimo.prox = null;
   }
 
+  esvaziar()
+  {
+    this._prim = null;
+    this._ultimo = null;
+  }
+
 
   //atual
   colocarAtualComeco()
@@ -71,12 +77,12 @@ class ListaDuplamenteLigada
   {
     if (this._atual == null)
       throw "Atual eh nulo! - em removerAtual() ";
-      
+
     if (this._atual.ant == null)
     {
         this._prim = null;
         this._ultimo = null;
-    }else        
+    }else
         this._atual.ant.prox = this._atual.prox;
   }
 }
