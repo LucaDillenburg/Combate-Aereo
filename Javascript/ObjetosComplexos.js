@@ -114,7 +114,7 @@ class PersComTiros extends Objeto
   {
     if (this._formaGeometrica.codForma != Geometria.COD_QUADRADO
       && this._formaGeometrica.codForma != Geometria.COD_RETANGULO)
-      throw "Não é possível mudar o width de um objeto que não tem!";
+      throw "Não é possível mudar o width de um objeto que não o tem!";
 
     if (nvWidth < 0)
       throw "Width inválido!";
@@ -128,7 +128,7 @@ class PersComTiros extends Objeto
   {
     if (this._formaGeometrica.codForma != Geometria.COD_QUADRADO
       && this._formaGeometrica.codForma != Geometria.COD_RETANGULO)
-      throw "Não é possível mudar o width de um objeto que não tem!";
+      throw "Não é possível mudar o height de um objeto que não o tem!";
 
     if (nvHeight < 0)
       throw "Height inválido!";
@@ -293,7 +293,7 @@ class PersonagemPrincipal extends PersComTiros
 
 class Inimigo extends PersComTiros
 {
-  constructor(formaGeometrica, vida, corVida, tiroPadrao, qtdTiraVidaPersQndIntersec, objSaiuTotalmente)
+  constructor(formaGeometrica, vida, corVida, tiroPadrao, qtdTiraVidaPersQndIntersec, qtdAndarX, qtdAndarY, tipoAndar)
   {
     super(formaGeometrica, vida, tiroPadrao, false);
 
@@ -302,33 +302,56 @@ class Inimigo extends PersComTiros
     this._widthVida = this._vidaMAX*0.25;
     this._heightVida = 10;
 
-    this._objSaiuTotalmente = objSaiuTotalmente;
-
     this._qtdTiraVidaPersQndIntersec = qtdTiraVidaPersQndIntersec;
+
+    //andar
+    this._tipoAndar = null;
+    this.tipoAndar = tipoAndar;
+    this._qtdAndarX = qtdAndarX;
+    this._qtdAndarY = qtdAndarY;
+
+    this._vivo = true;
   }
 
-  //(x, y)
-  mudarX(qtdMudar)
+  //getters e setters vivo
+  get vivo()
+  { return this._vivo; }
+  morreu()
+  { this._vivo = false; }
+
+  //getters e setters andar
+  get tipoAndar()
+  { return this._tipoAndar; }
+  set tipoAndar(tipo)
   {
-    //verificar se nao bate em personagem
-    this._formaGeometrica.x += qtdMudar;
-    if (this._objSaiuTotalmente)
-    //se querem saber se inimigo saiu totalmente
-      return !Tela.objSaiuTotalmente(this._formaGeometrica);
-    else
-    //se querem saber se inimigo saiu pelo menos um pouco
-      return !Tela.objSaiuEmX(this._formaGeometrica);
+    if (tipo == Andar.SEGUIR_INIM_MAIS_PROX)
+      throw "Inimigo nao pode seguir inimigos";
+      this._tipoAndar = tipo;
   }
-  mudarY(qtdMudar)
+  get qtdAndarX()
+  { return this._qtdAndarX; }
+  get qtdAndarY()
+  { return this._qtdAndarY; }
+
+  andar(pers, qtdAndarX, qtdAndarY)
   {
-    //verificar se nao bate em personagem
-    this._formaGeometrica.y += qtdMudar;
-    if (this._objSaiuTotalmente)
-    //se querem saber se inimigo saiu totalmente
-      return !Tela.objSaiuTotalmente(this._formaGeometrica);
-    else
-    //se querem saber se inimigo saiu pelo menos um pouco
-      return !Tela.objSaiuEmY(this._formaGeometrica);
+    if (qtdAndarX == null || qtdAndarY == null)
+    {
+      let qtdAndar = Andar.qtdAndarFromTipo(this._qtdAndarX, this._qtdAndarY, this._formaGeometrica, this._tipoAndar);
+      if (qtdAndar.inverterDirQtdAndar)
+      {
+        //inverte a direcao do obstaculo
+        this._qtdAndarX = -this._qtdAndarX;
+        this._qtdAndarY = -this._qtdAndarY;
+      }
+      qtdAndarX = qtdAndar.x;
+      qtdAndarX = qtdAndar.y;
+    }
+
+    //TODO: verificar se nao vai intersectar personagem
+
+    this._formaGeometrica.x += qtdAndarX;
+    this._formaGeometrica.y += qtdAndarY;
   }
 
   //tirar vida personagem quando intersecta com inimigo
@@ -338,6 +361,10 @@ class Inimigo extends PersComTiros
   { pers.mudarVida(-this._qtdTiraVidaPersQndIntersec); }
 
   //desenho
+  get corVida()
+  { return this._corVida; }
+  get corVida(vida)
+  { this._corVida = vida; }
   draw()
   {
     //desenha inimigo e tiros dele

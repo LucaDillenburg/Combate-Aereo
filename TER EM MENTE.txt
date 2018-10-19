@@ -1,0 +1,3 @@
+ - ha controladores de inimigos, controladores de obstaculos e controladores de tiros
+ - nos controladores sempre precisa se verificar se o objeto que ele controla jah morreu ou nao
+ - num ObjetoTela, get eh com formaGeometrica dos obstaculos, mas setter soh na propria classe

@@ -375,3 +375,69 @@ class Geometria
   static get COD_QUADRILATERO()
   { return 5; }
 }
+
+
+//andar
+class Andar
+{
+  //tipos andar
+  static get ANDAR_NORMAL()
+  { return 1; }
+  static get INVERTER_QTDANDAR_NAO_SAIR_TELA()
+  { return 2; }
+  static get SEGUIR_PERS()
+  { return 3; }
+  static get SEGUIR_INIM_MAIS_PROX()
+  { return 4; }
+
+  qtdAndarFromTipo(qtdAndarXPadrao, qtdAndarYPadrao, formaGeometrica, tipoAndar, pers, inimSeguir)
+  {
+    let qtdAndar = {x: qtdAndarXPadrao, y: qtdAndarYPadrao};
+
+    switch(tipoAndar)
+    {
+      case Andar.ANDAR_NORMAL:
+        break;
+      case Andar.INVERTER_QTDANDAR_NAO_SAIR_TELA:
+        //se obstaculo vai sair, inverte a direcao
+        if (Tela.objVaiSairEmX(formaGeometrica, qtdAndarXPadrao) ||
+          Tela.objVaiSairEmY(formaGeometrica, qtdAndarYPadrao))
+        {
+          qtdAndar.inverterDirQtdAndar = true;
+
+          //jah anda pro outro lado
+          qtdAndar.x = -qtdAndarXPadrao;
+          qtdAndar.y = -qtdAndarYPadrao;
+        }
+        break;
+      case Andar.SEGUIR_PERS:
+      case Andar.SEGUIR_INIM_MAIS_PROX:
+        let objTela;
+        if (tipoAndar == Andar.SEGUIR_INIM_MAIS_PROX)
+          objTela = inimSeguir;
+        else
+          objTela = pers;
+
+        //calcular quanto teria que andar em cada direcao para chegar ao objeto
+        qntQrAndar = Andar.qntAndarParaBater(objTela, formaGeometrica);
+
+        //calcular quanto andar em cada direcao para andar sempre o mesmo que o padrao
+          //ps: equacoes baseadas em "andar na direcao de algo andando o mesmo.png"
+        qtdAndar.y = ((qtdAndarXPadrao + qtdAndarYPadrao)*qntQrAndar.y)/(qntQrAndar.x + qntQrAndar.y);
+        qtdAndar.x = qtdAndarXPadrao + qtdAndarYPadrao - qtdAndarY;
+        break;
+    }
+
+    return qtdAndar;
+  }
+
+  qntAndarParaBater(formaGeometrica, objTela)
+  {
+    //calcular quanto teria que andar em cada direcao para chegar ao objeto ("andar na direcao de algo andando o mesmo.png")
+    return {
+      x: (objTela.formaGeometrica.x + objTela.formaGeometrica.width - formaGeometrica.width) - formaGeometrica.x,
+                       //PONTO X
+      y: objTela.formaGeometrica.y - (formaGeometrica.y + (formaGeometrica.y<objTela.formaGeometrica.y)?(formaGeometrica.height-1):1)
+    };
+  }
+}
