@@ -1,3 +1,6 @@
+//import "FormasGeometricas.js";
+//import "ListaDuplamenteLigada.js";
+
 class ObjetoTela
 {
   constructor(formaGeometrica)
@@ -18,7 +21,7 @@ class ObjetoTela
 //TIRO
 class Tiro extends ObjetoTela
 {
-  constructor(formaGeometrica, corMorto, qtdAndarX, qtdAndarY, tipoAndar, ehDoPers, mortalidade, controladoresInimigos)
+  constructor(formaGeometrica, corMorto, qtdAndarX, qtdAndarY, tipoAndar, controladoresInimigos, ehDoPers, mortalidade)
   //soh precisa colocar controladoresInimigos se tipoAndar for SEGUIR_INIM_MAIS_PROX
   {
     super(formaGeometrica);
@@ -153,7 +156,6 @@ class Tiro extends ObjetoTela
     //ver se colidiu com personagem
       return this._estadoTiroPosAndarNaoEhPers(qtdAndar.x, qtdAndar.y, pers);
   }
-
   _estadoTiroPosAndarEhPers(qtdAndarX, qtdAndarY, controladoresObstaculos, controladoresInimigos)
   {
     //ret: menorHipotenusa, listaBateu, menorWidth, menorHeight, qtdPodeAndarX, qtdPodeAndarY, colidiu
@@ -182,7 +184,7 @@ class Tiro extends ObjetoTela
         controlador = controladoresInimigos[i-qtdContrObstaculos];
       //ateh aqui ele vai passar por todos os controladores
 
-      let inseriu = controlador.verificarColidirComTiro(info, this._ehDoPers);
+      let inseriu = controlador.verificarColidirComTiro(info, true);
       if (inseriu)
       {
         if (i < qtdContrObstaculos)
@@ -198,7 +200,7 @@ class Tiro extends ObjetoTela
       }
     }
 
-    let qntEntra = this._qntEntra(info.menorWidth, info.menorHeight);
+    let qntEntra = this._qntEntra(qtdAndarX, qtdAndarY, info.menorWidth, info.menorHeight);
     this._formaGeometrica.x += info.qtdPodeAndarX + qntEntra.x;
     this._formaGeometrica.y += info.qtdPodeAndarY + qntEntra.y;
 
@@ -221,7 +223,6 @@ class Tiro extends ObjetoTela
 
     return true;
   }
-
   _estadoTiroPosAndarNaoEhPers(qtdAndarX, qtdAndarY, pers)
   {
     let qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(pers.formaGeometrica, this._formaGeometrica, qtdAndarX, qtdAndarY);
@@ -245,15 +246,14 @@ class Tiro extends ObjetoTela
       return true;
     }
   }
-
   _qntEntra(qtdAndarX, qtdAndarY, menorWidth, menorHeight)
   {
     //ver quanto o tiro deve entrar no obstaculo ou inimigo
     let mult = 0.2; //multiplicador do this._qtdAndarX e this._qtdAndarY
     let mudarQntEntra = 0;
-    if (mult*qtdAndarX > menorWidth/2)
+    if (Math.abs(mult*qtdAndarX) > menorWidth/2)
       mudarQntEntra++;
-    if (mult*qtdAndarY > menorHeight/2)
+    if (Math.abs(mult*qtdAndarY) > menorHeight/2)
       mudarQntEntra += 2;
 
     let qntEntraX;
@@ -264,22 +264,22 @@ class Tiro extends ObjetoTela
       {
         case 1:
           //regra de tres: qtdAndarX/qtdAndarY = (menorWidth/2)/qntEntraY
-          qntEntraX = menorWidth/2;
+          qntEntraX = menorWidth/2 * (qtdAndarX>0?1:-1);
           qntEntraY = (qntEntraX*qtdAndarY)/qtdAndarX;
           break;
         case 2:
           //regra de tres: this._qtdAndarX/this._qtdAndarY = qntEntraX/(menorHeight/2)
-          qntEntraY = menorHeight/2;
+          qntEntraY = menorHeight/2 * (qtdAndarY>0?1:-1);
           qntEntraX = (qntEntraY*qtdAndarX)/qtdAndarY;
           break;
         case 3:
           //regra de tres: this._qtdAndarX/this._qtdAndarY = (menorWidth/2)/qntEntraY
-          let qntEntraX1 = menorWidth/2;
-          let qntEntraY1 = (qntEntraX*qtdAndarY)/qtdAndarX;
+          let qntEntraX1 = menorWidth/2 * (qtdAndarX>0?1:-1);
+          let qntEntraY1 = (qntEntraX1*qtdAndarY)/qtdAndarX;
 
-          let qntEntraY2 = menorHeight/2;
+          let qntEntraY2 = menorHeight/2 * (qtdAndarY>0?1:-1);
 
-          if (qntEntraY1 <= qntEntraY2)
+          if (Math.abs(qntEntraY1) <= Math.abs(qntEntraY2))
           {
             qntEntraX = qntEntraX1;
             qntEntraY = qntEntraY1;
@@ -320,9 +320,11 @@ class Tiro extends ObjetoTela
     super.draw();
   }
 
-  clone()
+  //clone
+  clone(controladoresInimigos)
   {
-    return new Tiro(this._formaGeometrica, this._corMorto, this._qtdAndarX, this._qtdAndarY, this._ehDoPers, this._mortalidade);
+    return new Tiro(this._formaGeometrica, this._corMorto, this._qtdAndarX, this._qtdAndarY, this._tipoAndar,
+      this._ehDoPers, this._mortalidade, controladoresInimigos);
   }
 }
 
@@ -351,7 +353,8 @@ class Obstaculo extends ObjetoTela
 
   get vivo()
   { return this._vivo; }
-  morreu(explodiu)
+  morreu(indexControladorTiro)
+  //obstaculo normal sempre vai explodir e obstaculo com vida pode ser morto pelo tiro do personagem ou explodir
   {
     if (explodiu == null)
       explodiu = true;
@@ -359,7 +362,7 @@ class Obstaculo extends ObjetoTela
     this._vivo = false;
   }
   get explodiu()
-  { return this._expodiu; }
+  { return this._explodiu; }
 
   //getters e setters
   get tipoAndar()
@@ -386,9 +389,9 @@ class Obstaculo extends ObjetoTela
   { pers.mudarVida(-this._qtdTiraVidaNaoConsegueEmpurrarPers); }
 
   //andar
-  andar(pers, contrObst, contrInim, contrTiros)
+  andar(indexContrObst, pers, contrObst, contrInim, contrTiros)
   //contrObst, contrInim e contrTiros para caso o obstaculo tenha que empurrar o personagem (pers.mudarXY)
-  //retorna se consegue andar tudo
+  //retorna se continua na lista
   {
     let qtdAndar = Andar.qtdAndarFromTipo(this._qtdAndarX, this._qtdAndarY, this._formaGeometrica, this._tipoAndar, pers);
     if (qtdAndar.inverterDirQtdAndar)
@@ -405,18 +408,29 @@ class Obstaculo extends ObjetoTela
     {
       let xPersAntes = pers.formaGeometrica.x;
       let yPersAntes = pers.formaGeometrica.y;
-      conseguiuAndarTudo = pers.mudarXY(qtdAndar.x - qtdPodeAndar.x, qtdAndar.y - qtdPodeAndar.y, this, contrInim, contrTiros);
+      conseguiuAndarTudo = pers.mudarXY(qtdAndar.x - qtdPodeAndar.x, qtdAndar.y - qtdPodeAndar.y, contrObst, contrInim, contrTiros);
       if (!conseguiuAndarTudo)
       {
         qtdAndar.x = qtdPodeAndar.x + pers.formaGeometrica.x - xPersAntes;
         qtdAndar.y = qtdPodeAndar.y + pers.formaGeometrica.y - yPersAntes;
+
+        //obstaculo explode
+        this.morreu(true);
+        this.tirarVidaPersNaoConsegueEmpurrar(pers);
       }
     }
+
+    //verificar se vai bater em tiros do personagem
+    pers.controladorTiros.procedimentoObjTelaColideAndar(this, qtdAndar.x, qtdAndar.y,
+      controladorTiros.OBSTACULOS_ANDOU, indexContrObst);
+    // dentro desse metodo vai tirar da lista os tiros que jah tinham sido mortos por esse obstaculo
+    // e colidir com outros tiros (mata o tiro e se eh obstaculo com vida, tira vida dele)
 
     this._formaGeometrica.x += qtdAndar.x;
     this._formaGeometrica.y += qtdAndar.y;
 
-    return conseguiuAndarTudo;
+    //se estah dentro da tela, continua na lista
+    return !Tela.objSaiuTotalmente(this._formaGeometrica);
   }
 
   //desenhar
@@ -433,15 +447,22 @@ class Obstaculo extends ObjetoTela
     }
     super.draw();
   }
+
+  //clone
+  clone()
+  {
+    return new Obstaculo(this._formaGeometrica, this._corEspecial, this._qtdAndarX, this._qtdAndarY, this._tipoAndar,
+      this._qtdTiraVidaNaoConsegueEmpurrarPers);
+  }
 }
 
 class ObstaculoComVida extends Obstaculo
 {
   //extends Obstaculo pq funcao igual a do obstaculo (mesmo andar()) e nao vai desenhar vida e varios casos
 
-  constructor(formaGeometrica, corEspecial, qtdAndarXPadrao, qtdAndarYPadrao, tipoAndar, qtdTiraVidaNaoConsegueEmpurrarPers, vida)
+  constructor(formaGeometrica, corEspecial, qtdAndarX, qtdAndarY, tipoAndar, qtdTiraVidaNaoConsegueEmpurrarPers, vida)
   {
-    super(formaGeometrica, corEspecial, qtdAndarXPadrao, qtdAndarYPadrao, tipoAndar, qtdTiraVidaNaoConsegueEmpurrarPers);
+    super(formaGeometrica, corEspecial, qtdAndarX, qtdAndarY, tipoAndar, qtdTiraVidaNaoConsegueEmpurrarPers);
     this._vida = vida;
   }
 
@@ -453,6 +474,7 @@ class ObstaculoComVida extends Obstaculo
     this._vida += qtdMuda;
     if (this._vida <= 0)
     {
+      //obstaculo morreu pelo tiro do personagem
       this.morreu(false);
       this._vida = 0;
     }

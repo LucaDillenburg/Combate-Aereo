@@ -93,6 +93,7 @@ class Semirreta extends Reta
 }
 
 const Direcao = {"Direita":1, "Esquerda":2, "Cima":3, "Baixo":4};
+const heightVidaUsuario = 30;
 
 //operacoes e funcoes basicas de geometria
 class Interseccao
@@ -149,20 +150,26 @@ class Interseccao
 				{
 					let nvRetangulo = new Retangulo(obj2.x, obj2.y + qtdAndarY, obj2.width, obj2.height - qtdAndarY);
 
-          if (returnTrueFalse)
-            return Interseccao.interseccao(obj1, nvRetangulo);
-
-					if (Interseccao.interseccao(obj1, nvRetangulo))
-						qtdPodeAndar.y += obj2.y + qtdAndarY - obj1.y -1;
+          if (Interseccao.interseccao(obj1, nvRetangulo))
+          {
+            if (returnTrueFalse)
+              return true;
+            qtdPodeAndar.y += obj2.y + qtdAndarY - obj1.y -1;
+          }else
+            if (returnTrueFalse)
+              return false;
 				}else
 				{
 					let nvRetangulo = new Retangulo(obj2.x, obj2.y, obj2.width, obj2.height - qtdAndarY);
 
-          if (returnTrueFalse)
-            return Interseccao.interseccao(obj1, nvRetangulo);
-
-					if (Interseccao.interseccaoObjDesmontado(obj1, nvRetangulo))
-						qtdPodeAndar.y += obj1.y - (obj2.y + obj2.height - qtdAndarY) -1;
+          if (Interseccao.interseccao(obj1, nvRetangulo))
+          {
+            if (returnTrueFalse)
+              return true;
+            qtdPodeAndar.y += obj1.y - (obj2.y + obj2.height - qtdAndarY) -1;
+          }else
+            if (returnTrueFalse)
+              return false;
 				}
 
 				return qtdPodeAndar;
@@ -173,20 +180,26 @@ class Interseccao
 				{
 					let nvRetangulo = new Retangulo(obj2.x + qtdAndarX, obj2.y, obj2.width - qtdAndarX, obj2.height);
 
-          if (returnTrueFalse)
-            return Interseccao._interseccao(obj1, nvRetangulo);
-
-					if (Interseccao.interseccaoObjDesmontado(obj1, nvRetangulo)
-						qtdPodeAndar.x += obj2.x + qtdAndarX - obj1.x -1;
+          if (Interseccao.interseccao(obj1, nvRetangulo))
+          {
+            if (returnTrueFalse)
+              return true;
+            qtdPodeAndar.x += obj2.x + qtdAndarX - obj1.x -1;
+          }else
+            if (returnTrueFalse)
+              return false;
 				}else
 				{
 					let nvRetangulo = new Retangulo(obj2.x, obj2.y, obj2.width - qtdAndarX, obj2.height);
 
-          if (returnTrueFalse)
-            return Interseccao.interseccao(obj1, nvRetangulo);
-
-					if (Interseccao.interseccaoObjDesmontado(obj1, nvRetangulo))
-						qtdPodeAndar.x += obj1.x - (obj2.x + obj2.width - qtdAndarX) -1;
+          if (Interseccao.interseccao(obj1, nvRetangulo))
+          {
+            if (returnTrueFalse)
+              return true;
+            qtdPodeAndar.x += obj1.x - (obj2.x + obj2.width - qtdAndarX) -1;
+          }else
+            if (returnTrueFalse)
+              return false;
 				}
 
 				return qtdPodeAndar;
@@ -194,7 +207,7 @@ class Interseccao
 		}
 
 		// daqui pra baixo andar pras duas direcoes e/ou eh triangulo, paralelogramo ou quadrilatero
-		ARRUMAR DAQUI PRA FRENTE!!
+		//ARRUMAR DAQUI PRA FRENTE!!
 
 		let paralelogramo1;
 		switch (obj2.codForma)

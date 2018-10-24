@@ -1,4 +1,7 @@
-class PersComTiros extends Objeto
+//import "OutrosControladores.js";
+// import "ObjetosSimples.js"; (jah foi importado por OutrosControladores.js)
+
+class PersComTiros extends ObjetoTela
 {
   constructor(formaGeometrica, vida, tiroPadrao, ehPersPrinc)
   {
@@ -34,40 +37,27 @@ class PersComTiros extends Objeto
     return this._vida != 0;
   }
 
-  //getters and setters tiro
-  get tiroPadrao()
-  { return this._tiroPadrao; }
-  set tiroPadrao(tiro)
-  { this._tiroPadrao = tiro; }
-
   //TIROS
   //novo tiro
-  adicionarTiro(ondeColocar, qtdAndarX, qtdAndarY, corMorto, mortalidade, formaGeomTiro)
+  atirar(controladoresInimigos, ondeColocar)
   //essa eh a ordem onde os primeiros parametros da funcao sao os que primeiro estariam fora do padrao
 	//pode-se chamar uma funcao sem todos os parametros necessarios e os demais ficam como nulos,
 		//porem se for colocar parametros tem que estar na ordem certa
   {
     if (ondeColocar == null)
-      ondeColocar = direcaoPadrao();
-    let onde = lugarCertoTiro(ondeColocar);
-    this._controladorTiros.adicionarTiro(onde.x, onde.y, ondeColocar, qtdAndarX, qtdAndarY, corMorto, mortalidade, formaGeomTiro);
+      ondeColocar = this._direcaoPadrao();
+    let onde = this._lugarCertoTiro(ondeColocar);
+
+    this._controladorTiros.adicionarTiro(onde.x, onde.y, controladoresInimigos);
   }
-  adicionarTiroDif(tiro, ondeColocar)
-  {
-    if (ondeColocar == null)
-      ondeColocar = direcaoPadrao();
-    let onde = lugarCertoTiro(ondeColocar);
-    //criar tiro e adicionar ao comeco da lista
-		this._controladorTiros.adicionarTiroDif(onde.x, onde.y, tiro);
-  }
-  direcaoPadrao()
+  _direcaoPadrao()
   {
     if (this._ehPersPrincipal)
       return Direcao.Cima;
     else
       return Direcao.Baixo;
   }
-  lugarCertoTiro(ondeColocar)
+  _lugarCertoTiro(ondeColocar)
   {
     let x = null;
     let y = null;
@@ -95,9 +85,9 @@ class PersComTiros extends Objeto
   }
 
   //mover tiros
-  andarTiros(pers, obstaculos, inimigos)
+  andarTiros(pers, controladoresObstaculos, controladoresInimigos)
   {
-    this._controladorTiros.andarTiros();
+    this._controladorTiros.andarTiros(pers, controladoresObstaculos, controladoresInimigos);
   }
 
 	//draw
@@ -172,7 +162,7 @@ class PersonagemPrincipal extends PersComTiros
     this.colocarMeioX();
     this._formaGeometrica.y = 0.75*height;
   }
-  andar(direcaoX, direcaoY, obstaculos, inimigos, controladorTirosJogo)
+  andar(direcaoX, direcaoY, controladoresObstaculos, controladoresInimigos, controladoresTirosJogo)
   //usuario soh usa esse metodo
   {
     let qtdAndarX;
@@ -203,9 +193,10 @@ class PersonagemPrincipal extends PersComTiros
         break;
     }
 
-    this.mudarXY(qtdAndarX, qtdAndarY, obstaculos, inimigos, controladorTirosJogo);
+    this.mudarXY(qtdAndarX, qtdAndarY,  controladoresObstaculos, controladoresInimigos, controladoresTirosJogo);
   }
-  mudarXY(qtdMudaX, qtdAndarY, obstaculos, inimigos, controladorTirosJogo)
+  mudarXY(qtdMudaX, qtdAndarY, controladoresObstaculos, controladoresInimigos, controladoresTirosJogo)
+  //soh obstaculo usa diretamente
   //retorna se pode andar tudo aquilo ou nao (para andar do obstaculo)
   {
     let qtdVaiMudarX = Tela.qtdAndarObjNaoSairX(this._formaGeometrica, qtdMudaX);
@@ -363,7 +354,7 @@ class Inimigo extends PersComTiros
   //desenho
   get corVida()
   { return this._corVida; }
-  get corVida(vida)
+  set corVida(vida)
   { this._corVida = vida; }
   draw()
   {

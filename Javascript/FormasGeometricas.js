@@ -1,7 +1,9 @@
+//import "GeometriaBasica.js";
+
 //FORMAS: quadrado, retangulo, triangulo, paralelogramo, quadrilatero
 
 // BASICO
-class FormaGeometrica implements InterfaceFormaGeometrica
+class FormaGeometrica /*implements InterfaceFormaGeometrica*/
 {
   constructor (strokeColor, fillColor, img)
   {
@@ -43,7 +45,7 @@ class FormaGeometrica implements InterfaceFormaGeometrica
     image(this._img, this.x, this.y, this.width, this.height);
   }
 }
-interface InterfaceFormaGeometrica
+/*interface InterfaceFormaGeometrica
 {
   //forma
   get codForma()
@@ -73,7 +75,7 @@ interface InterfaceFormaGeometrica
 
   //forma e cor
   draw()
-}
+} */
 
 
 // FORMAS SIMPLES
@@ -313,7 +315,7 @@ class Quadrado extends FormaGeometricaSimples
 
 
 //FORMAS COMPLEXAS
-class FormaGeometricaComplexa extends FormaGeometrica
+class FormaGeometricaComplexa extends FormaGeometrica /*implements InterfaceFormaGeometricaComplexa */
 {
   constructor (a, strokeColor, fillColor, img)
   {
@@ -435,12 +437,12 @@ class FormaGeometricaComplexa extends FormaGeometrica
     return false;
   }
 }
-interface InterfaceFormaGeometricaComplexa extends InterfaceFormaGeometrica
+/*interface InterfaceFormaGeometricaComplexa extends InterfaceFormaGeometrica
 {
   get _triangulos()
   _mudarVerticeX(i, novoValor) //mudar no vetor e no a,b,c,d
   _mudarVerticeY(i, novoValor) //mudar no vetor e no a,b,c,d
-}
+}*/
 
 class Quadrilatero extends FormaGeometricaComplexa
 {

@@ -1,6 +1,11 @@
+// import "ObjetosSimples.js"; jah foi importado por OutrosControladores.js e ObjetosComplexos.js
+//import "ObjetosComplexos.js";
+// import "OutrosControladores.js"; jah foi importado por ObjetosComplexos.js
+// import "ListaDuplamenteLigada.js"; jah foi importado
+
 const EstadoJogo = {"NaoComecou":0, "Jogando":1, "Pausado":2, "Morto":3};
 
-const heightVidaUsuario = 30;
+//const heightVidaUsuario estah em geometria basica
 class ControladorJogo
 {
   constructor()

@@ -1,6 +1,6 @@
-Arrumar:
- - verificar se Tiro._qntEntra(...) tambem retorna (x,y) negativo
-
+AGORA:
+ - colocar imgMorreu e corMorto em todos os ObjetosTela e mudar draw
+ 
 
 FAZER AGORA:
 ps: ver se colidir estah certo (ControladoresTiros, ControladoresInimigos, ControladoresObstaculos)
@@ -9,7 +9,10 @@ Lembre-se: pode haver haver mais de um controladorTiroJogo, controladorObstaculo
  - verificar ControladorObstaculo e Obstaculo. OK
  - verificar ControladorTiros e Tiro. OK
  - verificar ControladorInimigos e Inimigo
+(quando inimigos andarem ver se tiros do personagem colidiram com esse ControladorTiro)
  - verificar Personagem
+(inclusive mudarXY)
+(quando personagem andar ver se obstaculo mortos nao colidiram com ele)
 
 
 EXPLICACAO: em cada level terá vários
@@ -33,17 +36,13 @@ EXPLICACAO: em cada level terá vários
     -> O poder vai ser pra smp ou temporario??
 ps: Tudo, exceto o personagem, mudará a cada level
 
+ - ACABAR GeometriaBasica.js : Interseccao.VaiTerInterseccao
 
-comentarios //TODO
-
-
-- fazer:
+ - fazer:
+  .comentarios //TODO
   .ControladorJogo.JogoAcabou boolean
   .Poder (img, index, nome). DEPOIS
   .ControladorPoderes. DEPOIS
-  .obstaculo.clone
-
- - ACABAR GeometriaBasica.js : Interseccao.VaiTerInterseccao
 
 opção de só colocar vida na inimigo na tela quando ele eh atingido (por um certo tempo):
 //PS: ISSO DEVE SER USADO EM INIMIGOS MENORES PRINCIPALMENTE
@@ -56,8 +55,21 @@ funcao(){
 
  - CreateCanvas de um tamanho mínimo: metade de toda tela (resize() mudar o tamanho dele?)
 
+ - quando objetos com vida perderem vida abaixar a vida gradativamente (mudarVida gradativamente)
+
  - quando um tiro colidir com obstaculos e inimigos guardar todos eles, e soh tirar da lista quando todos os inimigos e obstaculos andarem (mudar emQuemBateu)
 
+
+ Fazer imports:
+ (parece que nao da no chrome: https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Statements/import)
+  - GeometriaBasica.js
+  - FormasGeometricas.js
+  - ListaDuplamenteLigada.js
+  - ObjetosSimples.js
+  - OutrosControladores.js
+  - ObjetosComplexos.js
+  - ControladorJogo.js
+  - Script.js
 
 
  EXPLICAÇÃO COLISÃO DE OBJETOS:

@@ -1,8 +1,9 @@
+//import "ControladorJogo.js"; //tudo dentro disso
+
 //colocar eventos no formulario
 window.addEventListener("onload", setup);
 window.addEventListener("keydown", keyDown);
 window.addEventListener("keyup", keyUp);
-
 
 var controladorJogo;
 
