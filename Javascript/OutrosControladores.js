@@ -31,30 +31,35 @@ class ControladorTiros
   { return this._tiroPadrao; }
 
   //novo tiro
-  adicionarTiro(x, y, controladoresInimigos, qtdAndarX, qtdAndarY, tipoAndar, corMorto, mortalidade, formaGeomTiro)
+  adicionarTiro(x, y, pers, controladoresObstaculos, controladoresInimigos,
+    qtdAndarX, qtdAndarY, tipoAndar, corImgMorto, mortalidade, formaGeometrica)
   //essa eh a ordem onde os primeiros parametros da funcao sao os que primeiro estariam fora do padrao
 	//pode-se chamar uma funcao sem todos os parametros necessarios e os demais ficam como nulos,
 		//porem se for colocar parametros tem que estar na ordem certa
   {
+    if (x == null)
+      x = this._tiroPadrao.formaGeometrica.x;
+    if (y == null)
+      y = this._tiroPadrao.formaGeometrica.y;
     if (qtdAndarX == null)
       qtdAndarX = this._tiroPadrao.qtdAndarX;
     if (qtdAndarY == null)
       qtdAndarY = this._tiroPadrao.qtdAndarY;
     if (tipoAndar == null)
       tipoAndar = this._tiroPadrao.tipoAndar;
-    if (corMorto == null)
-      corMorto = this._tiroPadrao.corMorto;
+    if (corImgMorto == null)
+      corImgMorto = this._tiroPadrao.corMorto;
     if (mortalidade == null)
       mortalidade = this._tiroPadrao.mortalidade;
-    if (formaGeomTiro == null)
-      formaGeomTiro = this._tiroPadrao.formaGeomTiro;
+    if (formaGeometrica == null)
+      formaGeometrica = this._tiroPadrao.formaGeometrica;
 
-    formaGeomTiro.x = x;
-    formaGeomTiro.y = y;
+    formaGeometrica.x = x;
+    formaGeometrica.y = y;
 
-    this._adicionarTiro(new Tiro(formaGeomTiro, corMorto, qtdAndarX, qtdAndarY, tipoAndar, controladoresInimigos, this._ehPersPrinc, mortalidade));
+    this._adicionarTiro(new Tiro(formaGeometrica, corImgMorto, qtdAndarX, qtdAndarY, tipoAndar, controladoresInimigos, this._ehPersPrinc, mortalidade));
   }
-  adicionarTiroDif(x, y, tiro)
+  adicionarTiroDif(x, y, pers, controladoresObstaculos, controladoresInimigos, tiro)
   {
 		if (tiro == null)
       tiro = this._tiroPadrao;
@@ -65,14 +70,16 @@ class ControladorTiros
     novoTiro.formaGeometrica.y = y;
     this._adicionarTiro(novoTiro);
   }
-  _adicionarTiro(novoTiro)
+  _adicionarTiro(novoTiro, pers, controladoresObstaculos, controladoresInimigos)
   {
+    novoTiro.procCriou(pers, controladoresObstaculos, controladoresInimigos);
+
     //adicionar novo tiro ao comeco da lista
 		this._tiros.inserirNoComeco(novoTiro);
   }
 
   //mover tiros
-  andarTiros(pers, controladoresObstaculos, controladoresInimigos)
+  andarTiros(pers, controladoresObstaculos, controladoresInimigos, controladoresTirosJogo)
   {
     //percorrer todos os elementos da lista andando os tiros (se retornar false, remover da lista)
 		this._tiros.colocarAtualComeco();
@@ -85,7 +92,7 @@ class ControladorTiros
       else
       {
         //retorna se tiro continua na lista (o morreu() eh feito la dentro)
-        let continuaLista = this._tiros.atual.andar(pers, controladoresObstaculos, controladoresInimigos);
+        let continuaLista = this._tiros.atual.andar(pers, controladoresObstaculos, controladoresInimigos, controladoresTirosJogo);
         if (!continuaLista)
   				this._tiros.removerAtual();
       }
@@ -128,6 +135,30 @@ class ControladorTiros
       this._tiros.andarAtual();
 		}
   }
+  static get INIMIGOS_CRIADO()
+  { return Tiro.COLIDIU_COM_INIMIGO; }
+  static get OBSTACULOS_CRIADO()
+  { return Tiro.COLIDIU_COM_OBSTACULO; }
+  procedimentoObjTelaColideCriar(objTelaColide, quemFoiCriado, indexAndou)
+  {
+    //percorrer todos os elementos da lista andando os tiros (se retornar false, remover da lista)
+		for (this._tiros.colocarAtualComeco(); !this._tiros.atualEhNulo; this._tiros.andarAtual())
+      if (this._tiros.atual.vivo && Interseccao.interseccao(this._tiros.atual.formaGeometrica, objTelaColide.formaGeometrica))
+      {
+        //se objeto tela tem vida
+        if (objTelaColide instanceof PersComTiros || objTelaColide instanceof ObstaculoComVida)
+          this_tiros.atual.tirarVidaObjComVida(objTelaColide);
+        this._tiros.atual.morreu(quemAndou, indexAndou);
+      }
+      //coisas que acabaram de ser criadas ainda nao vao ter colidido com ninguem
+  }
+
+  //uso: quando os inimigos morrerem passar os tiros deles para controladoresTirosJogo[0]
+  concatenarTiros(controladorTiros)
+  {
+    //os tiros do outro controlador serao passados para esse (sem fazer clone)
+    this._tiros.concatenar(controladorTiros._tiros);
+  }
 
 	//draw
     //desenha todos os tiros
@@ -165,7 +196,8 @@ class ControladorObstaculos
   { return this._obstaculoPadrao; }
 
   //novo obstaculo
-  adicionarObstaculo(x, y, vida, qtdAndarX, qtdAndarY, tipoAndar, qtdTiraVidaNaoConsegueEmpurrarPers, corEspecial, formaGeometrica)
+  adicionarObstaculo(x, y, contrObst, contrInim, contrTiros, indexContrObst, vida, qtdAndarX,
+    qtdAndarY, tipoAndar, qtdTiraVidaNaoConsegueEmpurrarPers, corEspecial, corImgMorto, formaGeometrica)
   //ps: o parametro vida deve ser false se ele nao tem vida ou o numero da vida inicial do obstaculo se ele tem.
   // se ele for null, sera pego a vida do obstaculo padrao se ele tiver e se ele nao tiver serah considerado false
 
@@ -174,20 +206,26 @@ class ControladorObstaculos
 		//porem se for colocar parametros tem que estar na ordem certa
   {
     if (x == null)
-      this._obstaculoPadrao.formaGeometrica.x;
+      x = this._obstaculoPadrao.formaGeometrica.x;
     if (y == null)
-      this._obstaculoPadrao.formaGeometrica.y;
+      y = this._obstaculoPadrao.formaGeometrica.y;
     if (qtdAndarX == null)
       qtdAndarX = this._obstaculoPadrao.qtdAndarX;
     if (qtdAndarY == null)
       qtdAndarY = this._obstaculoPadrao.qtdAndarY;
+    if (tipoAndar == null)
+      tipoAndar = this._obstaculoPadrao.tipoAndar;
+    if (qtdTiraVidaNaoConsegueEmpurrarPers == null)
+      qtdTiraVidaNaoConsegueEmpurrarPers = this._obstaculoPadrao.qtdTiraVidaNaoConsegueEmpurrarPers;
     if (corEspecial == null)
       corEspecial = this._obstaculoPadrao.corEspecial;
+    if (corImgMorto == null)
+      corImgMorto = this._obstaculoPadrao.corImgMorto;
     if (formaGeometrica == null)
       formaGeometrica = this._obstaculoPadrao.formaGeometrica;
 
-    formaGeomTiro.x = x;
-    formaGeomTiro.y = y;
+    formaGeometrica.x = x;
+    formaGeometrica.y = y;
 
     //vida (Obstaculo com Vida ou sem)
     if (vida == null)
@@ -202,13 +240,13 @@ class ControladorObstaculos
 
     let novoObstaculo;
     if (vida && vida > 0) //se vida eh um numero (essa vida tem que ser maior que zero)
-       novoObstaculo = new ObstaculoComVida(formaGeometrica, corEspecial, qtdAndarX, qtdAndarY, tipoAndar,
+       novoObstaculo = new ObstaculoComVida(formaGeometrica, corEspecial, corImgMorto, qtdAndarX, qtdAndarY, tipoAndar,
          qtdTiraVidaNaoConsegueEmpurrarPers, vida);
     else
-      novoObstaculo = new Obstaculo(formaGeometrica, corEspecial, qtdAndarX, qtdAndarY, tipoAndar, qtdTiraVidaNaoConsegueEmpurrarPers);
-    this._adicionarObstaculo(novoObstaculo);
+      novoObstaculo = new Obstaculo(formaGeometrica, corEspecial, corImgMorto, qtdAndarX, qtdAndarY, tipoAndar, qtdTiraVidaNaoConsegueEmpurrarPers);
+    this._adicionarObstaculo(novoObstaculo, contrObst, contrInim, contrTiros, indexContrObst);
   }
-  adicionarObstaculoDif(x, y, obstaculo)
+  adicionarObstaculoDif(x, y, contrObst, contrInim, contrTiros, indexContrObst, obstaculo)
   {
 		if (obstaculo == null)
       obstaculo = this._tiroPadrao;
@@ -216,10 +254,12 @@ class ControladorObstaculos
     let novoObstaculo = obstaculo.clone();
     novoObstaculo.formaGeometrica.x = x;
     novoObstaculo.formaGeometrica.y = y;
-    this._adicionarObstaculo(novoObstaculo);
+    this._adicionarObstaculo(novoObstaculo, contrObst, contrInim, contrTiros, indexContrObst);
   }
-  _adicionarObstaculo(novoObstaculo)
+  _adicionarObstaculo(novoObstaculo, contrObst, contrInim, contrTiros, indexContrObst)
   {
+    novoObstaculo.procCriou(pers, contrObst, contrInim, contrTiros, indexContrObst);
+
     //adicionar novo obstaculo ao comeco da lista
 		this._obstaculos.inserirNoComeco(novoObstaculo);
   }
@@ -242,17 +282,27 @@ class ControladorObstaculos
   }
 
   //andar personagem
-  qtdPersPodeAndar(persAndou)
+  qtdPersPodeAndar(infoQtdMudar, formaGeomPers, persAndou)
   {
     //o valor default eh TRUE (pois normalmente esse metodo vai ser chamado quando ele andar)
     if (persAndou == null)
       persAndou = true;
 
-    //TODO TODO
+    //ve quanto que personagem pode mudar
     for (this._obstaculos.colocarAtualComeco(); !this._obstaculos.atualEhNulo; this._obstaculos.andarAtual())
       if (this._obstaculos.atual.vivo)
       {
+        let qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(this._obstaculos.atual.formaGeometrica, formaGeomPers,
+          infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
+        let hipotenusa = Operacoes.hipotenusa(qtdPodeAndar.x, qtdPodeAndar.y);
 
+        //se tiro vai bater em um obstaculo mais perto que o outro
+        if (hipotenusa < infoQtdMudar.menorHipotenusa)
+        {
+          infoQtdMudar.menorHipotenusa = hipotenusa;
+          infoQtdMudar.qtdPodeMudarX = qtdPodeAndar.x;
+          infoQtdMudar.qtdPodeMudarY = qtdPodeAndar.y;
+        }
       }else
         if (persAndou)
           this._obstaculos.removerAtual();
@@ -260,7 +310,7 @@ class ControladorObstaculos
 
 
   //colisao com tiro
-  verificarColidirComTiro(info, tiroPersAndou)
+  verificarColidirComTiro(info, tiro, tiroPersAndou)
   //esses metodos funcionam por passagem por referencia
   {
     if (tiroPersAndou == null)
@@ -270,12 +320,21 @@ class ControladorObstaculos
     for (this._obstaculos.colocarAtualComeco(); !this._obstaculos.atualEhNulo; this._obstaculos.andarAtual())
       if (this._obstaculos.atual.vivo)
       //passa por todos os obstaculos
-        inseriu = inseriu || AuxControladores.auxAndarTiro(info, this._obstaculos.atual);
+        inseriu = AuxControladores.auxAndarTiro(info, this._obstaculos.atual, tiro) || inseriu;
       else
         if (tiroPersAndou && !this._obstaculos.atual.explodiu)
         //se tiros do personagem andaram e esse obstaculo morreu por tiro do pers (nao explodiu com o personagem em si)
           this._obstaculos.removerAtual();
     return inseriu;
+  }
+
+  //para quando um tiro for criado (ver se colide com obstaculos)
+  procColidirTiroCriadoTodosObst(tiro)
+  {
+    let colidiu = false;
+    for (this._obstaculos.colocarAtualComeco(); !this._obstaculos.atualEhNulo; this._obstaculos.andarAtual())
+      colidiu = this._obstaculos.atual.procColidirTiroCriado(tiro) || colidiu;
+    return colidiu;
   }
 
 	//draw
@@ -296,11 +355,116 @@ class ControladorObstaculos
 
 class ControladorInimigos
 {
-  O INIMIGO MORTO SOH VAI SAIR DA LISTA DEPOIS QUE FOR PRINTADO NA TELA, QUANDO TODOS OS INIMIGOS ANDAREM OU QUANDO OS TIROS DO PERSONAGEM ANDAREM
-  (OU QUANDO ELE SAIR DA TELA)
+  //O INIMIGO MORTO SOH VAI SAIR DA LISTA DEPOIS QUE FOR PRINTADO NA TELA, QUANDO TODOS OS INIMIGOS ANDAREM OU
+  //QUANDO OS TIROS DO PERSONAGEM ANDAREM (OU QUANDO ELE SAIR DA TELA)
+
+  constructor(inimigoPadrao)
+  {
+    //padrao
+    this._inimigoPadrao = inimigoPadrao;
+
+    //LISTA DUPLAMENTE LIGADA (COM PONTEIRO NO ULTIMO)
+    // ir adicionando os obstaculos no comeco e quando ele sair da tela ouir tirando os que jah sairam da tela do final
+    this._inimigos = new ListaDuplamenteLigada();
+  }
+
+  get inimigoPadrao()
+  { return this._inimigoPadrao; }
+
+  //novo inimigo
+  adicionarInimigo(x, y, pers, indexContrInim, vida, qtdAndarX, qtdAndarY, tipoAndar, qtdTiraVidaPersQndIntersec, tiroPadrao, corVida, corImgMorto, formaGeometrica)
+  //essa eh a ordem onde os primeiros parametros da funcao sao os que primeiro estariam fora do padrao
+	//pode-se chamar uma funcao sem todos os parametros necessarios e os demais ficam como nulos,
+		//porem se for colocar parametros tem que estar na ordem certa
+  {
+    if (x == null)
+      x = this._inimigoPadrao.formaGeometrica.x;
+    if (y == null)
+      y = this._inimigoPadrao.formaGeometrica.y;
+    if (vida == null)
+      vida = this._inimigoPadrao.vidaMAX;
+    if (qtdAndarX == null)
+      qtdAndarX = this._inimigoPadrao.qtdAndarX;
+    if (qtdAndarY == null)
+      qtdAndarY = this._inimigoPadrao.qtdAndarY;
+    if (tipoAndar == null)
+      tipoAndar = this._inimigoPadrao.tipoAndar;
+    if (qtdTiraVidaPersQndIntersec == null)
+      qtdTiraVidaPersQndIntersec = this._inimigoPadrao.qtdTiraVidaPersQndIntersec;
+    if (tiroPadrao == null)
+      tiroPadrao = this._inimigoPadrao.controladorTiros.tiroPadrao;
+    if (corVida == null)
+      corVida = this._inimigoPadrao.corVida;
+    if (corImgMorto == null)
+      corImgMorto = this._inimigoPadrao.corImgMorto;
+    if (formaGeometrica == null)
+      formaGeometrica = this._inimigoPadrao.formaGeometrica;
+
+    formaGeometrica.x = x;
+    formaGeometrica.y = y;
+
+    this._adicionarInimigo(new Inimigo(formaGeometrica, corImgMorto, vida, corVida, tiroPadrao,
+      qtdTiraVidaPersQndIntersec, qtdAndarX, qtdAndarY, tipoAndar));
+  }
+  adicionarInimigoDif(x, y, pers, indexContrInim, inimigo)
+  {
+		if (inimigo == null)
+      inimigo = this._inimigoPadrao;
+
+    let novoInim = inimigo.clone();
+    novoInim.formaGeometrica.x = x;
+    novoInim.formaGeometrica.y = y;
+    this._adicionarInimigo(novoInim, pers, indexContrInim);
+  }
+  _adicionarInimigo(novoInim, pers, indexContrInim)
+  {
+    novoInim.procCriou(pers, indexContrInim);
+
+    //adicionar novo inimigo ao comeco da lista
+		this._inimigos.inserirNoComeco(novoInim);
+  }
+
+  //tiros inimigos
+  andarTirosTodosInim(pers, controladoresObstaculos, controladoresInimigos, controladoresTirosJogo)
+  {
+    //andar todos os tiros de todos os inimigos
+    for (this._inimigos.colocarAtualComeco(); !this._inimigos.atualEhNulo; this._inimigos.andarAtual())
+      this._inimigos.atual.andarTiros(pers, controladoresObstaculos, controladoresInimigos, controladoresTirosJogo);
+  }
+
+  //andar
+  andarInimigos(pers, controladoresTirosJogo)
+  {
+    for (this._inimigos.colocarAtualComeco(); !this._inimigos.atualEhNulo; this._inimigos.andarAtual())
+      if (this._inimigos.atual.vivo)
+      {
+        //retorna se tiro continua na lista (o morreu() eh feito la dentro)
+        let continuaNaLista = this._inimigos.atual.andar(pers);
+        if (!continuaNaLista)
+          this._removerInimAtualCompleto(controladoresTirosJogo);
+      }else
+        this._removerInimAtualCompleto(controladoresTirosJogo);
+  }
+
+ //outros...
+
+  //para ver se level acabou
+  algumVivo()
+  {
+		this._inimigos.colocarAtualComeco();
+		while (!this._inimigos.atualEhNulo)
+    {
+      //se inimigo jah morreu (desenhar ele a ultima vez e depois tirar ele da lista)
+      if (this._inimigos.atual.vivo)
+        return true;
+      this._inimigos.andarAtual();
+    }
+
+    return false;
+	}
 
   //colisao com tiro
-  verificarColidirComTiro(info, tiroPersAndou)
+  verificarColidirComTiro(info, tiro, controladoresTirosJogo, tiroPersAndou)
   //esses metodos funcionam por passagem por referencia
   {
     if (tiroPersAndou == null)
@@ -310,12 +474,37 @@ class ControladorInimigos
     for (this._inimigos.colocarAtualComeco(); !this._inimigos.atualEhNulo; this._inimigos.andarAtual())
       if (this._inimigos.atual.vivo)
       //passa por todos os obstaculos
-        inseriu = inseriu || AuxControladores.auxAndarTiro(info, this._inimigos.atual);
+        inseriu = AuxControladores.auxAndarTiro(info, this._inimigos.atual, tiro) || inseriu;
       else
         if (tiroPersAndou)
         //os inimigos soh morrem por tiro do pers
-          this._inimigos.removerAtual();
+          this._removerInimAtualCompleto(controladoresTirosJogo);
     return inseriu;
+  }
+
+  //para quando um tiro for criado (ver se colide com inimigos)
+  procColidirTiroCriadoTodosInim(tiro)
+  {
+    let colidiu = false;
+    for (this._inimigos.colocarAtualComeco(); !this._inimigos.atualEhNulo; this._inimigos.andarAtual())
+      colidiu = this._inimigos.atual.procColidirTiroCriado(tiro) || colidiu;
+    return colidiu;
+  }
+
+  //andar personagem
+  procPersColidirTirosTodosInim(pers, qtdAndarX, qtdAndarY)
+  //pers andou colidir com tiros de inimigos
+  {
+    for (this._inimigos.colocarAtualComeco(); !this._inimigos.atualEhNulo; this._inimigos.andarAtual())
+      this._inimigos.atual.controladorTiros.procedimentoObjTelaColideAndar(pers, qtdAndarX, qtdAndarY, ControladorTiros.PERSONAGEM_ANDOU);
+  }
+  procPersAndar(pers, qtdAndarX, qtdAndarY)
+  //pers andou colidir com inimigos
+  {
+    for (this._inimigos.colocarAtualComeco(); !this._inimigos.atualEhNulo; this._inimigos.andarAtual())
+      if (this._inimigos.atual.vivo && Interseccao.vaiTerInterseccao(this._inimigos.atual.formaGeometrica, pers.formaGeometrica,
+        qtdAndarX, qtdAndarY))
+        this._inimigos.atual.tirarVidaPersIntersec(pers);
   }
 
   //para andar ateh inimigo
@@ -344,15 +533,36 @@ class ControladorInimigos
 
     return qtdAndar;
 	}
+
+  //aux
+  _removerInimAtualCompleto(controladoresTirosJogo)
+  {
+    controladoresTirosJogo[0].concatenarTiros(this._inimigos.atual.controladorTiros);
+    this._inimigos.removerAtual();
+  }
+
+  //draw
+  draw(controladoresTirosJogo)
+	{
+		this._inimigos.colocarAtualComeco();
+		while (!this._inimigos.atualEhNulo)
+    {
+      this._inimigos.atual.draw();
+      //se inimigo jah morreu (desenhar ele a ultima vez e depois tirar ele da lista)
+      if (!this._inimigos.atual.vivo)
+        this._removerInimAtualCompleto(controladoresTirosJogo);
+      this._inimigos.andarAtual();
+    }
+	}
 }
 
 class AuxControladores
 {
-  auxAndarTiro(info, objTelaRealAtual)
+  auxAndarTiro(info, objTelaRealAtual, tiro)
   //retorna se inseriu
   //info: menorHipotenusa, listaBateu, menorWidth, menorHeight, qtdPodeAndarX, qtdPodeAndarY, colidiu
   {
-    let qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(objTelaRealAtual.formaGeometrica, this._formaGeometrica, info.qtdPodeAndarX, info.qtdPodeAndarY);
+    let qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(objTelaRealAtual.formaGeometrica, tiro.formaGeometrica, info.qtdPodeAndarX, info.qtdPodeAndarY);
     let hipotenusa = Operacoes.hipotenusa(qtdPodeAndar.x, qtdPodeAndar.y);
 
     let inseriu = false;

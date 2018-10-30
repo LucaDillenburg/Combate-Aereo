@@ -1,48 +1,11 @@
-AGORA:
- - colocar imgMorreu e corMorto em todos os ObjetosTela e mudar draw
- 
-
-FAZER AGORA:
-ps: ver se colidir estah certo (ControladoresTiros, ControladoresInimigos, ControladoresObstaculos)
-TER EM MENTE QUANDO TIRAR CADA OBJETO TELA MORTO DA LISTA
-Lembre-se: pode haver haver mais de um controladorTiroJogo, controladorObstaculos e controladorInimigos
- - verificar ControladorObstaculo e Obstaculo. OK
- - verificar ControladorTiros e Tiro. OK
- - verificar ControladorInimigos e Inimigo
-(quando inimigos andarem ver se tiros do personagem colidiram com esse ControladorTiro)
- - verificar Personagem
-(inclusive mudarXY)
-(quando personagem andar ver se obstaculo mortos nao colidiram com ele)
-
-
-EXPLICACAO: em cada level terá vários
-  .GRUPOS DE OBSTACULOS: todos obstáculos do grupo
-  (vetor de ControladorObstaculos no ControladorJogo)
-    -> será com ou sem vida
-    -> vão ficar parados, andar sempre com o msm qtdAndarX e qtdAndarY, inverter qtdAndarX e qtdAndarY para nao sair da tela ou
-      andam em direcao ao pers
-  .GRUPOS DE INIMIGOS: todos os inimigos do grupo
-  (vetor de ControladorInimigos no ControladorJogo)
-    -> vão ser essenciais ou não (os essenciais são aqueles que quando forem mortos o level acabará)
-    -> vão mostrar a vida sempre ou só quando forem atingidos
-    -> vão andar sempre com o msm qtdAndarX e qtdAndarY, inverter o qtdAndarX e qtdAndarY ao nao deixar sair da vidaNaTela [ou de outra forma]
-  .GRUPOS DE TIROS: todos os tiros do grupo
-  (vetor de ControladorTiros no ControladorJogo e nos Inimigos e Personagem)
-    -> serão do personagem ou nao
-    -> podem andar sempre a mesma coisa ou seguir o personagem
-  .GRUPO DE PODERES (ver IDEIAS.txt)
-  (classe Poder: metodo para colocar o poder na pratica, img,... e ControladorPoder: vai criar um poder "aleatorio" pra por na tela)
-    -> O poder vai ficar guardado ou vai ser usado logo que o usuario o pegar??
-    -> O poder vai ser pra smp ou temporario??
-ps: Tudo, exceto o personagem, mudará a cada level
+- fazer:
+ .comentarios //TODO
+ .Poder (img, index, nome)
+ .ControladorPoderes
 
  - ACABAR GeometriaBasica.js : Interseccao.VaiTerInterseccao
 
- - fazer:
-  .comentarios //TODO
-  .ControladorJogo.JogoAcabou boolean
-  .Poder (img, index, nome). DEPOIS
-  .ControladorPoderes. DEPOIS
+ - fazer sistema de Teste do jogo (colocar super devagar: framerate baixissimo)
 
 opção de só colocar vida na inimigo na tela quando ele eh atingido (por um certo tempo):
 //PS: ISSO DEVE SER USADO EM INIMIGOS MENORES PRINCIPALMENTE
@@ -57,19 +20,43 @@ funcao(){
 
  - quando objetos com vida perderem vida abaixar a vida gradativamente (mudarVida gradativamente)
 
- - quando um tiro colidir com obstaculos e inimigos guardar todos eles, e soh tirar da lista quando todos os inimigos e obstaculos andarem (mudar emQuemBateu)
+ - quando um tiro colidir com obstaculos e inimigos guardar todos eles, e soh tirar da lista quando todos os inimigos e
+obstaculos andarem (mudar emQuemBateu, procCriou, _estadoTiroPosAndarEhPers)
 
 
- Fazer imports:
- (parece que nao da no chrome: https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Statements/import)
-  - GeometriaBasica.js
-  - FormasGeometricas.js
-  - ListaDuplamenteLigada.js
-  - ObjetosSimples.js
-  - OutrosControladores.js
-  - ObjetosComplexos.js
-  - ControladorJogo.js
-  - Script.js
+ - Fazer imports:
+(parece que nao da no chrome: https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Statements/import)
+   .GeometriaBasica.js
+   .FormasGeometricas.js
+   .ListaDuplamenteLigada.js
+   .ObjetosSimples.js
+   .OutrosControladores.js
+   .ObjetosComplexos.js
+   .ControladorJogo.js
+   .Script.js
+
+------------------------------------------------------------------------------------------------------------------------------
+
+  EXPLICACAO: em cada level terá vários
+    .GRUPOS DE OBSTACULOS: todos obstáculos do grupo
+    (vetor de ControladorObstaculos no ControladorJogo)
+      -> será com ou sem vida
+      -> vão ficar parados, andar sempre com o msm qtdAndarX e qtdAndarY, inverter qtdAndarX e qtdAndarY para nao sair da tela ou
+        andam em direcao ao pers
+    .GRUPOS DE INIMIGOS: todos os inimigos do grupo
+    (vetor de ControladorInimigos no ControladorJogo)
+      -> vão ser essenciais ou não (os essenciais são aqueles que quando forem mortos o level acabará)
+      -> vão mostrar a vida sempre ou só quando forem atingidos
+      -> vão andar sempre com o msm qtdAndarX e qtdAndarY, inverter o qtdAndarX e qtdAndarY ao nao deixar sair da vidaNaTela [ou de outra forma]
+    .GRUPOS DE TIROS: todos os tiros do grupo
+    (vetor de ControladorTiros no ControladorJogo e nos Inimigos e Personagem)
+      -> serão do personagem ou nao
+      -> podem andar sempre a mesma coisa ou seguir o personagem
+    .GRUPO DE PODERES (ver IDEIAS.txt)
+    (classe Poder: metodo para colocar o poder na pratica, img,... e ControladorPoder: vai criar um poder "aleatorio" pra por na tela)
+      -> O poder vai ficar guardado ou vai ser usado logo que o usuario o pegar??
+      -> O poder vai ser pra smp ou temporario??
+  ps: Tudo, exceto o personagem, mudará a cada level
 
 
  EXPLICAÇÃO COLISÃO DE OBJETOS:

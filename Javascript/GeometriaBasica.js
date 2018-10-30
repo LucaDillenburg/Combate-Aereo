@@ -93,7 +93,6 @@ class Semirreta extends Reta
 }
 
 const Direcao = {"Direita":1, "Esquerda":2, "Cima":3, "Baixo":4};
-const heightVidaUsuario = 30;
 
 //operacoes e funcoes basicas de geometria
 class Interseccao

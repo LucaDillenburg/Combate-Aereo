@@ -31,6 +31,12 @@ class FormaGeometrica /*implements InterfaceFormaGeometrica*/
     fill(this._fillColor);
   }
 
+  //img
+  get img()
+  { return this._img; }
+  set img(img)
+  { this._img = img; }
+
   get width()
   { return this.maiorX - this.menorX; }
   get height()

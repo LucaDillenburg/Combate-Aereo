@@ -11,14 +11,15 @@ class ControladorJogo
   constructor()
   {
     this._personagemPrincipal = null;
-    this._inimigos = null;
-    this._obstaculos = null;
-    this._controladorTiros = null;
+    this._controladoresInimigos = null;
+    this._controladoresObstaculos = null;
+    this._controladoresTiros = null;
+    //deixar posicao 0 para tiros de personagens que morrem
 
     this._estadoJogo = EstadoJogo.NaoComecou;
     this._estadoJogoAnterior = null;
 
-    this._level = 1;
+    this._level = -1;
     this._passandoLevel = false;
   }
 
@@ -58,23 +59,37 @@ class ControladorJogo
   _iniciarLevel()
   {
     this._passandoLevel = true;
-    this._inimigos = null;
-    this._obstaculos = null;
 
+    //mudar : this._controladoesInimigos, this._controladoresObstaculos, this._controladoresTiros
+    // ATENCAO: NENHUM DESSES MEMBROS PODEM SER NULOS, POREM PODEM SER UM ARRAY DE ZERO POSICOES
+    //  (exceto this._controladoresTiros que tem que ter no minimo 1 posicao)
+
+    //TODO: DEFINIR COMO CADA LEVEL VAI SER
+      //1. Um inimigo central que se mexe de um lado para o outro atirando e obstaculos com vida passando da esquerda para a direita (saindo da tela)
+      //2. mais inimigos nao essenciais
     switch(this._level)
     {
       case 1:
-        this._inimigos = new Array(1);
+      // inimigos
+        // TODO :
+        this._controladoresInimigos = new Array(1);
+
         let tamInimigo = 50;
         let corInim = color("red");
-
         let formaInimigo = new Quadrado(0, 0, tamInimigo, corInim, corInim, null);
 
-        this._inimigos[0] = new Inimigo(formaInimigo, 250, corInim, null, 8, false);
+        this.controladoresInimigos[0] = new ControladorInimigos(new Inimigo(formaInimigo, color("black"), 250, corInim, null, 8, false));
+
+      // obstaculos
+        // TODO :
+      // tiros tela
+        // TODO :
         break;
     }
 
-    setTimeout(function() {this._passandoLevel = false;}, 3000);
+    // tira o "Level X" da tela
+    let t = this;
+    setTimeout(function(){t._passandoLevel = false;}, 3000);
   }
   //passar de level
   _passarLevel()
@@ -83,30 +98,52 @@ class ControladorJogo
     this._iniciarLevel();
   }
 
-
-  //JOGO
-  //andar tiros
+  //FUNCIONALIDADES PROGRAMA FAZ SOZINHO
+  //ANDAR ObjetosTela que se movem sozinho:
+  //tiros
   _andarTiros()
   {
-    //desenha o personagem e os tiros dele
-    this._personagemPrincipal.andarTiros(this._personagemPrincipal, this._obstaculos, this._inimigos);
+    //tiros do controlador jogo
+    for (let i = 0; i<this._controladoresTiros; i++)
+      this._controladoresTiros[i].andarTiros(this._personagemPrincipal, this._controladoresObstaculos,
+        this._controladoresInimigos, this._controladoresTiros);
 
-    if (this._inimigos != null)
-      for (let i = 0; i<this._inimigos.length; i++)
-        this._inimigos[i].andarTiros(this._personagemPrincipal, this._obstaculos, this._inimigos);
+    //tiros do personagem
+    this._personagemPrincipal.controladorTiros.andarTiros(this._personagemPrincipal, this._controladoresObstaculos,
+      this._controladoresInimigos, this._controladoresTiros);
+
+    //tiros dos inimigos
+    for (let i = 0; i<this._controladoresInimigos.length; i++)
+      this._controladoresInimigos[i].andarTirosTodosInim(this._personagemPrincipal, this._controladoresInimigos,
+        this._controladoresInimigos, this._controladoresTiros);
+  }
+  //inimigos e obstaculos
+  _andarInimObst()
+  {
+    //andar obstaculos
+    for (let i = 0; i<this._controladoresObstaculos.length; i++)
+      this._controladoresObstaculos[i].andarObstaculos(i, this._personagemPrincipal,
+        this._controladoresObstaculos, this._controladoresInimigos, this._controladoresTiros);
+
+    //andar inimigos
+    for (let i = 0; i<this._controladoresInimigos.length; i++)
+      this._controladoresInimigos[i].andarInimigos(this._personagemPrincipal, this._controladoresTirosJogo);
   }
 
 
-  //funcionalidades personagem
+  //FUNCINALIDADES PERSONAGEM
   andarPers(direcaoX, direcaoY) //setinhas
   {
     //se estah jogando (jah comecou, nao estah pausado e o personagem nao morreu)
     if (this._estadoJogo == EstadoJogo.Jogando)
-      this._personagemPrincipal.andar(direcaoX, direcaoY, this._obstaculos, this._inimigos, this._controladorTiros);
+      this._personagemPrincipal.andar(direcaoX, direcaoY, this._controladoresObstaculos, this._controladoresInimigos, this._controladoresTiros);
   }
   atirar() //espaco
   {
-    this._personagemPrincipal.adicionarTiro();
+    //se estah jogando (jah comecou, nao estah pausado e o personagem nao morreu)
+    if (this._estadoJogo == EstadoJogo.Jogando)
+      this._personagemPrincipal.atirar(this._personagemPrincipal, this._controladoresObstaculos, this._controladoresInimigos,
+        Direcao.Cima);
   }
   mudarPausado() //enter
   {
@@ -127,6 +164,7 @@ class ControladorJogo
   {
     if (this._estadoJogo == EstadoJogo.NaoComecou)
     {
+      // TODO : design
       background(255);
       stroke(0);
       fill(0);
@@ -136,6 +174,7 @@ class ControladorJogo
     }
     if (this._estadoJogo == EstadoJogo.Pausado) //pausa-se com [ENTER]
     {
+      // TODO : design
       //deixa o que estava na tela de fundo mesmo
       stroke(0);
       fill(0);
@@ -145,7 +184,7 @@ class ControladorJogo
     }
     if (this._estadoJogo == EstadoJogo.Morto) //animacao dele morrendo
     {
-
+      // TODO : animacao dele morrendo
       return;
     }
 
@@ -153,18 +192,18 @@ class ControladorJogo
 
     background(100);
 
-    //desenha o personagem e os tiros dele
+    // desenha os inimigos
+    for (let i = 0; i<this._controladoresInimigos.length; i++)
+    //deseha todos os inimigos desse controlador e os tiros de cada um
+      this._controladoresInimigos[i].draw(this._controladoresTiros);
+
+    // desenha os obstaculos
+    for (let i = 0; i<this._controladoresObstaculos.length; i++)
+    //desenha todos os obstaculos desse controlador
+      this._controladoresObstaculos[i].draw();
+
+    //desenha o personagem, os tiros dele e a vida
     this._personagemPrincipal.draw();
-
-    if (this._inimigos != null)
-      for (let i = 0; i<this._inimigos.length; i++)
-        this._inimigos[i].draw();
-
-    if (this._obstaculos != null)
-      for (let i = 0; i<this._obstaculos.length; i++)
-        this._obstaculos[i].draw();
-
-    this._andarTiros();
 
     if (this._passandoLevel)
     {
@@ -175,18 +214,27 @@ class ControladorJogo
       textAlign(LEFT, BASELINE);
     }
 
-    this._personagemPrincipal.colocacarVidaTela();
+
+    // daqui pra baixo eh nao grafico...
+    this._andarTiros();
+    this._andarInimObst();
 
     if (this._acabouLevel())
       this._passarLevel();
     else
+      this._fazerProcLevel();
+
+    if (!this._personagemPrincipal.vivo)
+      this._estadoJogo = EstadoJogo.Morto;
+  }
+
+  _fazerProcLevel()
+  {
+    //fazer alguma coisa dependendo do level
+    switch (this._level)
     {
-      //fazer alguma coisa dependendo do level
-      switch (this._level)
-      {
-        case 1:
-          break;
-      }
+      case 1:
+        break;
     }
   }
 
@@ -196,7 +244,7 @@ class ControladorJogo
     switch (this._level)
     {
       case 1:
-        return this._inimigos[0].vida <= 0;
+        return !this._controladoresInimigos[0].algumVivo();
       default:
         return false;
     }

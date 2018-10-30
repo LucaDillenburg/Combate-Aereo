@@ -1,17 +1,21 @@
 //import "OutrosControladores.js";
 // import "ObjetosSimples.js"; (jah foi importado por OutrosControladores.js)
 
-class PersComTiros extends ObjetoTela
+class PersComTiros extends ObjetoTelaMorre
 {
-  constructor(formaGeometrica, vida, tiroPadrao, ehPersPrinc)
+  constructor(formaGeometrica, corImgMorto, vida, tiroPadrao, ehPersPrinc)
   {
     //personagem
-    super(formaGeometrica);
+    super(formaGeometrica, corImgMorto);
     this._vida = vida;
     this._vidaMAX = vida;
     this._ehPersPrincipal = ehPersPrinc;
 
+    //tiros
     this._controladorTiros = new ControladorTiros(tiroPadrao, ehPersPrinc);
+
+    //vivo
+    this._vivo = true;
   }
 
   //get ControladorTiros
@@ -28,18 +32,28 @@ class PersComTiros extends ObjetoTela
   colocarMAXVida()
   { this._vida = this._vidaMAX; }
   zerarVida()
-  { this._vida = 0; }
+  {
+    this._vida = 0;
+    this._vivo = false;
+  }
   mudarVida(qtdMuda)
   {
     this._vida += qtdMuda;
     if (this._vida < 0)
         this._vida = 0;
-    return this._vida != 0;
+    this._vivo = this._vida != 0;
+    return this._vivo;
   }
+
+  //getters e setters vivo
+  get vivo()
+  { return this._vivo; }
+  morreu()
+  { this._vivo = false; }
 
   //TIROS
   //novo tiro
-  atirar(controladoresInimigos, ondeColocar)
+  atirar(pers, controladoresObstaculos, controladoresInimigos, ondeColocar)
   //essa eh a ordem onde os primeiros parametros da funcao sao os que primeiro estariam fora do padrao
 	//pode-se chamar uma funcao sem todos os parametros necessarios e os demais ficam como nulos,
 		//porem se for colocar parametros tem que estar na ordem certa
@@ -48,7 +62,7 @@ class PersComTiros extends ObjetoTela
       ondeColocar = this._direcaoPadrao();
     let onde = this._lugarCertoTiro(ondeColocar);
 
-    this._controladorTiros.adicionarTiro(onde.x, onde.y, controladoresInimigos);
+    this._controladorTiros.adicionarTiro(onde.x, onde.y, pers, controladoresObstaculos, controladoresInimigos);
   }
   _direcaoPadrao()
   {
@@ -61,39 +75,43 @@ class PersComTiros extends ObjetoTela
   {
     let x = null;
     let y = null;
-    switch (ondeColocar)
+
+    let tiro = this._controladorTiros.tiroPadrao;
+
+    //calcular qual o (x,y) em que o tiro vai ser criado
+    let mult = 0.35;
+    if (ondeColocar == Direcao.Cima || ondeColocar == Direcao.Baixo)
     {
-      case Direcao.Cima:
-        x = this._formaGeometrica.x + (this._formaGeometrica.width - tiro.formaGeometrica.width)/2;
-        y = this._formaGeometrica.y - tiro.formaGeometrica.height;
-        break;
-      case Direcao.Baixo:
-        x = this._formaGeometrica.x + (this._formaGeometrica.width - formaGeometrica.width)/2;
-        y = this._formaGeometrica.y + this._formaGeometrica.height;
-        break;
-      case Direcao.Esquerda:
-        x = this._formaGeometrica.x - tiro.formaGeometrica.width;
-        y = this._formaGeometrica.y + (this._formaGeometrica.height - tiro.formaGeometrica.height)/2;
-        break;
-      case Direcao.Direita:
-        x = this._formaGeometrica.x + this._formaGeometrica.width;
-        y = this._formaGeometrica.y + (this._formaGeometrica.height - tiro.formaGeometrica.height)/2;
-        break;
+      //calcular quanto vai entrar no personagem com tiro
+      //menor altura de tiro e personagem /2
+      let qntEntra = Math.min(this._formaGeometrica.height, tiro.height)*mult;
+      x = this._formaGeometrica.x + (this._formaGeometrica.width - tiro.formaGeometrica.width)/2;
+
+      if (ondeColocar == Direcao.Cima)
+        y = this._formaGeometrica.y - tiro.formaGeometrica.height + qntEntra;
+      else
+        y = this._formaGeometrica.y + this._formaGeometrica.height - qntEntra;
+    }else
+    {
+      //calcular quanto vai entrar no personagem com tiro
+      //menor altura de tiro e personagem /2
+      let qntEntra = Math.min(this._formaGeometrica.width, tiro.width)*mult;
+      y = this._formaGeometrica.y + (this._formaGeometrica.height - tiro.formaGeometrica.height)/2;
+
+      if (ondeColocar == Direcao.Esquerda)
+        x = this._formaGeometrica.x - tiro.formaGeometrica.width + qntEntra;
+      else
+        x = this._formaGeometrica.x + this._formaGeometrica.width - qntEntra;
     }
 
     return {x: x, y: y};
-  }
-
-  //mover tiros
-  andarTiros(pers, controladoresObstaculos, controladoresInimigos)
-  {
-    this._controladorTiros.andarTiros(pers, controladoresObstaculos, controladoresInimigos);
   }
 
 	//draw
     //desenha o personagem e todos seus tiros
 	draw()
 	{
+    this._mudarImgCorSeMorto();
 		super.draw();
     this._controladorTiros.draw(); //desenha tiros
 	}
@@ -150,10 +168,19 @@ class PersComTiros extends ObjetoTela
 
 class PersonagemPrincipal extends PersComTiros
 {
-  constructor(formaGeometrica, vida, tiroPadrao, qtdAndar)
+  constructor(formaGeometrica, corImgMorto, vida, tiroPadrao, qtdAndar)
   {
-    super(formaGeometrica, vida, tiroPadrao, true);
+    super(formaGeometrica, corImgMorto, vida, tiroPadrao, true);
+    this.qtdAndar = qtdAndar;
+  }
+
+  //mudar qtdAndar
+  get qtdAndar()
+  { return this._qtdAndar; }
+  set qtdAndar(qtdAndar)
+  {
     this._qtdAndar = qtdAndar;
+    this._qtdAndarCadaDirDiag = this._qtdAndar*Math.sqrt(2)/2;
   }
 
   //mudar (x,y)
@@ -165,105 +192,91 @@ class PersonagemPrincipal extends PersComTiros
   andar(direcaoX, direcaoY, controladoresObstaculos, controladoresInimigos, controladoresTirosJogo)
   //usuario soh usa esse metodo
   {
-    let qtdAndarX;
-    switch(direcaoX)
+    let qtdAndarX, qtdAndarY;
+    if (direcaoX != null && direcaoY != null)
+    //se personagem quer andar pra alguma diagonal
     {
-      case Direcao.Direita:
+      qtdAndarX = this._qtdAndarCadaDirDiag;
+      qtdAndarY = this._qtdAndarCadaDirDiag;
+    }else
+    //soh anda em X
+    if (direcaoX != null)
+    {
+      if (direcaoX == Direcao.Direita)
         qtdAndarX = this._qtdAndar;
-        break;
-      case Direcao.Esquerda:
+      else
         qtdAndarX = -this._qtdAndar;
-        break;
-      default:
-        qtdAndarX = 0;
-        break;
-    }
-
-    let qtdAndarY;
-    switch(direcaoY)
+      qtdAndarY = 0;
+    }else
+    //soh anda em Y
+    if (direcaoY != null)
     {
-      case Direcao.Baixo:
+      if (direcaoY == Direcao.Baixo)
         qtdAndarY = this._qtdAndar;
-        break;
-      case Direcao.Cima:
+      else
         qtdAndarY = -this._qtdAndar;
-        break;
-      default:
-        qtdAndarX = 0;
-        break;
-    }
+      qtdAndarX = 0;
+    }else
+    //se ele nao quer andar pra nenhuma direcao
+      return;
 
     this.mudarXY(qtdAndarX, qtdAndarY,  controladoresObstaculos, controladoresInimigos, controladoresTirosJogo);
   }
-  mudarXY(qtdMudaX, qtdAndarY, controladoresObstaculos, controladoresInimigos, controladoresTirosJogo)
+  mudarXY(qtdMudaX, qtdMudaY, controladoresObstaculos, controladoresInimigos, controladoresTirosJogo)
   //soh obstaculo usa diretamente
   //retorna se pode andar tudo aquilo ou nao (para andar do obstaculo)
   {
-    let qtdVaiMudarX = Tela.qtdAndarObjNaoSairX(this._formaGeometrica, qtdMudaX);
-    let qtdVaiMudarY = Tela.qtdAndarObjNaoSairY(this._formaGeometrica, qtdMudaY);
+    //colisao com:
+      // - tiros de inimigos e do jogo => perde vida e mata tiros
+      // - inimigos => perde vida
+      // - obstaculos => anda menos (soh ateh encostar nele)
+
+    //se nao vai mudar nada
+    if (qtdMudaX == 0 && qtdMudaY == 0)
+      return true;
+
+    let infoQtdMudar =
+    {
+      qtdPodeMudarX : Tela.qtdAndarObjNaoSairX(this._formaGeometrica, qtdMudaX),
+      qtdPodeMudarY : Tela.qtdAndarObjNaoSairY(this._formaGeometrica, qtdMudaY);
+      menorHipotenusa : Operacoes.hipotenusa(qtdPodeAndarX, qtdPodeAndarY);
+    };
+
+    if (infoQtdMudar.qtdPodeMudarX == 0 && infoQtdMudar.qtdPodeMudarY == 0)
+      return false;
 
     //obstaculos
-    if (obstaculos != null)
+    //colisao com obstaculos, vai definir quanto pode andar em cada direcao
+    for (let i = 0; i<controladoresObstaculos.length; i++)
+      controladoresObstaculos[i].qtdPersPodeAndar(infoQtdMudar, this._formaGeometrica);
+    //aqui tudo o que devia ser feito com obstaculos estah OK
+
+    //inimigos e tiros deles
+    for (let i = 0; i<controladoresInimigos.length; i++)
     {
-      let menorHipotenusa = Operacoes.hipotenusa(qtdPodeAndarX, qtdPodeAndarY);
-      for(let i = 0; i<obstaculos.length; i++)
-      {
-        let qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(obstaculos[i].formaGeometrica, this._formaGeometrica, qtdPodeAndarX, qtdPodeAndarY);
-        let hipotenusa = Operacoes.hipotenusa(qtdPodeAndar.x, qtdPodeAndar.y);
-
-        //se tiro vai bater em um obstaculo mais perto que o outro
-        if (hipotenusa < menorHipotenusa)
-        {
-          menorHipotenusa = hipotenusa;
-          qtdVaiMudarX = qtdPodeAndar.x;
-          qtdVaiMudarY = qtdPodeAndar.y;
-        }
-      }
-    }//aqui tudo o que devia ser feito com obstaculos estah OK
-
-    //controladoresTiros
-    let qtdInimigos = (inimigos==null)?0:inimigos.length;
-    for (let i = 0; i<qtdInimigos+1; i++)
-    {
-      let controladorTirosAtual;
-      if (i<qtdInimigos)
-        controladorTirosAtual = inimigos[i].controladorTiros;
-      else
-        controladorTirosAtual = controladorTirosJogo;
-      //controladorTirosAtual passará por todos os controladores de tiros dos inimigos e do jogo em si
-
-      controladorTirosAtual.procedimentoObjTelaColideAndar(this, qtdVaiMudarX, qtdVaiMudarY);
+      controladoresInimigos[i].procPersAndar(this, infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
+      controladoresInimigos[i].procPersColidirTirosTodosInim(this, infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
     }
 
-    //inimigos
-    for (let i = 0; i<qtdInimigos; i++)
-      if (Interseccao.vaiTerInterseccao(inimigos[i].formaGeometrica, this._formaGeometrica, qtdVaiMudarX, qtdVaiMudarY))
-      {
-        inimigos[i].tirarVidaPersIntersec(this);
-        //TODO: se personagem ficar dentro do inimigo ir tirando vida
-      }
+    //controladoresTiros do jogo
+    for (let i = 0; i<controladoresTirosJogo.length; i++)
+      controladoresTirosJogo[i].procedimentoObjTelaColideAndar(this, infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY, ControladorTiros.PERSONAGEM_ANDOU);
 
     //aqui qtdVaiMudarX e qtdVaiMudarY sao os maiores possiveis (a menor distancia que bateu)
-    this._formaGeometrica.x += qtdVaiMudarX;
-    this._formaGeometrica.y += qtdVaiMudarY;
+    this._formaGeometrica.x += infoQtdMudar.qtdPodeMudarX;
+    this._formaGeometrica.y += infoQtdMudar.qtdPodeMudarY;
 
     //se consegue andar tudo o que deveria
-    return qtdVaiMudarX == qtdMudaX && qtdVaiMudarY == qtdMudaY;
+    return infoQtdMudar.qtdPodeMudarX == qtdMudaX && infoQtdMudar.qtdPodeMudarY == qtdMudaY;
   }
 
-  get x()
-  { return this._formaGeometrica.x; }
-  get y()
-  { return this._formaGeometrica.y; }
-
-  //mudar qtdAndar
-  get qtdAndar()
-  { return this._qtdAndar; }
-  set qtdAndar(qtdAndar)
-  { this._qtdAndar = qtdAndar; }
-
   //draw
-  colocacarVidaTela()
+  draw()
+  {
+    super.draw();
+    this._colocacarVidaTela();
+  }
+  _colocacarVidaTela()
   {
     stroke(0);
     fill(255);
@@ -284,9 +297,9 @@ class PersonagemPrincipal extends PersComTiros
 
 class Inimigo extends PersComTiros
 {
-  constructor(formaGeometrica, vida, corVida, tiroPadrao, qtdTiraVidaPersQndIntersec, qtdAndarX, qtdAndarY, tipoAndar)
+  constructor(formaGeometrica, corImgMorto, vida, corVida, tiroPadrao, qtdTiraVidaPersQndIntersec, qtdAndarX, qtdAndarY, tipoAndar)
   {
-    super(formaGeometrica, vida, tiroPadrao, false);
+    super(formaGeometrica, corImgMorto, vida, tiroPadrao, false);
 
     this._corVida = corVida;
 
@@ -301,14 +314,17 @@ class Inimigo extends PersComTiros
     this._qtdAndarX = qtdAndarX;
     this._qtdAndarY = qtdAndarY;
 
-    this._vivo = true;
+    this._auxTirarVidaPers = 0;
   }
 
-  //getters e setters vivo
-  get vivo()
-  { return this._vivo; }
-  morreu()
-  { this._vivo = false; }
+  procCriou(pers, indexContrInim)
+  {
+    //colisao com tiros
+    pers.controladorTiros.procedimentoObjTelaColideCriar(this, ControladorTiros.INIMIGO_CRIADO, indexContrInim);
+    //colisao com personagem
+    if (this._vivo && Interseccao.interseccao(this._formaGeometrica, pers.formaGeometrica))
+      this.tirarVidaPersIntersec(pers);
+  }
 
   //getters e setters andar
   get tipoAndar()
@@ -324,32 +340,50 @@ class Inimigo extends PersComTiros
   get qtdAndarY()
   { return this._qtdAndarY; }
 
-  andar(pers, qtdAndarX, qtdAndarY)
+  andar(pers, indexContrInim)
+  //retorna se deve continuar na lista
   {
-    if (qtdAndarX == null || qtdAndarY == null)
+    let qtdAndar = Andar.qtdAndarFromTipo(this._qtdAndarX, this._qtdAndarY, this._formaGeometrica, this._tipoAndar);
+    if (qtdAndar.inverterDirQtdAndar)
     {
-      let qtdAndar = Andar.qtdAndarFromTipo(this._qtdAndarX, this._qtdAndarY, this._formaGeometrica, this._tipoAndar);
-      if (qtdAndar.inverterDirQtdAndar)
-      {
-        //inverte a direcao do obstaculo
-        this._qtdAndarX = -this._qtdAndarX;
-        this._qtdAndarY = -this._qtdAndarY;
-      }
-      qtdAndarX = qtdAndar.x;
-      qtdAndarX = qtdAndar.y;
+      //inverte a direcao do obstaculo
+      this._qtdAndarX = -this._qtdAndarX;
+      this._qtdAndarY = -this._qtdAndarY;
     }
 
-    //TODO: verificar se nao vai intersectar personagem
+    //verificar se vai bater em tiros do personagem e se tiro tem que sair da lista porque esse inimigo andou, ele sai
+    pers.controladorTiros.procedimentoObjTelaColideAndar(this, qtdAndar.x, qtdAndar.y,
+      controladorTiros.INIMIGOS_ANDOU, indexContrInim);
 
-    this._formaGeometrica.x += qtdAndarX;
-    this._formaGeometrica.y += qtdAndarY;
+    //verificar se nao vai intersectar personagem
+    if (this._vivo && Interseccao.vaiTerInterseccao(pers.formaGeometrica, this._formaGeometrica, qtdAndar.x, qtdAndar.y))
+      this.tirarVidaPersIntersec(pers);
+
+    this._formaGeometrica.x += qtdAndar.x;
+    this._formaGeometrica.y += qtdAndar.y;
+
+    //soh ve agr pois ele pode ter passado por cima de um personagem e depois saido
+    return !Tela.objSaiuTotalmente(this._formaGeometrica);
   }
 
   //tirar vida personagem quando intersecta com inimigo
   get qtdTiraVidaPersQndIntersec()
   { return this._qtdTiraVidaPersQndIntersec; }
   tirarVidaPersIntersec(pers)
-  { pers.mudarVida(-this._qtdTiraVidaPersQndIntersec); }
+  {
+    pers.mudarVida(-this._qtdTiraVidaPersQndIntersec);
+
+    //se personagem ficar dentro do inimigo ir tirando vida
+    this._auxTirarVidaPers++;
+    let t = this;
+    setTimeout(
+      function()
+      {
+        t._auxTirarVidaPers--;
+        if (t._auxTirarVidaPers == 0 && Interseccao.interseccao(t._formaGeometrica, pers.formaGeometrica))
+          t.tirarVidaPersIntersec(pers);
+      }, frameRatePadrao);
+  }
 
   //desenho
   get corVida()
@@ -382,5 +416,25 @@ class Inimigo extends PersComTiros
       (this._widthVida - 2*tamStrokeAtual)*(this._vida/this._vidaMAX), this._heightVida - 2*tamStrokeAtual);
 
     strokeWeight(tamStroke);
+  }
+
+  //clone
+  clone()
+  {
+    return new Inimigo(this._formaGeometrica, this._corImgMorto, this._vida, this._corVida, this._controladorTiros.tiroPadrao,
+      this._qtdTiraVidaPersQndIntersec, this._qtdAndarX, this._qtdAndarY, this._tipoAndar);
+  }
+
+ //outros...
+  //para quando um tiro for criado (ver se colide com esse inimigo)
+  //retorna se colidiu
+  procColidirTiroCriado(tiro)
+  {
+    if (Interseccao.interseccao(tiro.formaGeometrica, this._formaGeometrica))
+    {
+      tiro.tirarVidaObjCmVida(this);
+      return true;
+    }
+    return false;
   }
 }

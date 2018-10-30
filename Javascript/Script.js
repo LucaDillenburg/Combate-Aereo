@@ -8,12 +8,15 @@ window.addEventListener("keyup", keyUp);
 var controladorJogo;
 
 const tamStroke = 1.5;
+const frameRatePadrao = 50;
+const heightVidaUsuario = 30;
 
 // The statements in the setup() function executes once when the program begins
-function setup() {
+function setup()
+{
   // createCanvas must be the first statement
   createCanvas(window.innerWidth-20, window.innerHeight-20);
-  frameRate(50);
+  frameRate(frameRatePadrao);
 
   strokeWeight(tamStroke);
 

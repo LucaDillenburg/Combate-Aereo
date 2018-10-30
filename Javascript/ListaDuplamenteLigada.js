@@ -85,6 +85,28 @@ class ListaDuplamenteLigada
     }else
         this._atual.ant.prox = this._atual.prox;
   }
+
+  //outros
+  concatenar(outraLista)
+  {
+    if (this.prim == null)
+    //se this eh uma lista vazia, a primeira e ultima posicao dessa lista vai ser a do outro
+    //(sendo a outra vazia ou nao)
+    {
+      this._prim = outraLista._prim;
+      this._ultimo = outraLista._ultimo;
+    }
+    else
+    if (outraLista._ultimo != null)
+    //se this nao for vazia e nem a outra lista
+    {
+      outraLista._prim.ant = this._ultimo;
+      this._ultimo.prox = outraLista._prim;
+
+      this._ultimo = outraLista._ultimo;
+    }
+    //nao tem else porque se a outra lista for vazia nao tem mais o que fazer
+  }
 }
 
 // no
