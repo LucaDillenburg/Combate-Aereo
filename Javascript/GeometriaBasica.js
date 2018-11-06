@@ -1,4 +1,4 @@
-//ponto, reta e semirreta
+//ponto, reta e semirreta (bases da geometria)
 class Ponto
 {
   constructor(x, y)
@@ -8,13 +8,59 @@ class Ponto
   }
 
   static max(p1, p2)
+  //mais de baixo (maior Y) e da direita (maior X)
+  {
+    if (p1.y > p2.y)
+      return p1;
+    if (p2.y > p1.y)
+      return p2;
+    // p1.y == p2.y
+    return (p1.x > p2.x ? p1 : p2);
+  }
+
+  static min(p1, p2)
+  //mais de cima (menor Y) e da esquerda (menor X)
   {
     if (p1.y < p2.y)
       return p1;
     if (p2.y < p1.y)
       return p2;
-    return (p1.x<p2.x ? p1 : p2);
+    // p1.y == p2.y
+    return (p1.x < p2.x ? p1 : p2);
   }
+
+  mais(outro)
+  { return new Ponto(this.x + outro.x, this.y + outro.y); }
+  menos(outro)
+  { return new Ponto(this.x - outro.x, this.y - outro.y); }
+
+  dividido(divisor)
+  { return new Ponto(this.x/divisor, this.y/divisor); }
+  multiplicado(mult)
+  { return new Ponto(this.x*mult, this.y*mult); }
+
+  compareTo(outro)
+  // <0 : se this for menor (acima e esquerda)
+  // >0 : se this for maior (abaixo e direita)
+  // 0: se forem iguais
+  {
+    if (this.y < outro.y)
+      return -1;
+    if (this.y > outro.y)
+      return 1;
+
+    //y eh igual
+    if (this.x < outro.x)
+      return -1;
+    if (this.x > outro.x)
+      return 1;
+
+    //iguais
+    return 0;
+  }
+
+  clone()
+  { return new Ponto(this.x, this.y); }
 }
 
 class Reta
@@ -24,7 +70,7 @@ class Reta
     if (a.x == b.x && a.y == b.y)
       throw "Esses dois pontos não formam uma reta!"
 
-    //de cima para baixo, da esquerda para direita
+    //nao precisa ser necessariamente de cima para baixo
     this._a = a;
     this._b = b;
 
@@ -47,7 +93,7 @@ class Semirreta extends Reta
   constructor(a, b)
   { super(a,b); }
 
-  intersecta(semirreta)
+  interseccao(semirreta)
   {
     // https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
 
@@ -92,13 +138,56 @@ class Semirreta extends Reta
   }
 }
 
+class Angulo
+{
+  constructor(a, b, c, tipoAngulo)
+  {
+    if (tipoAngulo == null)
+      tipoAngulo = Angulo.MENOR_180;
+
+    let ba = a.menos(b);
+    let bc = c.menos(b);
+
+    this._angulo = Math.acos(
+      Angulo._vezes(ba, bc) / (Angulo._magnitude(ba)*Angulo._magnitude(bc))
+    );
+
+    //deixar angulo maior que 180 graus
+    if (tipoAngulo != Angulo.MENOR_180)
+    {
+      let ondeEstah = new Reta(a,b).ondePontoEstah(c);
+      if ((tipoAngulo == Angulo.MAIOR_180_CIMA && ondeEstah < 0) ||
+        (tipoAngulo == Angulo.MAIOR_180_BAIXO && ondeEstah > 0))
+        this._angulo = 2*Math.PI - this._angulo;
+    }
+  }
+  static get MENOR_180()
+  { return 0; }
+  static get MAIOR_180_CIMA()
+  { return 1; }
+  static get MAIOR_180_BAIXO()
+  { return 2; }
+
+  get valor()
+  { return this._angulo; }
+
+  static _magnitude(vetor)
+  { return Math.sqrt(vetor.x*vetor.x + vetor.y*vetor.y); }
+
+  static _vezes(vetor1, vetor2)
+  { return (vetor1.x*vetor2.x) + (vetor1.y*vetor2.y); }
+}
+
 const Direcao = {"Direita":1, "Esquerda":2, "Cima":3, "Baixo":4};
 
+
 //operacoes e funcoes basicas de geometria
+const qntNaoColidir = 0.2;
 class Interseccao
 {
 	//ESTAH INTERSECTANDO
 	static intersecDirecao(inicio1, distancia1, inicio2, distancia2)
+  // retorna se estah intersectando
 	{
 		if (distancia1 <= distancia2)
 			return (inicio1 >= inicio2 && inicio1 <= inicio2 + distancia2)
@@ -109,93 +198,118 @@ class Interseccao
 	}
 
 	static interseccao(obj1, obj2) //obj1 e obj2 = ObjetoTela
+  // retorna se estah intersectando
 	{
 		if (obj1.codForma > obj2.codForma)
-			return obj1.intersectar(obj2);
+			return obj1.interseccao(obj2);
 		else
-			return obj2.intersectar(obj1);
+			return obj2.interseccao(obj1);
 	}
 
 	static interseccaoRetDesmontado(x1, y1, width1, height1, x2, y2, width2, height2)
 	{
-		return Interseccao._intersecDirecao(x1, width1, x2, width2) &&
-			Interseccao._intersecDirecao(y1, height1, y2, height2);
+		return Interseccao.intersecDirecao(x1, width1, x2, width2) &&
+			Interseccao.intersecDirecao(y1, height1, y2, height2);
 	}
 
 	//VAI INTERSECTAR
   static qntPodeAndarAntesIntersec(obj1, obj2, qtdAndarX, qtdAndarY) //Obj1 e Obj2 devem ser formas geometricas
+  //explicacao: "obj2 quer andar qtdAndarX em X e qtdAndarY em Y"
   //retorna qtdPodeAndar (x,y) para nao intersectar
   { return Interseccao._interseccaoObjAndando(obj1, obj2, qtdAndarX, qtdAndarY, false); }
 
   static vaiTerInterseccao(obj1, obj2, qtdAndarX, qtdAndarY) //Obj1 e Obj2 devem ser formas geometricas
+  //explicacao: "obj2 quer andar qtdAndarX em X e qtdAndarY em Y"
   { return Interseccao._interseccaoObjAndando(obj1, obj2, qtdAndarX, qtdAndarY, true); }
 
-	static _interseccaoObjAndando(obj1, obj2, qtdAndarX, qtdAndarY, returnTrueFalse)
-  //Obj1 e Obj2 devem ser formas geometricas
+	static _interseccaoObjAndando(obj1, obj2, qtdAndarX, qtdAndarY, returnTrueFalse) //Obj1 e Obj2 devem ser formas geometricas
+  //explicacao: "obj2 quer andar qtdAndarX em X e qtdAndarY em Y"
 	//se returnTrueFalse, retorna para VaiTerInterseccao; else, retorna para QntPodeAndarAntesIntersec
 	{
-		if (Interseccao.interseccao(obj1, obj2) || qtdAndarX == 0 && qtdAndarY == 0)
-			return new Ponto(0, 0);
+    //se nao quer andar nada
+    if (qtdAndarX == 0 && qtdAndarY == 0)
+    {
+      if (returnTrueFalse)
+        return false;
+      else
+        return {x: 0, y: 0};
+    }
+    // daqui pra baixo tem que querer andar alguma coisa...
 
-		let qtdPodeAndar = new Ponto(qtdAndarX, qtdAndarY);
+    //se jah estah intersectando antes de andar
+		if (Interseccao.interseccao(obj1, obj2))
+    {
+      if (returnTrueFalse)
+        return true;
+      else
+        return {x: 0, y: 0};
+    }
 
-		//caso especial mais simples: se o que anda eh um retangulo
-		if (obj2.codForma == Geometria.COD_QUADRADO || obj2.codForma == Geometria.COD_RETANGULO)
+		let qtdPodeAndar = {x: qtdAndarX, y: qtdAndarY};
+
+		//caso especial mais simples: se o objeto que anda eh um quadrado ou retangulo
+    //e soh andou em uma direcao
+		if ((obj2.codForma == Geometria.COD_QUADRADO || obj2.codForma == Geometria.COD_RETANGULO) &&
+        (qtdAndarX == 0 || qtdAndarY == 0))
 		{
 			// SE ANDA SOH EM UMA DIRECAO:
 			if (qtdAndarX == 0)
 			{
 				if (qtdAndarY < 0)
 				{
-					let nvRetangulo = new Retangulo(obj2.x, obj2.y + qtdAndarY, obj2.width, obj2.height - qtdAndarY);
+					let nvRetangulo = new Retangulo(obj2.x, obj2.y + qtdAndarY, obj2.width, -qtdAndarY);
 
           if (Interseccao.interseccao(obj1, nvRetangulo))
           {
             if (returnTrueFalse)
               return true;
-            qtdPodeAndar.y += obj2.y + qtdAndarY - obj1.y -1;
+            qtdPodeAndar.y = Interseccao._qtdPodeAndarEmY(obj1, obj2, qtdAndarY); // TODO : isso soh funciona se os dois forem quadrados ou retangulos
           }else
             if (returnTrueFalse)
               return false;
-				}else
+				}
+        //if (qtdAndarY > 0)
+        else
 				{
-					let nvRetangulo = new Retangulo(obj2.x, obj2.y, obj2.width, obj2.height - qtdAndarY);
+					let nvRetangulo = new Retangulo(obj2.x, obj2.y + obj2.height, obj2.width, qtdAndarY);
 
           if (Interseccao.interseccao(obj1, nvRetangulo))
           {
             if (returnTrueFalse)
               return true;
-            qtdPodeAndar.y += obj1.y - (obj2.y + obj2.height - qtdAndarY) -1;
+            qtdPodeAndar.y = Interseccao._qtdPodeAndarEmY(obj1, obj2, qtdAndarY); // TODO : isso soh funciona se os dois forem quadrados ou retangulos
           }else
             if (returnTrueFalse)
               return false;
 				}
 
 				return qtdPodeAndar;
-			}
-			if (qtdAndarY == 0)
+			}else
+			//if (qtdAndarY == 0)
 			{
 				if (qtdAndarX < 0)
 				{
-					let nvRetangulo = new Retangulo(obj2.x + qtdAndarX, obj2.y, obj2.width - qtdAndarX, obj2.height);
+					let nvRetangulo = new Retangulo(obj2.x + qtdAndarX, obj2.y, -qtdAndarX, obj2.height);
 
           if (Interseccao.interseccao(obj1, nvRetangulo))
           {
             if (returnTrueFalse)
               return true;
-            qtdPodeAndar.x += obj2.x + qtdAndarX - obj1.x -1;
+            qtdPodeAndar.x = Interseccao._qtdPodeAndarEmX(obj1, obj2, qtdAndarX); // TODO : isso soh funciona se os dois forem quadrados ou retangulos
           }else
             if (returnTrueFalse)
               return false;
-				}else
+				}
+        //if (qtdAndarX > 0)
+        else
 				{
-					let nvRetangulo = new Retangulo(obj2.x, obj2.y, obj2.width - qtdAndarX, obj2.height);
+					let nvRetangulo = new Retangulo(obj2.x + obj2.width, obj2.y, qtdAndarX, obj2.height);
 
           if (Interseccao.interseccao(obj1, nvRetangulo))
           {
             if (returnTrueFalse)
               return true;
-            qtdPodeAndar.x += obj1.x - (obj2.x + obj2.width - qtdAndarX) -1;
+            qtdPodeAndar.x = Interseccao._qtdPodeAndarEmX(obj1, obj2, qtdAndarX); // TODO : isso soh funciona se os dois forem quadrados ou retangulos
           }else
             if (returnTrueFalse)
               return false;
@@ -205,46 +319,53 @@ class Interseccao
 			}
 		}
 
-		// daqui pra baixo andar pras duas direcoes e/ou eh triangulo, paralelogramo ou quadrilatero
-		//ARRUMAR DAQUI PRA FRENTE!!
+		// daqui pra baixo nao pode ser um quadrado e retangulo que soh anda pra alguma direcao... (tambem quer andar alguma coisa pelo menos)
 
-		let paralelogramo1;
-		switch (obj2.codForma)
-		{
-			case Geometria.COD_RETANGULO:
-			case Geometria.COD_QUADRADO:
-				if ((qtdAndarX > 0 && qtdAndarY > 0) || (qtdAndarX < 0 && qtdAndarY > 0))
-				{
-					paralelogramo1.x1 = obj2.x;
-					paralelogramo1.y1 = obj2.y + obj2.height;
-					paralelogramo1.x2 = obj2.x + qtdAndarX;
-					paralelogramo1.y2 = obj2.y + obj2.height + qtdAndarY;
-				}else
-				//if ((qtdAndarX > 0 && qtdAndarY < 0) || (qtdAndarX < 0 && qtdAndarY < 0))
-				{
-					paralelogramo1.x1 = obj2.x + qtdAndarX;
-					paralelogramo1.y1 = obj2.y + qtdAndarY;
-					paralelogramo1.x2 = obj2.x;
-					paralelogramo1.y2 = obj2.y;
-				}
+    //EXPLICACAO: qualquer quadrado, retangulo, triangulo ou paralelogramo quando vai andar forma
+    // um ou dois paralelogramos que representa(m) o caminho por onde a figura geometrica passará
+    let paralelogramos = Interseccao._montarParalelogramosAndar(obj2, qtdAndarX, qtdAndarY);
 
+		//daqui pra baixo o(s) paralelogramo(s) jah está(ão) montado(s)...
 
-				break;
-			case Geometria.COD_TRIANGULO:
+    //verificar se alguma parte do caminho do obj2 (oq vai andar) colidira com obj2
+    let colidiu = Interseccao.interseccao(paralelogramos[0], obj1);
+    if (paralelogramos[1] != null)
+      colidiu = colidiu || Interseccao.interseccao(paralelogramos[1], obj1);
 
-				break;
-			case Geometria.COD_PARALELOGRAMO:
+    if (returnTrueFalse)
+      return colidiu;
+      //retorna se vai intersectar
 
-				break;
-			case Geometria.COD_QUADRILATERO:
+    if (!colidiu)
+      return qtdPodeAndar;
 
-				break;
-		}
+    //daqui pra frente colidiu e eh pra retornar quanto pode andar antes de intersectar
 
-		//daqui pra baixo paralelogramo jah estah montado...
+    // TODO : isso soh funciona se os dois forem quadrados ou retangulos
 
+    // a partir apenas de X
+    let qtdPodeAndarX1;
+    if (Interseccao.intersecDirecao(obj2.x, obj2.width, obj1.x, obj1.width))
+      qtdPodeAndarX1 = 0;
+    else
+      qtdPodeAndarX1 = Interseccao._qtdPodeAndarEmX(obj1, obj2, qtdAndarX);
+    // regra de 3:
+    let qtdPodeAndarY1 = (qtdPodeAndarX1*qtdAndarY)/qtdAndarX;
 
+    // a partir apenas de Y
+    let qtdPodeAndarY2;
+    if (Interseccao.intersecDirecao(obj2.y, obj2.height, obj1.y, obj1.height))
+      qtdPodeAndarY2 = 0;
+    else
+      qtdPodeAndarY2 = Interseccao._qtdPodeAndarEmX(obj1, obj2, qtdAndarY);
 
+    if (Math.abs(qtdPodeAndarY1) >= Math.abs(qtdPodeAndarY2))
+    // 1: a partir de X
+      return {x: qtdPodeAndarX1, y: qtdPodeAndarY1};
+    else
+    // 2: a partir de Y
+      return {x: (qtdPodeAndarY2*qtdAndarX)/qtdAndarY, // regra de 3 (vai andar em X proporcional de quanto andara em Y)
+        y: qtdPodeAndarY2};
 
 		/*
 		//se <= ZERO: quanto tem q diminuir no qtdAndarX (diminuir um a mais).
@@ -273,6 +394,182 @@ class Interseccao
 			//pensar se eh pelo proporcional ou nao, e se eh o maior ou menor
 		let proporcaoMudarX = ; */
 	}
+  static _qtdPodeAndarEmX(obj1, obj2, qtdAndarX)
+  // se jah sabe que vai colidir em X
+  {
+    if (qtdAndarX < 0)
+      return obj1.x + obj1.width - obj2.x +qntNaoColidir;
+    else
+    if (qtdAndarX > 0)
+      return obj1.x - (obj2.x + obj2.width) -qntNaoColidir;
+    else
+      return 0;
+  }
+  static _qtdPodeAndarEmY(obj1, obj2, qtdAndarY)
+  // se jah sabe que vai colidir em Y
+  {
+    if (qtdAndarY < 0)
+      return obj1.y + obj1.height - obj2.y +qntNaoColidir;
+    else
+    if (qtdAndarY > 0)
+      return obj1.y - (obj2.y + obj2.height) -qntNaoColidir;
+    else
+      return 0;
+  }
+  static _montarParalelogramosAndar(obj, qtdAndarX, qtdAndarY)
+  //esse metodo vai retornar o(s) paralelogramo(s) que o andar de obj formaria (1 ou 2)
+  {
+    let paralelogramo1;
+    let paralelogramo2 = null; //dependendo de qual for a figura e como andar, pode nao ter um segundo paralelogramo
+    // PONTOS EM SENTIDO HORARIO
+		switch (obj.codForma)
+		{
+			case Geometria.COD_RETANGULO:
+			case Geometria.COD_QUADRADO:
+        if (qtdAndarY < 0)
+        {
+          //paralelogramo que sai de cima
+          let p1 = new Ponto(obj.x + qtdAndarX, obj.y + qtdAndarY);
+          let p2 = new Ponto(obj.x + obj.width + qtdAndarX, obj.y + qtdAndarY);
+          let p3 = new Ponto(obj.x + obj.width, obj.y);
+          let p4 = new Ponto(obj.x, obj.y);
+          paralelogramo1 = new Paralelogramo(p1, p2, p3, p4);
+        }else
+        {
+          //paralelogramo que sai de baixo
+          let p1 = new Ponto(obj.x, obj.y + obj.height);
+          let p2 = new Ponto(obj.x + obj.width, obj.y + obj.height);
+          let p3 = new Ponto(obj.x + obj.width + qtdAndarX, obj.y + obj.height + qtdAndarY);
+          let p4 = new Ponto(obj.x + qtdAndarX, obj.y + obj.height + qtdAndarY);
+          paralelogramo1 = new Paralelogramo(p1, p2, p3, p4);
+        }
+
+        if (qtdAndarX < 0)
+        {
+          //paralelogramo que sai do lado esquerdo
+          let p1 = new Ponto(obj.x + qtdAndarX, obj.y + qtdAndarY);
+          let p2 = new Ponto(obj.x, obj.y);
+          let p3 = new Ponto(obj.x, obj.y + obj.height);
+          let p4 = new Ponto(obj.x + qtdAndarX, obj.y + obj.height + qtdAndarY);
+
+          if (qtdAndarY < 0)
+            paralelogramo2 = new Paralelogramo(p1, p2, p3, p4);
+          else
+            paralelogramo2 = new Paralelogramo(p2, p3, p4, p1);
+        }else
+        {
+          //paralelogramo que sai do lado esquerdo
+          let p1 = new Ponto(obj.x + obj.width + qtdAndarX, obj.y + qtdAndarY);
+          let p2 = new Ponto(obj.x + obj.width + qtdAndarX, obj.y + obj.height + qtdAndarY);
+          let p3 = new Ponto(obj.x + obj.width, obj.y + obj.height);
+          let p4 = new Ponto(obj.x + obj.width, obj.y);
+
+          if (qtdAndarY < 0)
+            paralelogramo2 = new Paralelogramo(p1, p2, p3, p4);
+          else
+            paralelogramo2 = new Paralelogramo(p4, p1, p2, p3);
+        }
+				break;
+			case Geometria.COD_TRIANGULO:
+        //a unica difereca entre o procedimento que serah feito se entrar no if ou else a seguir
+        //sao as variaveis usadas e a invercao de direita e esquerda...
+
+        //pontos
+        let a, b, c;
+        //o que invertera direita e esquerda
+        let mult;
+        if ((qtdAndarY < 0) || (qtdAndarY == 0 && qtdAndarX > 0))
+        // se (qtdAndarY < 0) e uma opcao de (qtdAndarY == 0): se (qtdAndarX > 0)
+        {
+          // A: obj.vertices[0], B: obj.vertices[1], C: obj.vertices[2]
+          a = obj.vertices[0];
+          b = obj.vertices[1];
+          c = obj.vertices[2];
+
+          // direita serah considerado direita e o mesmo com a esquerda
+          mult = 1;
+        }else
+        //if ((qtdAndarY > 0) || (qtdAndarY == 0 && qtdAndarX < 0))
+        // se (qtdAndarY > 0) e uma opcao de (qtdAndarY == 0): se (qtdAndarX < 0)
+        // ps: soh faltou (qtdAndarY == 0 && qtdAndarX == 0) porem nao queria andar nada jah foi tratado
+        {
+          // QUASE IGUAL O IF ANTERIOR. O QUE MUDA:
+            //1) A -> ContraA (obj.contrVertices[0]), B -> ContraA (obj.contrVertices[1]), C -> ContraA (obj.contrVertices[2]),...
+            //2) trocar DIREITA por ESQUERDA
+          a = obj.contrVertices[0];
+          b = obj.contrVertices[1];
+          c = obj.contrVertices[2];
+
+          // direita serah considerado esquerda e esquerda, direita (trocar esquerda e direita)
+          mult = -1;
+        }
+
+        // A': A + qtdAndar, B': B + qtdAndar, C': C + qtdAndar,
+        let qtdAndar = new Ponto(qtdAndarX, qtdAndarY);
+        let a2 = a.mais(qtdAndar); //A'
+        let b2 = b.mais(qtdAndar); //B'
+        let c2 = c.mais(qtdAndar); //C'
+
+        //linha da parte mais alta do triangulo original com a parte mais alta do triangulo
+        //onde ficara se andar (reta por dois pontos: A e A')
+        let linha = new Reta(a2, a);
+
+        // Obs: Esquerda da linha: reta.ondePontoEstah(p) < 0. Direita da linha: reta.ondePontoEstah(p) > 0
+
+        // se B' estah a esquerda da linha ou em cima dela
+        if (linha.ondePontoEstah(b2)*mult <= 0)
+        {
+          // se B' estah a direita ou na Reta formada pelos pontos C e C'
+          if (new Reta(c2, c).ondePontoEstah(b2)*mult >= 0)
+            //Paralelogramo: A' - A - C - C'
+            paralelogramo1 = new Paralelogramo(a2, a, c, c2);
+          else
+          {
+            //Paralelogramos (C' eh o vertice central):
+              //1) C' - C - B - B'
+            paralelogramo1 = new Paralelogramo(c2, c, b, b2);
+              //2) A' - A - C - C'
+            paralelogramo2 = new Paralelogramo(a2, a, c, c2);
+          }
+        }else
+        // se C' estah a direita da linha ou em cima dela
+        if (linha.ondePontoEstah(c2)*mult >= 0)
+        {
+          if (new Reta(b2, obj.vertices[1]).ondePontoEstah(c2)*mult <= 0)
+            //Paralelogramo: A' - B' - B - A
+            paralelogramo1 = new Paralelogramo(a2, b2, b, a);
+          else
+          {
+            //Paralelogramos (B' eh o vertice central):
+              //1) A' - B' - B - A
+              paralelogramo1 = new Paralelogramo(a2, b2, b, a);
+              //2) B' - C' - C - B
+              paralelogramo2 = new Paralelogramo(b2, c2, c, b);
+          }
+        }else
+        {
+          //Paralelogramos (A' eh o vertice central):
+            //1) A' - B' - B - A
+            paralelogramo1 = new Paralelogramo(a2, b2, b, a);
+            //2) A' - A - C - C'
+            paralelogramo2 = new Paralelogramo(a2, a, c, c2);
+        }
+				break;
+			case Geometria.COD_PARALELOGRAMO:
+        // TODO :
+        throw "FUNCIONALIDADE AINDA NAO EXISTE!!";
+				break;
+			case Geometria.COD_QUADRILATERO:
+        // TODO:
+        throw "FUNCIONALIDADE AINDA NAO EXISTE!!";
+				break;
+		}
+
+    let ret = new Array(2);
+    ret[0] = paralelogramo1;
+    ret[1] = paralelogramo2;
+    return ret;
+  }
 }
 
 class Tela
@@ -355,10 +652,8 @@ class Tela
 
 class Operacoes
 {
-	hipotenusa(cateto1, cateto2)
-	{
-		return Math.sqrt(cateto1*cateto1 + cateto2*cateto2);
-	}
+	static hipotenusa(cateto1, cateto2)
+	{ return Math.sqrt(cateto1*cateto1 + cateto2*cateto2); }
 }
 
 class Geometria

@@ -1,43 +1,33 @@
-- fazer:
- .comentarios //TODO
- .Poder (img, index, nome)
- .ControladorPoderes
+- AGORA: COMITAR E DEPOIS VER ANDAR DO PERSONAGEM (VER PROGRESSO.TXT)
+- SISTEMA DE TESTE
+   > testar se PontoCerto do paralelogramo estah realmente certo
+   > testar se estah se criando os paralelogramos certos
+   > fazer sistema de Teste do jogo (colocar super devagar: framerate baixissimo)
 
- - ACABAR GeometriaBasica.js : Interseccao.VaiTerInterseccao
+- fazer Interseccao.qntPodeAndarAntesIntersec(...) para Triangulo
 
- - fazer sistema de Teste do jogo (colocar super devagar: framerate baixissimo)
+- colisao com obstaculos: se bate em cima ou em baixo soh anda em Y, o contrario soh anda em X
 
-opção de só colocar vida na inimigo na tela quando ele eh atingido (por um certo tempo):
-//PS: ISSO DEVE SER USADO EM INIMIGOS MENORES PRINCIPALMENTE
-setTimeout(funcao, tempo); -> this._numTiroAtingido++ e vidaNaTela = true
-funcao(){
-  this._numTiroAtingido--;
-  if(this._numTiroAtingido == 0)
-     ...tirar da tela a vida (vidaNaTela = false;)
-}
+- opcao para mudar tamanho personagem, inimigo e obstaculo
+(deve ser super parecido com procCriou, talvez possa usar ele mesmo ou fazer um metodo em comum)
 
- - CreateCanvas de um tamanho mínimo: metade de toda tela (resize() mudar o tamanho dele?)
+- New Features:
+  .Poder (img, cod, nome, executarPoder)
+  .ControladorPoderes
 
- - quando objetos com vida perderem vida abaixar a vida gradativamente (mudarVida gradativamente)
+- ver comentarios //TODO
 
- - quando um tiro colidir com obstaculos e inimigos guardar todos eles, e soh tirar da lista quando todos os inimigos e
+- CreateCanvas de um tamanho mínimo: metade de toda tela (resize() mudar o tamanho dele?)
+
+- quando objetos com vida perderem vida abaixar a vida gradativamente (mudarVida gradativamente)
+
+- fazer Interseccao.vaiTerInterseccao(...) para Paralelogramos e Quadrilateros
+- quando um tiro colidir com obstaculos e inimigos guardar todos eles, e soh tirar da lista quando todos os inimigos e
 obstaculos andarem (mudar emQuemBateu, procCriou, _estadoTiroPosAndarEhPers)
-
-
- - Fazer imports:
-(parece que nao da no chrome: https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Statements/import)
-   .GeometriaBasica.js
-   .FormasGeometricas.js
-   .ListaDuplamenteLigada.js
-   .ObjetosSimples.js
-   .OutrosControladores.js
-   .ObjetosComplexos.js
-   .ControladorJogo.js
-   .Script.js
 
 ------------------------------------------------------------------------------------------------------------------------------
 
-  EXPLICACAO: em cada level terá vários
+ EXPLICACAO: em cada level terá vários
     .GRUPOS DE OBSTACULOS: todos obstáculos do grupo
     (vetor de ControladorObstaculos no ControladorJogo)
       -> será com ou sem vida

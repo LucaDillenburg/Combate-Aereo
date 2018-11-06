@@ -3,13 +3,14 @@
 // import "OutrosControladores.js"; jah foi importado por ObjetosComplexos.js
 // import "ListaDuplamenteLigada.js"; jah foi importado
 
-const EstadoJogo = {"NaoComecou":0, "Jogando":1, "Pausado":2, "Morto":3};
+const EstadoJogo = {"NaoComecou":0, "Jogando":1, "Pausado":2, "Morto":3, "Ganhou": 4};
 
 //const heightVidaUsuario estah em geometria basica
 class ControladorJogo
 {
   constructor()
   {
+    this._conjuntoObjetosTela = null;
     this._personagemPrincipal = null;
     this._controladoresInimigos = null;
     this._controladoresObstaculos = null;
@@ -31,19 +32,19 @@ class ControladorJogo
   {
     let tamPersPrinc = 30;
     let corPers = color(0, 51, 153);
-    let forma = new Quadrado(0, 0, tamPer, corPers, corPers, null);
-
-    let pers = new PersonagemPrincipal(forma, 100, ControladorJogo.tiroPersPadrao, 8);
+    let forma = new Quadrado(0, 0, tamPersPrinc, {strokeColor: corPers, fillColor: corPers});
+    let pers = new PersonagemPrincipal(forma, color("black"), 100, ControladorJogo.tiroPersPadrao, 8);
     pers.colocarLugarInicial();
-    return
+    return pers;
   }
-  static tiroPersPadrao()
+  newTiroPersPadrao()
   {
     let corTiro = color(0, 0, 102);
-    let tiro = new Tiro(new Retangulo(0, 0, 5, 8, corTiro, corTiro, null),
-                    {fill: color("black"), stroke: color("black")}, 0, -15, true, 5);
-    tiro.colocarNoMeioX();
-    return tiro;
+    let formaGeometrica = new Retangulo(0, 0, 5, 8, {fill: corTiro, stroke: corTiro});
+    let corImgMorto = {fill: color("black"), stroke: color("black")};
+    let infoAndar = {qtdAndarX: 0, qtdAndarY: -15, tipoAndar: Andar.ANDAR_NORMAL};
+
+    return new Tiro(formaGeometrica, corImgMorto, infoAndar, this._controladoresInimigos, 5);
   }
 
   //inicializacao
@@ -53,12 +54,18 @@ class ControladorJogo
 
     this._level = 1;
     this._iniciarLevel();
+
     this._estadoJogo = EstadoJogo.Jogando;
   }
   //inicializar level
   _iniciarLevel()
   {
     this._passandoLevel = true;
+
+    //zerar tudo
+    this._controladoresInimigos = new Array(0);
+    this._controladoresObstaculos = new Array(0);
+    this._controladoresTiros = new Array(0);
 
     //mudar : this._controladoesInimigos, this._controladoresObstaculos, this._controladoresTiros
     // ATENCAO: NENHUM DESSES MEMBROS PODEM SER NULOS, POREM PODEM SER UM ARRAY DE ZERO POSICOES
@@ -67,25 +74,41 @@ class ControladorJogo
     //TODO: DEFINIR COMO CADA LEVEL VAI SER
       //1. Um inimigo central que se mexe de um lado para o outro atirando e obstaculos com vida passando da esquerda para a direita (saindo da tela)
       //2. mais inimigos nao essenciais
+    let controladoresInimigosLvAtual,
+        controladoresObstaculosLvAtual,
+        controladoresTirosLvAtual;
     switch(this._level)
     {
       case 1:
       // inimigos
-        // TODO :
-        this._controladoresInimigos = new Array(1);
+        controladoresInimigosLvAtual = new Array(1);
 
         let tamInimigo = 50;
         let corInim = color("red");
-        let formaInimigo = new Quadrado(0, 0, tamInimigo, corInim, corInim, null);
+        let formaInimigo = new Quadrado(0, 0, tamInimigo, {strokeColor: corInim, fillColor: corInim});
 
-        this.controladoresInimigos[0] = new ControladorInimigos(new Inimigo(formaInimigo, color("black"), 250, corInim, null, 8, false));
+        controladoresInimigosLvAtual[0] = new ControladorInimigos(new Inimigo(formaInimigo, color("black"),
+          {vida: 250, corVida: corInim, mostrarVidaSempre: true}, null, 5, {qtdAndarX: 0, qtdAndarY: 0, tipoAndar: Andar.ANDAR_NORMAL}));
 
       // obstaculos
-        // TODO :
       // tiros tela
-        // TODO :
         break;
     }
+
+    //colocar tudo na tela depois que jah criou tudo
+    if (controladoresInimigosLvAtual != null)
+      this._controladoresInimigos = controladoresInimigosLvAtual;
+    if (controladoresObstaculosLvAtual != null)
+      this._controladoresObstaculos = controladoresObstaculosLvAtual;
+    if (controladoresTirosLvAtual != null)
+      this._controladoresTiros = controladoresTirosLvAtual;
+    this._conjuntoObjetosTela =
+      {
+        pers: this._personagemPrincipal,
+        controladoresInimigos: this._controladoresInimigos,
+        controladoresObstaculos: this._controladoresObstaculos,
+        controladoresTirosJogo: this._controladoresTiros
+      };
 
     // tira o "Level X" da tela
     let t = this;
@@ -105,25 +128,21 @@ class ControladorJogo
   {
     //tiros do controlador jogo
     for (let i = 0; i<this._controladoresTiros; i++)
-      this._controladoresTiros[i].andarTiros(this._personagemPrincipal, this._controladoresObstaculos,
-        this._controladoresInimigos, this._controladoresTiros);
+      this._controladoresTiros[i].andarTiros(this._conjuntoObjetosTela);
 
     //tiros do personagem
-    this._personagemPrincipal.controladorTiros.andarTiros(this._personagemPrincipal, this._controladoresObstaculos,
-      this._controladoresInimigos, this._controladoresTiros);
+    this._personagemPrincipal.controladorTiros.andarTiros(this._conjuntoObjetosTela);
 
     //tiros dos inimigos
     for (let i = 0; i<this._controladoresInimigos.length; i++)
-      this._controladoresInimigos[i].andarTirosTodosInim(this._personagemPrincipal, this._controladoresInimigos,
-        this._controladoresInimigos, this._controladoresTiros);
+      this._controladoresInimigos[i].andarTirosTodosInim(this._conjuntoObjetosTela);
   }
   //inimigos e obstaculos
   _andarInimObst()
   {
     //andar obstaculos
     for (let i = 0; i<this._controladoresObstaculos.length; i++)
-      this._controladoresObstaculos[i].andarObstaculos(i, this._personagemPrincipal,
-        this._controladoresObstaculos, this._controladoresInimigos, this._controladoresTiros);
+      this._controladoresObstaculos[i].andarObstaculos(this._conjuntoObjetosTela, i);
 
     //andar inimigos
     for (let i = 0; i<this._controladoresInimigos.length; i++)
@@ -136,14 +155,13 @@ class ControladorJogo
   {
     //se estah jogando (jah comecou, nao estah pausado e o personagem nao morreu)
     if (this._estadoJogo == EstadoJogo.Jogando)
-      this._personagemPrincipal.andar(direcaoX, direcaoY, this._controladoresObstaculos, this._controladoresInimigos, this._controladoresTiros);
+      this._personagemPrincipal.andar(direcaoX, direcaoY, this._conjuntoObjetosTela);
   }
   atirar() //espaco
   {
     //se estah jogando (jah comecou, nao estah pausado e o personagem nao morreu)
     if (this._estadoJogo == EstadoJogo.Jogando)
-      this._personagemPrincipal.atirar(this._personagemPrincipal, this._controladoresObstaculos, this._controladoresInimigos,
-        Direcao.Cima);
+      this._personagemPrincipal.atirar(this._conjuntoObjetosTela, Direcao.Cima);
   }
   mudarPausado() //enter
   {
@@ -185,6 +203,11 @@ class ControladorJogo
     if (this._estadoJogo == EstadoJogo.Morto) //animacao dele morrendo
     {
       // TODO : animacao dele morrendo
+      return;
+    }else
+    if (this._estadoJogo == EstadoJogo.Ganhou)
+    {
+      // TODO : design (falar que ele passou todas as fases ateh ultima fase existente)
       return;
     }
 

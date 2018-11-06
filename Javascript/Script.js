@@ -1,7 +1,7 @@
 //import "ControladorJogo.js"; //tudo dentro disso
 
 //colocar eventos no formulario
-window.addEventListener("onload", setup);
+window.addEventListener("load", setup);
 window.addEventListener("keydown", keyDown);
 window.addEventListener("keyup", keyUp);
 
@@ -16,6 +16,7 @@ function setup()
 {
   // createCanvas must be the first statement
   createCanvas(window.innerWidth-20, window.innerHeight-20);
+  background(0);
   frameRate(frameRatePadrao);
 
   strokeWeight(tamStroke);
