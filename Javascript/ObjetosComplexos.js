@@ -32,15 +32,14 @@ class PersComTiros extends ObjetoTelaMorre
   colocarMAXVida()
   { this._vida = this._vidaMAX; }
   zerarVida()
-  {
-    this.mudarVida(-this._vida);
-  }
+  { this.mudarVida(-this._vida); }
   mudarVida(qtdMuda)
   {
     this._vida += qtdMuda;
     if (this._vida < 0)
         this._vida = 0;
     this._vivo = this._vida != 0;
+
     return this._vivo;
   }
 
@@ -82,12 +81,12 @@ class PersComTiros extends ObjetoTelaMorre
     let tiro = this._controladorTiros.tiroPadrao;
 
     //calcular qual o (x,y) em que o tiro vai ser criado
-    let mult = 0.35;
+    let mult = 0.05;
     if (ondeColocar == Direcao.Cima || ondeColocar == Direcao.Baixo)
     {
       //calcular quanto vai entrar no personagem com tiro
       //menor altura de tiro e personagem /2
-      let qntEntra = Math.min(this._formaGeometrica.height, tiro.height)*mult;
+      let qntEntra = Math.min(this._formaGeometrica.height, tiro.formaGeometrica.height)*mult;
       x = this._formaGeometrica.x + (this._formaGeometrica.width - tiro.formaGeometrica.width)/2;
 
       if (ondeColocar == Direcao.Cima)
@@ -98,7 +97,7 @@ class PersComTiros extends ObjetoTelaMorre
     {
       //calcular quanto vai entrar no personagem com tiro
       //menor altura de tiro e personagem /2
-      let qntEntra = Math.min(this._formaGeometrica.width, tiro.width)*mult;
+      let qntEntra = Math.min(this._formaGeometrica.width, tiro.formaGeometrica.width)*mult;
       y = this._formaGeometrica.y + (this._formaGeometrica.height - tiro.formaGeometrica.height)/2;
 
       if (ondeColocar == Direcao.Esquerda)
@@ -186,39 +185,36 @@ class PersonagemPrincipal extends PersComTiros
   andar(direcaoX, direcaoY, conjuntoObjetosTela)
   //usuario soh usa esse metodo
   {
-    console.log("DIRECAO - x: " + direcaoX + ", y: " + direcaoY);
-
-    let qtdAndarX, qtdAndarY;
-    if (direcaoX != null && direcaoY != null)
-    //se personagem quer andar pra alguma diagonal
-    {
-      qtdAndarX = this._qtdAndarCadaDirDiag;
-      qtdAndarY = this._qtdAndarCadaDirDiag;
-    }else
-    //soh anda em X
-    if (direcaoX != null)
-    {
-      console.log("1");
-      if (direcaoX == Direcao.Direita)
-        qtdAndarX = this._qtdAndar;
-      else
-        qtdAndarX = -this._qtdAndar;
-      qtdAndarY = 0;
-    }else
-    //soh anda em Y
-    if (direcaoY != null)
-    {
-      console.log("2");
-      if (direcaoY == Direcao.Baixo)
-        qtdAndarY = this._qtdAndar;
-      else
-        qtdAndarY = -this._qtdAndar;
-      qtdAndarX = 0;
-    }else
-    //se ele nao quer andar pra nenhuma direcao
+    if (direcaoX == null && direcaoY == null)
       return;
 
-    console.log("x: " + qtdAndarX + ", y: " + qtdAndarY);
+    let qtdAndarPadrao;
+    if (direcaoX != null && direcaoY != null)
+    //se personagem quer andar pra alguma diagonal
+      qtdAndarPadrao = this._qtdAndarCadaDirDiag;
+    else
+      qtdAndarPadrao = this._qtdAndar;
+
+    let qtdAndarX, qtdAndarY;
+    //anda em X
+    if (direcaoX != null)
+    {
+      if (direcaoX == Direcao.Direita)
+        qtdAndarX = qtdAndarPadrao;
+      else
+        qtdAndarX = -qtdAndarPadrao;
+    }else
+      qtdAndarX = 0;
+    //anda em Y
+    if (direcaoY != null)
+    {
+      if (direcaoY == Direcao.Baixo)
+        qtdAndarY = qtdAndarPadrao;
+      else
+        qtdAndarY = -qtdAndarPadrao;
+    }else
+      qtdAndarY = 0;
+
     this.mudarXY(qtdAndarX, qtdAndarY, conjuntoObjetosTela);
   }
   mudarXY(qtdMudaX, qtdMudaY, conjuntoObjetosTela)
@@ -240,7 +236,7 @@ class PersonagemPrincipal extends PersComTiros
       qtdPodeMudarY : Tela.qtdAndarObjNaoSairY(this._formaGeometrica, qtdMudaY),
       menorHipotenusa : null
     };
-    infoQtdMudar.menorHipotenusa = Operacoes.hipotenusa(infoQtdMudar.qtdPodeAndarX, infoQtdMudar.qtdPodeAndarY);
+    infoQtdMudar.menorHipotenusa = Operacoes.hipotenusa(infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
 
     if (infoQtdMudar.qtdPodeMudarX == 0 && infoQtdMudar.qtdPodeMudarY == 0)
       return false;
@@ -250,6 +246,8 @@ class PersonagemPrincipal extends PersComTiros
     for (let i = 0; i<conjuntoObjetosTela.controladoresObstaculos.length; i++)
       conjuntoObjetosTela.controladoresObstaculos[i].qtdPersPodeAndar(infoQtdMudar, this._formaGeometrica);
     //aqui tudo o que devia ser feito com obstaculos estah OK
+
+    console.log(infoQtdMudar);
 
     //inimigos e tiros deles
     for (let i = 0; i<conjuntoObjetosTela.controladoresInimigos.length; i++)
@@ -295,19 +293,25 @@ class PersonagemPrincipal extends PersComTiros
 }
 
 //INIMIGO
-const tempoMostrarVida = 500;
+const tempoMostrarVidaPadrao = 675;
 class Inimigo extends PersComTiros
 {
-  constructor(formaGeometrica, corImgMorto, infoVida, tiroPadrao, qtdTiraVidaPersQndIntersec, infoAndar)
-  // infoVida: vida, corVida, mostrarVidaSempre
+  constructor(formaGeometrica, corImgMorto, infoVida, tiroPadrao, qtdTiraVidaPersQndIntersec, infoAndar, pers)
+  // infoVida: vida, corVida, mostrarVidaSempre, [proporcTempoVida] (ultimo eh opcional)
   // infoAndar: qtdAndarX, qtdAndarY, tipoAndar
   {
     super(formaGeometrica, corImgMorto, infoVida.vida, tiroPadrao, false);
 
     //andar
-    this.tipoAndar = infoAndar.tipoAndar;
     this._qtdAndarX = infoAndar.qtdAndarX;
     this._qtdAndarY = infoAndar.qtdAndarY;
+    if (pers == null) // se eh soh para inimigo padrao por exemplo
+    {
+      this._seEhImpossivelExcep(infoAndar.tipoAndar)
+      this._tipoAndar = infoAndar.tipoAndar;
+    }
+    else
+      this.setTipoAndar(infoAndar.tipoAndar, pers); //tem que ser depois
 
     //tirar vida pers
     this._qtdTiraVidaPersQndIntersec = qtdTiraVidaPersQndIntersec;
@@ -318,6 +322,9 @@ class Inimigo extends PersComTiros
     this._heightVida = 10;
     this._corVida = infoVida.corVida;
     this._mostrarVidaSempre = infoVida.mostrarVidaSempre;
+    if (!this._mostrarVidaSempre)
+      this._tempoMostrarVida = (infoVida.proporcTempoVida==null) ? tempoMostrarVidaPadrao :
+        infoVida.proporcTempoVida*tempoMostrarVidaPadrao;
     if (this._mostrarVidaSempre)
     //se soh vai mostrar sempre
       this._mostrarVida = true;
@@ -342,21 +349,41 @@ class Inimigo extends PersComTiros
   //getters e setters andar
   get tipoAndar()
   { return this._tipoAndar; }
-  set tipoAndar(tipo)
+  _seEhImpossivelExcep(tipo)
   {
     if (tipo == Andar.SEGUIR_INIM_MAIS_PROX)
       throw "Inimigo nao pode seguir inimigos";
-      this._tipoAndar = tipo;
+  }
+  setTipoAndar(tipo, pers)
+  {
+    this._seEhImpossivelExcep(tipo);
+
+    if (tipo == Andar.DIRECAO_PERS)
+    {
+      let qtdAndar = Andar.qtdAndarFromTipo({qtdAndarXPadrao: this._qtdAndarX, qtdAndarYPadrao: this._qtdAndarY,
+        tipoAndar: Andar.SEGUIR_PERS, hipotenusaPadrao: Operacoes.hipotenusa(this._qtdAndarX, this._qtdAndarY)},
+        this._formaGeometrica, pers);
+      this._qtdAndarX = qtdAndar.x;
+      this._qtdAndarY = qtdAndar.y;
+    }else
+    if (tipo == Andar.SEGUIR_PERS)
+      this._hipotenusaAndarPadrao = Operacoes.hipotenusa(this._qtdAndarX, this._qtdAndarY);
+    else if (this._hipotenusaAndarPadrao != null) this._hipotenusaAndarPadrao = null;
+
+    this._tipoAndar = tipo;
   }
   get qtdAndarX()
   { return this._qtdAndarX; }
   get qtdAndarY()
   { return this._qtdAndarY; }
+  //se for adicionar set qtdAndar, mudar this._hipotenusaAndarPadrao de acordo com o tipoAndar
 
   andar(pers, indexContrInim)
   //retorna se deve continuar na lista
   {
-    let qtdAndar = Andar.qtdAndarFromTipo(this._qtdAndarX, this._qtdAndarY, this._formaGeometrica, this._tipoAndar);
+    let qtdAndar = Andar.qtdAndarFromTipo({qtdAndarXPadrao: this._qtdAndarX, qtdAndarYPadrao: this._qtdAndarY,
+      tipoAndar: this._tipoAndar, hipotenusaPadrao: this._hipotenusaAndarPadrao},
+      this._formaGeometrica, pers);
     if (qtdAndar.inverterDirQtdAndar)
     {
       //inverte a direcao do obstaculo
@@ -366,7 +393,7 @@ class Inimigo extends PersComTiros
 
     //verificar se vai bater em tiros do personagem e se tiro tem que sair da lista porque esse inimigo andou, ele sai
     pers.controladorTiros.procedimentoObjTelaColideAndar(this, qtdAndar.x, qtdAndar.y,
-      controladorTiros.INIMIGOS_ANDOU, indexContrInim);
+      ControladorTiros.INIMIGOS_ANDOU, indexContrInim);
 
     //verificar se nao vai intersectar personagem
     if (this._vivo && Interseccao.vaiTerInterseccao(pers.formaGeometrica, this._formaGeometrica, qtdAndar.x, qtdAndar.y))
@@ -419,7 +446,7 @@ class Inimigo extends PersComTiros
         t._auxMostrarVida--;
         if (t._auxMostrarVida == 0)
           t._mostrarVida = false;
-      }, tempoMostrarVida);
+      }, this._tempoMostrarVida);
   }
 
   get mostrarVidaSempre()
@@ -463,12 +490,12 @@ class Inimigo extends PersComTiros
   }
 
   //clone
-  clone()
+  clone(pers)
   {
-    return new Inimigo(this._formaGeometrica, this._corImgMorto,
+    return new Inimigo(this._formaGeometrica.clone(), this._corImgMorto,
       {vida: this._vida, corVida: this._corVida, mostrarVidaSempre: this._mostrarVidaSempre},
       this._controladorTiros.tiroPadrao, this._qtdTiraVidaPersQndIntersec,
-      {qtdAndarX: this._qtdAndarX, qtdAndarY: this._qtdAndarY, tipoAndar: this._tipoAndar});
+      {qtdAndarX: this._qtdAndarX, qtdAndarY: this._qtdAndarY, tipoAndar: this._tipoAndar}, pers);
   }
 
  //outros...

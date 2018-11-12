@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <!-- bibliotecas do P5 -->
+    <script src="Javascript/p5/p5.min.js"></script>
+    <!-- basico geometria e classes auxiliares -->
+    <script src="Javascript/GeometriaBasica.js"></script>
+    <script src="Javascript/FormasGeometricas.js"></script>
+    <title></title>
+  </head>
+  <body onload="setup()">
+    <script>
+    function setup()
+    {
+      createCanvas(800, 600);
+      background(0);
+      corImg = {stroke: color("white"), fill: color("blue")};
+    }
+    let corImg;
+
+    // teste se os paralelogramos da colisao estao sendo construidos adequadamente (quadrados/retangulos)
+    let ret1, ret2, pa1, pa2, pb1, pb2, pb3;
+    let qtdAndar;
+    document.onclick = function()
+    {
+      if (pa1 == null)
+        pa1 = new Ponto(mouseX, mouseY);
+      else
+      if (pa2 == null)
+      {
+        pa2 = new Ponto(mouseX, mouseY);
+        ret1 = new Retangulo(pa1.x, pa1.y, pa2.x-pa1.x, pa2.y-pa1.y, corImg);
+      }
+      else
+      if (pb1 == null)
+        pb1 = new Ponto(mouseX, mouseY);
+      else
+      if (pb2 == null)
+      {
+        pb2 = new Ponto(mouseX, mouseY);
+        ret2 = new Retangulo(pb1.x, pb1.y, pb2.x-pb1.x, pb2.y-pb1.y, corImg);
+      }else
+      if (pb3 == null)
+      {
+        pb3 = new Ponto(mouseX, mouseY);
+        qtdAndar = pb3.menos(pb1);
+
+        let qtd = Interseccao.qntPodeAndarAntesIntersec(ret1, ret2, qtdAndar.x, qtdAndar.y);
+        console.log(qtd.x + ", " + qtd.y);
+        ret2.x += qtd.x;
+        ret2.y += qtd.y;
+      }else
+      {
+        pa1 = new Ponto(mouseX, mouseY);
+        pa2 = null;
+        pa3 = null;
+        pb1 = null;
+        pb2 = null;
+        pb3 = null;
+      }
+    }
+
+    function draw()
+    {
+      background(0);
+      if (ret1 != null)
+      {
+        ret1.draw();
+        if (ret2 != null)
+          ret2.draw();
+      }
+    }
+    </script>
+  </body>
+</html>

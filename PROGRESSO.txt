@@ -1,0 +1,3 @@
+Novo:
+- quando for seguir sempre um inimigo seguir a parte mais importante apenas
+- alguns tiros vao na direcao de um outro objeto e depois usam sempre esse qtdAndar (DIRECAO_PERS e DIRECAO_INIM_MAIS_PROXIMO)

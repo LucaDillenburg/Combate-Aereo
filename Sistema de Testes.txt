@@ -1,0 +1,63 @@
+fazer TesteQntPodeAndarAntesIntersectar.html
+
+SISTEMA DE TESTES:
+ - tipos andar (falta seguir personagem e direcao personagem de obstaculo)
+ - adicionar nos controladores
+   -> inimigos. OK
+   -> tiros. OK
+   -> obstaculos. OK
+ - andar de outros objetos
+ - colisoes:
+   -> pers com obstaculo : obstaculo muito fino e qtdAndarPers muito grande
+   -> obstaculo com pers : obst empurrando personagem (quando da e qnd nao da)
+   -> pers com inimigo e inimigo com pers
+   -> tiros com resto
+     .cm personagem. OK
+     .cm inimigos. OK
+     .cm obstaculos
+ - procCriou de todos os ObjetosTela
+ - morrer de inimigos
+
+ - ver outros metodos
+
+
+Testes Basicos:
+ - ListaDuplamenteLigada.js  *OK*
+ - GeometriaBasica.js. ACREDITO QUE SIM (qntPodeAndarAntesIntersectar nao sei)
+ - FormasGeometricas.js. ACREDITO QUE SIM (inclusive ordenar os pontos)
+
+-------------------------------------------------------------------------------------
+
+SISTEMAS DE TESTES OK:
+- pers andando sem interferencia de outros objetos
+  -> esta andando nas direcoes certas. OK
+  -> nao estah saindo da tela. OK
+- paralelogramo
+  -> estah achando o verdadeiro ponto D. OK
+  -> estah ordenando certo quando cria-se novo Paralelogramo e pede para ordenar (o metodo de ordenar em si jah estava certo). OK
+- construcao dos paralelogramos nas colisoes
+  -> os 4 tipos de quadrados/retangulos. OK
+  -> os 5 tipos de triangulos. OK
+- tamanho vida inimigo dependendo da vidaMAX dele
+- testar inimigo que soh bota vida na tela um tempo depois de ser atingido
+- testar atirar
+- tiro tirar vida inimigo (tive que mudar algumas coisas)
+
+Conclusoes:
+//Controladores
+ - todos os tiros do controladores estavam iguais (parecia um soh) e quanto mais tiros, mais rapido ele andava.
+Descobri que faltava um .clone() nas formasGeometricas. Mudei isso em todos os controladores de objetos
+//Andar personagem no Script
+ - o andar do personagem estava meio lagado, pois ele soh andava quando o evento de KeyDown acontecia
+(esse evento demorava certo tempo para acontecer principalmente quando muda o que estava clicando)
+Entao fiz ele perceber se as teclas estao apertadas no KeyDown mesmo, mas fiz ele andar no draw.
+ps: Tambem fiz sistema com ON, OFF e OPTION para quando tiver uma setinha apertada e aperterem a oposta,
+quando soltarem e se a anterior ainda estiver apertada, ela volte a ser considerada.
+ps: Quando uma setinha for apertada e a oposta estiver ON, deixar ela como OPTION
+//GEOMETRIA BASICA
+ - estava dando um erro na hora da criacao dos paralelogramos. a diferenca entre o pontoDCerto e do D informado era minuscula e nao significativa.
+Entao fiz um procedimento que ve se estah quase igual (com uma margem muito pequena) e usei isso para determinar se dois pontos sao iguais,
+caso o parametro EXATAMENTE esteja FALSE (se for nulo ou true, sera feito normalmente)
+//ANDAR
+ - os tipoAndar Andar.SEGUIR_PERS e Andar.SEGUIR_INIM_MAIS_PROX estao "lagando" muito (por causa do tanto de conta que tem que fazer).
+Solucao: esses tipoAndar soh serao usados em MISSEIS TELEGUIADOS (Poder e arma secreta para inimigos importantes)

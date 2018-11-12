@@ -1,27 +1,35 @@
-- AGORA: COMITAR E DEPOIS VER ANDAR DO PERSONAGEM (VER PROGRESSO.TXT)
 - SISTEMA DE TESTE
-   > testar se PontoCerto do paralelogramo estah realmente certo
-   > testar se estah se criando os paralelogramos certos
-   > fazer sistema de Teste do jogo (colocar super devagar: framerate baixissimo)
 
+- poder atirar para todos lados (quando tiver com a nave especial)
+
+- variaveis que sao guardadas separadamente e depois tem que juntar, guardar junto (ex: infoAndar). ps: fazer classes para infoAndar por exemplo
+- variavel = null, mudar para delete variavel (nem sempre)
+- considerar um quadradao antes (de onde estava pra onde foi)
+- verificar se maiorY e menorY estao sendo usados da maneira correta
+
+- colisao com obstaculos: se bate em cima ou em baixo soh anda em Y, o contrario soh anda em X. (para obstaculo empurrando e personagem batendo: adicionar parametro em qntPodeAndarAntesIntersec para nao retornar medidas proporcionais as que eram para andar e sim absoluta)
+- padronizar o perder vida do personagem quando intersecta com inimigo (de acordo com o tempo, nao tira se ele andar la dentro ou se o inimigo andar: variavel int indexInimColidindo)
 - fazer Interseccao.qntPodeAndarAntesIntersec(...) para Triangulo
-
-- colisao com obstaculos: se bate em cima ou em baixo soh anda em Y, o contrario soh anda em X
-
 - opcao para mudar tamanho personagem, inimigo e obstaculo
 (deve ser super parecido com procCriou, talvez possa usar ele mesmo ou fazer um metodo em comum)
+
+- ver comentarios //TODO
 
 - New Features:
   .Poder (img, cod, nome, executarPoder)
   .ControladorPoderes
 
-- ver comentarios //TODO
-
 - CreateCanvas de um tamanho mínimo: metade de toda tela (resize() mudar o tamanho dele?)
-
-- quando objetos com vida perderem vida abaixar a vida gradativamente (mudarVida gradativamente)
+- criar niveis
+- colocar som
 
 - fazer Interseccao.vaiTerInterseccao(...) para Paralelogramos e Quadrilateros
+- fazer opcao para rotacionar obstaculos
+
+- programar centroMassa de quadrilatero
+- arrumar andar do personagem (quando jah tem duas teclas pressionadas quando uma terceira eh pressionada, o evento nao eh fired)
+- podemos saber se um ponto estah dentro de um quadrilatero (ou soh paralelogramo?) se estiver entre as retas de cima e de baixo e da direita e da esquerda
+- quando objetos com vida perderem vida abaixar a vida gradativamente (mudarVida gradativamente)
 - quando um tiro colidir com obstaculos e inimigos guardar todos eles, e soh tirar da lista quando todos os inimigos e
 obstaculos andarem (mudar emQuemBateu, procCriou, _estadoTiroPosAndarEhPers)
 

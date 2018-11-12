@@ -5,6 +5,7 @@ class ListaDuplamenteLigada
     this._prim = null;
     this._ultimo = null;
     this._atual = null;
+    this._qtdElem = 0;
   }
 
   //getters
@@ -22,6 +23,8 @@ class ListaDuplamenteLigada
   }
   get vazia()
   { return this._prim == null; }
+  get qtdElem()
+  { return this._qtdElem; }
 
   //adicionar no comeco
   inserirNoComeco(info)
@@ -30,6 +33,8 @@ class ListaDuplamenteLigada
 
     if (this._ultimo == null)
       this._ultimo = this._prim;
+
+    this._qtdElem++;
   }
 
   //tirar do final
@@ -43,12 +48,14 @@ class ListaDuplamenteLigada
       this._prim = null;
     else
       this._ultimo.prox = null;
+    this._qtdElem--;
   }
 
   esvaziar()
   {
     this._prim = null;
     this._ultimo = null;
+    this._qtdElem = 0;
   }
 
 
@@ -58,7 +65,7 @@ class ListaDuplamenteLigada
   andarAtual()
   {
     if (this._atual == null)
-      throw "Jah esta no ultimo! - em andarAtual() ";
+      throw "Atual eh nulo!";
     this._atual = this._atual.prox;
   }
   atualEstahNoFinal()
@@ -80,11 +87,14 @@ class ListaDuplamenteLigada
 
     if (this._atual.ant == null)
     {
-        this._prim = null;
-        this._ultimo = null;
+        this._prim = this._atual.prox;
+        if (this._prim == null)
+          this._ultimo = null;
     }else
         this._atual.ant.prox = this._atual.prox;
+    this._qtdElem--;
   }
+
 
   //outros
   concatenar(outraLista)
@@ -106,6 +116,21 @@ class ListaDuplamenteLigada
       this._ultimo = outraLista._ultimo;
     }
     //nao tem else porque se a outra lista for vazia nao tem mais o que fazer
+
+    this._qtdElem += outraLista._qtdElem;
+  }
+
+  //outros/aux
+  printar()
+  {
+    let atual = this._prim;
+    let string = "";
+    while(atual != null)
+    {
+      string += atual.info + " -> ";
+      atual = atual.prox;
+    }
+    console.log(string + "null");
   }
 }
 

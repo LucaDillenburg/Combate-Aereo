@@ -6,7 +6,7 @@
 class FormaGeometrica
 {
   constructor (corImg)
-  // corImg: imagem ou {strokeColor: cor, fillColor: cor}
+  // corImg: imagem ou {stroke: cor, fill: cor}
   {
     //se nao estah querendo soh a parte de backend (sem colocar na tela)
     if (corImg != null)
@@ -18,7 +18,7 @@ class FormaGeometrica
   { return this._corImg; }
   set corImg(corImg)
   {
-    this._ehCor = corImg.strokeColor != null;
+    this._ehCor = corImg.stroke != null;
     this._corImg = corImg;
   }
   get ehCor()
@@ -29,8 +29,8 @@ class FormaGeometrica
   { image(this._img, this.x, this.y, this.width, this.height); }
   _colocarCores()
   {
-    stroke(this._corImg.strokeColor);
-    fill(this._corImg.fillColor);
+    stroke(this._corImg.stroke);
+    fill(this._corImg.fill);
   }
 
   //arestas
@@ -47,6 +47,14 @@ class FormaGeometrica
 
     return this._arestas;
   }
+
+  get centroMassa()
+  {
+    if (this._centroMassa == null)
+      this._centroMassa = new Ponto(this.x + this.width/2, this.y + this.y + this.height/2);
+    return this._centroMassa;
+  }
+  // serve perfeitamente para quadrado e retangulo e mais ou menos para o resto
 
   //width, height e posicoes
   get width()
@@ -74,8 +82,12 @@ class FormaGeometrica
   -> get y()
   -> set y()
 
+  -> get centroMassa()
+
   //forma e cor
   -> draw()
+
+  -> clone()
 
 ps: nao fiz com interface, pois nao faz muito sentido em javascript
 */
@@ -110,18 +122,21 @@ class FormaGeometricaSimples extends FormaGeometrica
     return this._vertices;
   }
 
-  _mudouArestasVertices()
+  _mudouArestasVerticesCentro()
   {
     this._vertices = null;
     this._arestas = null;
+    this._centroMassa = null;
   }
+  _mudouArestas()
+  { this._arestas = null; }
 
   //forma
   set x(x)
   {
     if (this._x == x)
       return;
-    this._mudouArestasVertices();
+    this._mudouArestasVerticesCentro();
     this._x = x;
   }
   get x()
@@ -131,7 +146,14 @@ class FormaGeometricaSimples extends FormaGeometrica
     this._x += qtdMuda;
 
     if (qtdMuda != 0)
-      this._mudouArestasVertices();
+    {
+      this._mudouArestas();
+      if (this._vertices != null)
+        for (let i = 0; i<this._vertices.length; i++)
+          this._vertices[i].x += qtdMuda;
+      if (this._centroMassa != null)
+        this._centroMassa += qtdMuda;
+    }
 
     //se aparece um pouco
     return this._x + this._width > 0 && this._x <= width;
@@ -140,7 +162,7 @@ class FormaGeometricaSimples extends FormaGeometrica
   {
     if (this._y == y)
       return;
-    this._mudouArestasVertices();
+    this._mudouArestasVerticesCentro();
     this._y = y;
   }
   get y()
@@ -150,19 +172,26 @@ class FormaGeometricaSimples extends FormaGeometrica
     this._y += qtdMuda;
 
     if (qtdMuda != 0)
-      this._mudouArestasVertices();
+    {
+      this._mudouArestas();
+      if (this._vertices != null)
+        for (let i = 0; i<this._vertices.length; i++)
+          this._vertices[i].y += qtdMuda;
+      if (this._centroMassa != null)
+        this._centroMassa += qtdMuda;
+    }
 
     //se aparece um pouco
     return this._y + this._height > 0 && this._y <= height - heightVidaUsuario;
   }
 
-  menorX()
+  get menorX()
   { return this._x; }
-  maiorX()
+  get maiorX()
   { return this._x + this.width; }
-  menorY()
+  get menorY()
   { return this._y; }
-  maiorY()
+  get maiorY()
   { return this._y + this.height; }
 
   //draw
@@ -223,7 +252,7 @@ class Retangulo extends FormaGeometricaSimples
     this._x -= qtdMuda/2;
     this._width += qtdMuda;
 
-    this._mudouArestasVertices();
+    this._mudouArestasVerticesCentro();
     return this._width > 0;
   }
   set height(height)
@@ -245,9 +274,13 @@ class Retangulo extends FormaGeometricaSimples
     this._y -= qtdMuda/2;
     this._height += qtdMuda;
 
-    this._mudouArestasVertices();
+    this._mudouArestasVerticesCentro();
     return this._height > 0;
   }
+
+  //clone
+  clone()
+  { return new Retangulo(this._x, this._y, this._width, this._height, this._corImg); }
 }
 
 class Quadrado extends FormaGeometricaSimples
@@ -287,13 +320,17 @@ class Quadrado extends FormaGeometricaSimples
     this._y -= qtdMuda/2;
     this._tamLado += qtdMuda;
 
-    this._mudouArestasVertices();
+    this._mudouArestasVerticesCentro();
     return this._tamLado > 0;
   }
   get width()
   { return this._tamLado; }
   get height()
   { return this._tamLado; }
+
+  //clone
+  clone()
+  { return new Quadrado(this._x, this._y, this._tamLado, this._corImg); }
 }
 
 
@@ -365,6 +402,9 @@ class FormaGeometricaComplexa extends FormaGeometrica
         this._maiorY = maiorY;
       }
 
+      if (this._centroMassa != null)
+        this._centroMassa += qtdMuda;
+
       this._mudouArestasTriang();
     }
 
@@ -410,6 +450,9 @@ class FormaGeometricaComplexa extends FormaGeometrica
         this._maiorY = maiorY;
       }
 
+      if (this._centroMassa != null)
+        this._centroMassa += qtdMuda;
+
       this._mudouArestasTriang();
     }
 
@@ -449,21 +492,21 @@ class FormaGeometricaComplexa extends FormaGeometrica
     this._menorX = menorX;
     this._maiorY = maiorY;
   }
-  menorX()
+  get menorX()
   {
     if (this._menorX == null)
       this._pegarMenorMaiorXY();
     return this._menorX;
   }
-  maiorX()
+  get maiorX()
   {
     if (this._maiorX == null)
       this._pegarMenorMaiorXY();
     return this._maiorX;
   }
-  menorY()
+  get menorY()
   { return this._a.y; }
-  maiorY()
+  get maiorY()
   {
     if (this._maiorY == null)
       this._pegarMenorMaiorXY();
@@ -565,7 +608,7 @@ class FormaGeometricaComplexa extends FormaGeometrica
       //colocar vertices na ordem certa!!
       for (let i = 0; i<this.__triangulos.length; i++)
       {
-        let vert = triang;
+        let triang = null;
         switch (i)
         {
           case 0: triang = new Triangulo(this._a, this._b, this._c); break;
@@ -586,14 +629,16 @@ class FormaGeometricaComplexa extends FormaGeometrica
       // 1. Se algum vertice de obj estah dentro de algum dos triangulos dessa figura
           // ou
       // 2. Se alguma arestas de obj intersecta com alguma aresta de this
+    //ps: se todos os pontos estao dentro, o primeiro ponto estah dentro tbm e ent vai retornar true em 1
+    //ps: se nem todos os pontos estao dentro, alguma aresta vai intersectar e
+     //ent vai retornar true em 1 (se o primeiro ponto estiver dentro) ou em 2 (caso ele nao esteja)
 
     // 1.
-    for(let i = 0; i<obj.vertices.length; i++)
-      if ((obj.vertices[i].y >= this.menorY && obj.vertices[i].y <= this.maiorY))
-      // se vertice estah dentro do menor e maior Y do this
-        if (this.pontoEstahDentroAlgumTriang(obj.vertices[i]))
-        // verificar se esse ponto estah dentro de algum dos triangulos
-          return true;
+    if ((obj.vertices[0].y >= this.menorY && obj.vertices[0].y <= this.maiorY))
+    // se vertice estah dentro do menor e maior Y do this
+      if (this.pontoEstahDentroAlgumTriang(obj.vertices[0]))
+      // verificar se esse ponto estah dentro de algum dos triangulos
+        return true;
 
     // 2.
     for (let i=0; i<obj.arestas.length; i++)
@@ -614,8 +659,8 @@ class FormaGeometricaComplexa extends FormaGeometrica
   semirretaIntersectaAlgumaAresta(semirreta)
   {
     // verificar se a semirreta intersecta com alguma aresta do this
-    for (let i = 0; i<this.arestas.length; j++)
-      if (semirreta.interseccao(this.arestas[j]))
+    for (let i = 0; i<this.arestas.length; i++)
+      if (semirreta.interseccao(this.arestas[i]))
         return true;
     return false;
   }
@@ -628,7 +673,10 @@ class FormaGeometricaComplexa extends FormaGeometrica
     // colocar pontos na classe
     for (let i = 0; i<vertices.length; i++)
       this._mudarVertice(i, vertices[i]);
+
     this._mudouArestasTriang();
+    if (this._centroMassa != null)
+      this._centroMassa = null;
   }
   _organizarVertices(menorPrimeiro)
   // se menorPrimeiro, primeiro os mais de cima
@@ -766,6 +814,10 @@ class Quadrilatero extends FormaGeometricaComplexa
     //desenhar a imagem
       this._desenharImagem();
   }
+
+  //clone
+  clone()
+  { return new Quadrilatero(this._a, this._b, this._c, this._d, this._corImg); }
 }
 
 class Paralelogramo extends Quadrilatero
@@ -774,23 +826,43 @@ class Paralelogramo extends Quadrilatero
   constructor(a, b, c, d, corImg, colocarVerticesOrdemCorreta)
   {
     super(a, b, c, d, corImg);
-
+    if (colocarVerticesOrdemCorreta == null)
+      colocarVerticesOrdemCorreta = false;
     if (colocarVerticesOrdemCorreta)
       this.colocarVerticesOrdemCorreta();
       //os nulos serao os ultimos
 
     //verificar se sao pontos de um quadrilatero
-    let pontoDCerto = new Ponto(c.x + b.x - a.x, c.y + b.y - a.y);
+    let pontoDCerto = this._a.mais(this._c.menos(this._b));
     if (this._d == null)
+    {
       this._d = pontoDCerto;
+
+      //se o novo D estah mais pra cima e esquerda que A, D deve se tornar A, A -> B,...
+      if (this._d.y < this._a.y || (this._d.y == this._a.y && this._d.x < this._a.x))
+      {
+        let auxD = this._d;
+        this._d = this._c;
+        this._c = this._b;
+        this._b = this._a;
+        this._a = auxD;
+      }
+    }
     else
-    if (!pontoDCerto.equals(this._d))
+    if (!pontoDCerto.equals(this._d, false)) //quase exato (em javascript ha um problema de exatidao nas contas)
+    {
+      console.log(this._d.toString() + " != " + pontoDCerto.toString());
       throw "Esses pontos não formam um paralelogramo!";
+    }
   }
 
   //getters basicos
   get codForma()
   { return 4; }
+
+  //clone
+  clone()
+  { return new Paralelogramo(this._a, this._b, this._c, this._d, this._corImg, false); }
 }
 
 class Triangulo extends FormaGeometricaComplexa
@@ -832,12 +904,21 @@ class Triangulo extends FormaGeometricaComplexa
 	}
 
 	get area()
+  //para este metodo nao interessa a ordem de {a,b,c}
 	{
 		if (this._area == null)
 			this._area = Math.abs((this._a.x*(this._b.y - this._c.y) + this._b.x*(this._c.y - this._a.y)
 			+ this._c.x*(this._a.y - this._b.y))/2);
 		return this._area;
 	}
+
+  get centroMassa()
+  {
+    if (this._centroMassa == null)
+      //formula baricentro triangulo a partir dos vertices:
+      this._centroMassa = new Ponto((this._a.x + this._b.x + this._c.x)/3, (this._a.y + this._b.y + this._c.y)/3);
+    return this._centroMassa;
+  }
 
   draw()
   {
@@ -853,6 +934,10 @@ class Triangulo extends FormaGeometricaComplexa
     //desenhar a imagem
       this._desenharImagem();
   }
+
+  //clone
+  clone()
+  { return new Triangulo(this._a, this._b, this._c, this._corImg); }
 }
 
 //se for adicionar novas formas geometricas complexas,

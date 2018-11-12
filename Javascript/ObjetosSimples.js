@@ -37,11 +37,12 @@ class ObjetoTelaMorre extends ObjetoTela
   { this._formaGeometrica.corImg = this._corImgMorto; }
 }
 
+
 //TIRO
 class Tiro extends ObjetoTelaMorre
 {
-  constructor(formaGeometrica, corImgMorto, infoAndar, controladoresInimigos, ehDoPers, mortalidade)
-  //soh precisa colocar controladoresInimigos se tipoAndar for SEGUIR_INIM_MAIS_PROX
+  constructor(formaGeometrica, corImgMorto, infoAndar, conjuntoObjetosTela, ehDoPers, mortalidade)
+  //soh precisa colocar conjuntoObjetosTela se tipoAndar for SEGUIR_INIM_MAIS_PROX, DIRECAO_INIM_MAIS_PROX ou DIRECAO_PERS
   //infoAndar: qtdAndarX, qtdAndarY, tipoAndar
   {
     super(formaGeometrica, corImgMorto);
@@ -50,9 +51,15 @@ class Tiro extends ObjetoTelaMorre
     this._ehDoPers = ehDoPers;
 
     //andar
-    this.setTipoAndar(infoAndar.tipoAndar, controladoresInimigos);
     this._qtdAndarX = infoAndar.qtdAndarX;
     this._qtdAndarY = infoAndar.qtdAndarY;
+    if (conjuntoObjetosTela == null) // se eh soh para tiro padrao por exemplo
+    {
+      this._seEhImpossivelExcep(infoAndar.tipoAndar)
+      this._tipoAndar = infoAndar.tipoAndar;
+    }
+    else
+      this.setTipoAndar(infoAndar.tipoAndar, conjuntoObjetosTela.controladoresInimigos, conjuntoObjetosTela.pers); //tem que ser depois
 
     //mortalidade
     this._mortalidade = mortalidade;
@@ -71,13 +78,13 @@ class Tiro extends ObjetoTelaMorre
       //verificar colisao com obstaculos, inimigos
       for (let i = 0; i<conjuntoObjetosTela.controladoresObstaculos.length; i++)
       {
-        let colidiu = conjuntoObjetosTela.controladoresObstaculos.procColidirTiroCriadoTodosInim(this);
+        let colidiu = conjuntoObjetosTela.controladoresObstaculos[i].procColidirTiroCriadoTodosObst(this);
         if (colidiu && quemBateu == null)
           quemBateu = {quemAndou: Tiro.COLIDIU_COM_OBSTACULO, indexAndou: i};
       }
       for (let i = 0; i<conjuntoObjetosTela.controladoresInimigos.length; i++)
       {
-        let colidiu = conjuntoObjetosTela.controladoresInimigos.procColidirTiroCriadoTodosObst(this);
+        let colidiu = conjuntoObjetosTela.controladoresInimigos[i].procColidirTiroCriadoTodosInim(this);
         if (colidiu && quemBateu == null)
           quemBateu = {quemAndou: Tiro.COLIDIU_COM_INIMIGO, indexAndou: i};
       }
@@ -95,47 +102,89 @@ class Tiro extends ObjetoTelaMorre
 
   //getters e setters
   get tipoAndar()
-  { this._tipoAndar; }
+  { return this._tipoAndar; }
   get inimSeguir()
   { return this._inimSeguir; }
-  setTipoAndar(tipo, controladoresInimigos) //soh precisa colocar controladoresInimigos se tipo for SEGUIR_INIM_MAIS_PROX
+  _seEhImpossivelExcep(tipo)
   {
     //se eh para andar atras do personagem e o tiro eh do proprio personagem, da erro
-    if ((tipo == Andar.SEGUIR_PERS && this._ehDoPers) || (tipo == Andar.SEGUIR_INIM_MAIS_PROX && !this._ehDoPers))
-      throw "Tipo andar ou ehDoPers nao combinam! em new Tiro";
+    if ((this._ehDoPers && (tipo == Andar.SEGUIR_PERS || tipo == Andar.DIRECAO_PERS)) ||
+      (!this._ehDoPers && (tipo == Andar.SEGUIR_INIM_MAIS_PROX || tipo == Andar.DIRECAO_INIM_MAIS_PROX)))
+        throw "Tipo andar ou ehDoPers nao combinam!";
+  }
+  setTipoAndar(tipo, controladoresInimigos, pers) //soh precisa colocar controladoresInimigos se tipo for SEGUIR_INIM_MAIS_PROX
+  {
+    this._seEhImpossivelExcep(tipo);
+
+    this._tipoAndar = tipo;
 
     //se tipo eh para seguir inimigo mais proximo, tem que procurar inimigo mais proximo
     if (tipo == Andar.SEGUIR_INIM_MAIS_PROX)
     {
-      let qntQrAndar = null;
-      let menorHipotenusa = null;
-      for (let i=0; i<controladoresInimigos.length; i++)
+      // se for pra um tiro seguir um inimigo sempre, seguir um dos mais importantes soh
+      let praOndeAndar;
+      if (controladoresInimigos.length > 0) // se tem algum controlador
+        praOndeAndar = controladoresInimigos[0].qntAndarInimigoMaisProximo(this._formaGeometrica);
+      if (praOndeAndar == null || praOndeAndar.inim == null)
+        this._tipoAndar = Andar.ANDAR_NORMAL;
+        //throw "Nao ha inimigos para seguir!";
+      else
       {
-        let qntQrAndarAtual = controladoresInimigos[i].qntAndarInimigoMaisProximo(formaGeometrica);
-        let hipotenusaAtual = Operacoes.hipotenusa(qntQrAndarAtual.x, qntQrAndarAtual.y);
-        if (qntQrAndarAtual.inim != null && //se tem algum inimigo nesse controlador
-          (menorHipotenusa == null || hipotenusaAtual < menorHipotenusa))
-        {
-          qntQrAndar = qntQrAndarAtual;
-          menorHipotenusa = hipotenusaAtual;
-        }
+        this._inimSeguir = praOndeAndar.inim;
+        this._ultimoQtdAndarX = this._qtdAndarX;
+        this._ultimoQtdAndarY = this._qtdAndarY;
+      }
+    }else
+    {
+      if (this._ultimoQtdAndarX != null || this._ultimoQtdAndarY != null)
+      {
+        this._ultimoQtdAndarX = null;
+        this._ultimoQtdAndarY = null;
       }
 
-      if (qntQrAndar == null || qntQrAndar.inim == null)
-        throw "Nao ha inimigos para seguir!";
+      if (tipo == Andar.DIRECAO_PERS)
+        this._setarQtdAndarTipoDIRECAO(pers);
+      else
+      if (tipo == Andar.DIRECAO_INIM_MAIS_PROX)
+      {
+        //descobrir qual inimigo estah mais perto para seguir
+        let praOndeAndar = null;
+        let menorHipotenusa = null;
+        for (let i=0; i<controladoresInimigos.length; i++)
+        {
+          let praOndeAndarAtual = controladoresInimigos[i].qntAndarInimigoMaisProximo(this._formaGeometrica);
 
-      this._inimSeguir = qntQrAndar.inim;
+          if (praOndeAndarAtual.inim != null) //se tem algum inimigo nesse controlador
+          {
+            let hipotenusaAtual = Operacoes.hipotenusa(praOndeAndarAtual.x, praOndeAndarAtual.y);
 
-      this._ultimoQtdAndarX = this._qtdAndarX;
-      this._ultimoQtdAndarY = this._qtdAndarY;
-    }else
-    if (this._ultimoQtdAndarX != null || this._ultimoQtdAndarY != null)
-    {
-      this._ultimoQtdAndarX = null;
-      this._ultimoQtdAndarY = null;
+            if (menorHipotenusa == null || hipotenusaAtual < menorHipotenusa)
+            {
+              praOndeAndar = praOndeAndarAtual;
+              menorHipotenusa = hipotenusaAtual;
+            }
+          }
+        }
+
+        if (praOndeAndar == null || praOndeAndar.inim == null)
+          this._tipoAndar = Andar.ANDAR_NORMAL;
+          //throw "Nao ha inimigos para seguir!";
+        else
+          this._setarQtdAndarTipoDIRECAO(praOndeAndar.inim);
+      }
     }
 
-    this._tipoAndar = tipo;
+    if (tipo == Andar.SEGUIR_PERS || tipo == Andar.SEGUIR_INIM_MAIS_PROX)
+      this._hipotenusaAndarPadrao = Operacoes.hipotenusa(this._qtdAndarX, this._qtdAndarY);
+    else if (this._hipotenusaAndarPadrao != null) this._hipotenusaAndarPadrao = null;
+  }
+  _setarQtdAndarTipoDIRECAO(objSeguir)
+  {
+    let qtdAndar = Andar.qtdAndarFromTipo({qtdAndarXPadrao: this._qtdAndarX, qtdAndarYPadrao: this._qtdAndarY,
+      tipoAndar: (objSeguir instanceof Inimigo)?Andar.SEGUIR_INIM_MAIS_PROX:Andar.SEGUIR_PERS,
+      hipotenusaPadrao: Operacoes.hipotenusa(this._qtdAndarX, this._qtdAndarY)}, this._formaGeometrica, objSeguir);
+    this._qtdAndarX = qtdAndar.x;
+    this._qtdAndarY = qtdAndar.y;
   }
   get mortalidade()
   { return this._mortalidade; }
@@ -150,6 +199,7 @@ class Tiro extends ObjetoTelaMorre
   { return this._qtdAndarX; }
   get qtdAndarY()
   { return this._qtdAndarY; }
+  //se for adicionar set qtdAndar, mudar this._hipotenusaAndarPadrao de acordo com o tipoAndar
 
   get vivo()
   { return this._vivo; }
@@ -185,15 +235,29 @@ class Tiro extends ObjetoTelaMorre
   //retorna se continua na lista ou nao
   {
     //se tiro estah seguindo um inimigo que jah morreu, continuar andando normal
-    if (this.tipoAndar == Andar.SEGUIR_INIM_MAIS_PROX && !this._inimSeguir.vivo)
+    if (this._tipoAndar == Andar.SEGUIR_INIM_MAIS_PROX && !this._inimSeguir.vivo)
     {
       this._qtdAndarX = this._ultimoQtdAndarX;
       this._qtdAndarY = this._ultimoQtdAndarY;
       this.setTipoAndar(Andar.ANDAR_NORMAL);
     }
 
-    let qtdAndar = Andar.qtdAndarFromTipo(this._qtdAndarX, this._qtdAndarY, this._formaGeometrica,
-      this._tipoAndar, conjuntoObjetosTela.pers, this._inimSeguir);
+    //objSeguir para Andar.qtdAndarFromTipo(...)
+    let objSeguir;
+    if (this._tipoAndar == Andar.SEGUIR_PERS)
+      objSeguir = conjuntoObjetosTela.pers;
+    else
+    if (this._tipoAndar == Andar.SEGUIR_INIM_MAIS_PROX)
+      objSeguir = this._inimSeguir;
+
+    let qtdAndar = Andar.qtdAndarFromTipo({qtdAndarXPadrao: this._qtdAndarX, qtdAndarYPadrao: this._qtdAndarY,
+      tipoAndar: this._tipoAndar, hipotenusaPadrao: this._hipotenusaAndarPadrao},
+      this._formaGeometrica, objSeguir);
+    if (this._tipoAndar == Andar.SEGUIR_INIM_MAIS_PROX)
+    {
+      this._ultimoQtdAndarX = qtdAndar.x;
+      this._ultimoQtdAndarY = qtdAndar.y;
+    }else
     if (qtdAndar.inverterDirQtdAndar)
     {
       //inverte a direcao do obstaculo
@@ -219,7 +283,7 @@ class Tiro extends ObjetoTelaMorre
       menorHeight: height,
       qtdPodeAndarX: qtdAndarX,
       qtdPodeAndarY: qtdAndarY,
-      menorHipotenusa: menorHipotenusa = Operacoes.hipotenusa(qtdAndarX, qtdAndarY)
+      menorHipotenusa: Operacoes.hipotenusa(qtdAndarX, qtdAndarY)
     };
 
     let emQuemBateu = {quem: null, index: -1};
@@ -359,20 +423,21 @@ class Tiro extends ObjetoTelaMorre
   }
 
   //clone
-  clone(controladoresInimigos)
+  clone(conjuntoObjetosTela)
   {
-    return new Tiro(this._formaGeometrica, this._corImgMorto,
+    return new Tiro(this._formaGeometrica.clone(), this._corImgMorto,
       {qtdAndarX: this._qtdAndarX, qtdAndarY: this._qtdAndarY, tipoAndar: this._tipoAndar},
-      controladoresInimigos, this._ehDoPers, this._mortalidade);
+      conjuntoObjetosTela, this._ehDoPers, this._mortalidade);
   }
 }
 
 //OBSTACULO
 class Obstaculo extends ObjetoTelaMorre
 {
-  constructor(formaGeometrica, coresImgsDiferentes, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers)
+  constructor(formaGeometrica, coresImgsDiferentes, infoAndar, pers, qtdTiraVidaNaoConsegueEmpurrarPers)
   // coresImgsDiferentes: corImgEspecial, corImgMorto
   // infoAndar: qtdAndarX, qtdAndarY, tipoAndar
+  // pers eh necessario apenas se tipo andar for DIRECAO_PERS
   {
     super(formaGeometrica, coresImgsDiferentes.corImgMorto);
 
@@ -384,9 +449,15 @@ class Obstaculo extends ObjetoTelaMorre
     this._qtdTiraVidaNaoConsegueEmpurrarPers = qtdTiraVidaNaoConsegueEmpurrarPers;
 
     //andar
-    this.tipoAndar = infoAndar.tipoAndar;
     this._qtdAndarX = infoAndar.qtdAndarX;
     this._qtdAndarY = infoAndar.qtdAndarY;
+    if (pers == null) // se eh soh para obstaculo padrao por exemplo
+    {
+      this._seEhImpossivelExcep(infoAndar.tipoAndar)
+      this._tipoAndar = infoAndar.tipoAndar;
+    }
+    else
+      this.setTipoAndar(infoAndar.tipoAndar, pers); //tem que ser depois
 
     this._vivo = true;
   }
@@ -484,26 +555,47 @@ class Obstaculo extends ObjetoTelaMorre
   //andar
   get tipoAndar()
   { this._tipoAndar; }
-  set tipoAndar(tipo)
+  _seEhImpossivelExcep(tipo)
   {
-    if (tipo == Andar.SEGUIR_INIM_MAIS_PROX)
+    if (tipo == Andar.SEGUIR_INIM_MAIS_PROX || tipo == Andar.DIRECAO_INIM_MAIS_PROX)
       throw "Obstaculo nao pode seguir inimigos";
+  }
+  setTipoAndar(tipo, pers)
+  {
+    this._seEhImpossivelExcep(tipo);
+
+    if (tipo == Andar.DIRECAO_PERS)
+    {
+      let qtdAndar = Andar.qtdAndarFromTipo({qtdAndarXPadrao: this._qtdAndarX, qtdAndarYPadrao: this._qtdAndarY,
+        tipoAndar: Andar.SEGUIR_PERS, hipotenusaPadrao: Operacoes.hipotenusa(this._qtdAndarX, this._qtdAndarY)},
+        this._formaGeometrica, pers);
+      this._qtdAndarX = qtdAndar.x;
+      this._qtdAndarY = qtdAndar.y;
+    }else
+    if (tipo == Andar.SEGUIR_PERS)
+      this._hipotenusaAndarPadrao = Operacoes.hipotenusa(this._qtdAndarX, this._qtdAndarY);
+    else if (this._hipotenusaAndarPadrao != null) this._hipotenusaAndarPadrao = null;
+
     this._tipoAndar = tipo;
   }
   get qtdAndarX()
   { return this._qtdAndarX; }
   get qtdAndarY()
   { return this._qtdAndarY; }
+  /*
+  //se for adicionar set qtdAndar, mudar this._hipotenusaAndarPadrao de acordo com o tipoAndar
   set qtdAndarX(qtd)
   { this._qtdAndarX = qtd; }
   set qtdAndarY(qtd)
-  { this._qtdAndarY = qtd; }
+  { this._qtdAndarY = qtd; } */
 
   andar(conjuntoObjetosTela, indexContrObst)
   //contrObst, contrInim e contrTiros para caso o obstaculo tenha que empurrar o personagem (pers.mudarXY)
   //retorna se continua na lista
   {
-    let qtdAndar = Andar.qtdAndarFromTipo(this._qtdAndarX, this._qtdAndarY, this._formaGeometrica, this._tipoAndar, conjuntoObjetosTela.pers);
+    let qtdAndar = Andar.qtdAndarFromTipo({qtdAndarXPadrao: this._qtdAndarX, qtdAndarYPadrao: this._qtdAndarY,
+      tipoAndar: this._tipoAndar, hipotenusaPadrao: this._hipotenusaAndarPadrao},
+      this._formaGeometrica, conjuntoObjetosTela.pers);
     if (qtdAndar.inverterDirQtdAndar)
     {
       //inverte a direcao do obstaculo
@@ -511,7 +603,7 @@ class Obstaculo extends ObjetoTelaMorre
       this._qtdAndarY = -this._qtdAndarY;
     }
 
-    let qntPodeAndar = Interseccao.qntPodeAndarAntesIntersec(conjuntoObjetosTela.pers.formaGeometrica, this._formaGeometrica, qtdAndar.x, qtdAndar.y);
+    let qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(conjuntoObjetosTela.pers.formaGeometrica, this._formaGeometrica, qtdAndar.x, qtdAndar.y);
     let conseguiuAndarTudo = true;
     //se vai intersectar antes de andar tudo
     if (qtdPodeAndar.x < qtdAndar.x || qtdPodeAndar.y < qtdAndar.y)
@@ -572,11 +664,11 @@ class Obstaculo extends ObjetoTelaMorre
   }
 
   //clone
-  clone()
+  clone(pers)
   {
-    return new Obstaculo(this._formaGeometrica, {corImgEspecial: this._corImgEspecial, corImgMorto: this._corImgMorto},
+    return new Obstaculo(this._formaGeometrica.clone(), {corImgEspecial: this._corImgEspecial, corImgMorto: this._corImgMorto},
       {qtdAndarX: this._qtdAndarX, qtdAndarY: this._qtdAndarY, tipoAndar: this._tipoAndar},
-      this._qtdTiraVidaNaoConsegueEmpurrarPers);
+      pers, this._qtdTiraVidaNaoConsegueEmpurrarPers);
   }
 
  //outros...
@@ -596,9 +688,10 @@ class ObstaculoComVida extends Obstaculo
 {
   //extends Obstaculo pq funcao igual a do obstaculo (mesmo andar()) e nao vai desenhar vida em varios casos
 
-  constructor(formaGeometrica, coresImgsDiferentes, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers, vida)
+  constructor(formaGeometrica, coresImgsDiferentes, infoAndar, pers, qtdTiraVidaNaoConsegueEmpurrarPers, vida)
   {
-    super(formaGeometrica, coresImgsDiferentes, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers);
+    super(formaGeometrica, coresImgsDiferentes, infoAndar, pers, qtdTiraVidaNaoConsegueEmpurrarPers);
+    this._vidaMAX = vida;
     this._vida = vida;
   }
 
@@ -615,6 +708,14 @@ class ObstaculoComVida extends Obstaculo
       this._vida = 0;
     }
     return this._vida != 0;
+  }
+
+  //clone
+  clone(pers)
+  {
+    return new ObstaculoComVida(this._formaGeometrica.clone(), {corImgEspecial: this._corImgEspecial, corImgMorto: this._corImgMorto},
+      {qtdAndarX: this._qtdAndarX, qtdAndarY: this._qtdAndarY, tipoAndar: this._tipoAndar},
+      pers, this._qtdTiraVidaNaoConsegueEmpurrarPers, this._vidaMAX);
   }
 
   //draw (vai desenhar a vida? se sim, como?)

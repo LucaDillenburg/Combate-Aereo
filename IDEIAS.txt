@@ -9,7 +9,10 @@ Poção para ganhar vida
 Pocao para reverter todos os tiros de todos os inimigos que jah atiraram em de personagem e seguindo o inimigo mais proximo (imediatamente apos pegar pocao)
 Pocao para matar todos os inimigos nao essenciais
 Pocao para deixar o tempo mais lento (tudo anda X%)
+Pocao para reverter todos os tiros dos inimigos e do jogo (que estao na tela) para os inimigos mais proximos
 Obstaculo (triangulo) que congela o personagem por alguns segundos
+
+alguns Inimigos atirarem para todos os lados
 
 Transformar em jogo tematico! Batalha de naves espaciais?
 
