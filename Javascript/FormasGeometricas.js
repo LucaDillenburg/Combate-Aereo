@@ -143,16 +143,16 @@ class FormaGeometricaSimples extends FormaGeometrica
   { return this._x; }
   mudarX(qtdMuda) //retorna se aparece um pouco do objeto pelo menos (nos objetos que tem que ficar sempre dentro da tela, verifica-se se vai estar totalmente dentro antes de mudar X)
   {
-    this._x += qtdMuda;
-
     if (qtdMuda != 0)
     {
       this._mudouArestas();
+
+      this._x += qtdMuda;
       if (this._vertices != null)
         for (let i = 0; i<this._vertices.length; i++)
           this._vertices[i].x += qtdMuda;
       if (this._centroMassa != null)
-        this._centroMassa += qtdMuda;
+        this._centroMassa.x += qtdMuda;
     }
 
     //se aparece um pouco
@@ -169,16 +169,16 @@ class FormaGeometricaSimples extends FormaGeometrica
   { return this._y; }
   mudarY(qtdMuda) //retorna se aparece um pouco do objeto pelo menos (nos objetos que tem que ficar sempre dentro da tela, verifica-se se vai estar totalmente dentro antes de mudar Y)
   {
-    this._y += qtdMuda;
-
     if (qtdMuda != 0)
     {
       this._mudouArestas();
+
+      this._y += qtdMuda;
       if (this._vertices != null)
         for (let i = 0; i<this._vertices.length; i++)
           this._vertices[i].y += qtdMuda;
       if (this._centroMassa != null)
-        this._centroMassa += qtdMuda;
+        this._centroMassa.y += qtdMuda;
     }
 
     //se aparece um pouco
@@ -403,7 +403,7 @@ class FormaGeometricaComplexa extends FormaGeometrica
       }
 
       if (this._centroMassa != null)
-        this._centroMassa += qtdMuda;
+        this._centroMassa.x += qtdMuda;
 
       this._mudouArestasTriang();
     }
@@ -451,7 +451,7 @@ class FormaGeometricaComplexa extends FormaGeometrica
       }
 
       if (this._centroMassa != null)
-        this._centroMassa += qtdMuda;
+        this._centroMassa.y += qtdMuda;
 
       this._mudouArestasTriang();
     }

@@ -519,13 +519,14 @@ class ControladorInimigos
 
   //para andar ateh inimigo
 	qntAndarInimigoMaisProximo(formaGeometrica)
+  // formaGeometrica do objeto que vai andar ateh inimigo mais proximo
 	{
     let menorHipotenusa = null;
     let praOndeAndar = {x: null, y: null, inim: null};
 		for (this._inimigos.colocarAtualComeco(); !this._inimigos.atualEhNulo; this._inimigos.andarAtual())
       if (this._inimigos.atual.vivo)
       {
-        let qntAndar = Andar.qntAndarParaBater(this._inimigos.atual, formaGeometrica);
+        let qntAndar = Andar.qntAndarParaBater(formaGeometrica, this._inimigos.atual.formaGeometrica);
         let hipotenusa = Operacoes.hipotenusa(qntAndar.x, qntAndar.y);
         if (menorHipotenusa == null || hipotenusa < menorHipotenusa)
         {

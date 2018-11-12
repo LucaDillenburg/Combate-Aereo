@@ -26,7 +26,7 @@
 - fazer Interseccao.vaiTerInterseccao(...) para Paralelogramos e Quadrilateros
 - fazer opcao para rotacionar obstaculos
 
-- programar centroMassa de quadrilatero
+- programar centroMassa de quadrilatero (media de todos os vertices)
 - arrumar andar do personagem (quando jah tem duas teclas pressionadas quando uma terceira eh pressionada, o evento nao eh fired)
 - podemos saber se um ponto estah dentro de um quadrilatero (ou soh paralelogramo?) se estiver entre as retas de cima e de baixo e da direita e da esquerda
 - quando objetos com vida perderem vida abaixar a vida gradativamente (mudarVida gradativamente)

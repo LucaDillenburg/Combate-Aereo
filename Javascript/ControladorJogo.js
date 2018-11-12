@@ -42,7 +42,7 @@ class ControladorJogo
     let corTiro = color(0, 0, 102);
     return new Tiro(new Retangulo(0, 0, 5, 8, {fill: corTiro, stroke: corTiro}),
       {fill: color("black"), stroke: color("black")},
-      {qtdAndarX: 0, qtdAndarY: -15, tipoAndar: Andar.ANDAR_NORMAL}, null, true, 5);
+      {qtdAndarX: 0, qtdAndarY: -15, tipoAndar: Andar.SEGUIR_INIM_MAIS_PROX}, null, true, 5);
   }
   static newTiroNaoPersPadrao()
   {
@@ -98,14 +98,14 @@ class ControladorJogo
           ControladorJogo.newTiroNaoPersPadrao(), 2, {qtdAndarX: 5, qtdAndarY: 0,
           tipoAndar: Andar.INVERTER_QTDANDAR_NAO_SAIR_TELA}, this._personagemPrincipal
         ));
-        //controladoresInimigosLvAtual[0].adicionarInimigo(0, this._personagemPrincipal, Tela.xParaEstarNoMeio(tamInimigo), 20); aqui
+        controladoresInimigosLvAtual[0].adicionarInimigo(0, this._personagemPrincipal, Tela.xParaEstarNoMeio(tamInimigo), 20);
 
       // obstaculos
         controladoresObstaculosLvAtual = new Array(1);
 
         let corObst = color("black");
         controladoresObstaculosLvAtual[0] = new ControladorObstaculos(new Obstaculo(
-          new Retangulo(0, 0, 150, 50, {stroke: corObst, fill: corObst}),
+          new Retangulo(0, 0, 150, 0.7, {stroke: corObst, fill: corObst}),
           {corImgEspecial: color("green"), corImgMorto: color("white")},
           {qtdAndarX: 0, qtdAndarY: 0, tipoAndar: Andar.INVERTER_QTDANDAR_NAO_SAIR_TELA},
           this._personagemPrincipal, 20
@@ -185,7 +185,7 @@ class ControladorJogo
     this._auxAtirarInim++;
 
     // para que inimigo nao atire tao constantemente
-    if (this._auxAtirarInim >= 1000)//8) aqui
+    if (this._auxAtirarInim >= 8)
     {
       for(let i = 0; i<this._controladoresInimigos.length; i++)
         this._controladoresInimigos[i].atirarTodosInim(this._conjuntoObjetosTela);
@@ -315,7 +315,7 @@ class ControladorJogo
     switch (this._level)
     {
       case 1:
-        //return !this._controladoresInimigos[0].algumVivo(); aqui
+        return !this._controladoresInimigos[0].algumVivo();
       default:
         return false;
     }

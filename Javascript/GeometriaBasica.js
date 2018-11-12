@@ -1,3 +1,13 @@
+const qtdConsideradoQuaseExato = 0.005;
+class Exatidao
+{
+  static ehQuaseExato(n1, n2)
+  {
+    let diferenca = n1 - n2;
+    return diferenca >= -qtdConsideradoQuaseExato && diferenca <= qtdConsideradoQuaseExato;
+  }
+}
+
 //ponto, reta e semirreta (bases da geometria)
 class Ponto
 {
@@ -57,6 +67,17 @@ class Ponto
 
     //iguais
     return 0;
+  }
+
+  equals(outro, exato)
+  {
+    if (this.x == outro.x && this.y == outro.y)
+      return true;
+    else
+    if (exato)
+      return false;
+
+    return Exatidao.ehQuaseExato(this.x, outro.x) && Exatidao.ehQuaseExato(this.y, outro.y);
   }
 
   clone()
@@ -160,6 +181,10 @@ class Angulo
         (tipoAngulo == Angulo.MAIOR_180_BAIXO && ondeEstah > 0))
         this._angulo = 2*Math.PI - this._angulo;
     }
+
+    this._a = a;
+    this._b = b;
+    this._c = c;
   }
   static get MENOR_180()
   { return 0; }
@@ -168,18 +193,58 @@ class Angulo
   static get MAIOR_180_BAIXO()
   { return 2; }
 
+  //getters
   get valor()
   { return this._angulo; }
+  //vertices: AB^C
+  get a()
+  { return this._a; }
+  get b()
+  { return this._b; }
+  get c()
+  { return this._c; }
 
+  //aux
   static _magnitude(vetor)
   { return Math.sqrt(vetor.x*vetor.x + vetor.y*vetor.y); }
-
   static _vezes(vetor1, vetor2)
   { return (vetor1.x*vetor2.x) + (vetor1.y*vetor2.y); }
 }
 
-const Direcao = {"Direita":1, "Esquerda":2, "Cima":3, "Baixo":4};
+//direcao
+class Direcao
+{
+  //direcao relativa de obj2 em relacao a obj2
+  static emQualDirecaoObjEsta(obj1, obj2) //obj1 e obj2 sao formas geometricas
+  {
+    let aux = new Angulo(obj1.centroMassa.mais(new Ponto(3, -3)),
+      obj1.centroMassa, obj2.centroMassa, Angulo.MAIOR_180_CIMA);
+    let angulo = aux.valor;
 
+    stroke(255);
+    line(aux.a.x, aux.a.y, aux.b.x, aux.b.y);
+    line(aux.c.x, aux.c.y, aux.b.x, aux.b.y);
+
+    if (angulo <= 90) //angulo >= 0
+      return Direcao.Direita;
+    if (angulo <= 180) //angulo > 90
+      return Direcao.Baixo;
+    if (angulo <= 270) //angulo > 180
+      return Direcao.Esquerda;
+    //if (angulo <= 360) //angulo > 270
+    return Direcao.Cima;
+  }
+
+  //static getters
+  static get Direita()
+  { return 1; }
+  static get Esquerda()
+  { return 2; }
+  static get Cima()
+  { return 3; }
+  static get Baixo()
+  { return 4; }
+}
 
 //operacoes e funcoes basicas de geometria
 const qntNaoColidir = 0.2;
@@ -357,7 +422,7 @@ class Interseccao
     if (Interseccao.intersecDirecao(obj2.y, obj2.height, obj1.y, obj1.height))
       qtdPodeAndarY2 = 0;
     else
-      qtdPodeAndarY2 = Interseccao._qtdPodeAndarEmX(obj1, obj2, qtdAndarY);
+      qtdPodeAndarY2 = Interseccao._qtdPodeAndarEmY(obj1, obj2, qtdAndarY);
 
     if (Math.abs(qtdPodeAndarY1) >= Math.abs(qtdPodeAndarY2))
     // 1: a partir de X
@@ -366,33 +431,6 @@ class Interseccao
     // 2: a partir de Y
       return {x: (qtdPodeAndarY2*qtdAndarX)/qtdAndarY, // regra de 3 (vai andar em X proporcional de quanto andara em Y)
         y: qtdPodeAndarY2};
-
-		/*
-		//se <= ZERO: quanto tem q diminuir no qtdAndarX (diminuir um a mais).
-		 //ps: soh vai diminuir se os dois (qtdMudaAndarX e qtdMudaAndarY) forem <= ZERO
-		let qtdMudaAndarX;
-		if (qtdAndarX > 0)
-				qtdMudaAndarX = obj1.x - (obj2.x + obj2.width + qtdAndarX);
-		else
-		if (qtdAndarX < 0)
-			qtdMudaAndarX = (obj2.x - qtdAndarX) - obj1.x;
-		else
-			qtdMudaAndarX = 0;
-
-		//se <= ZERO: quanto tem q diminuir no qtdAndarX (diminuir um a mais).
-		 //ps: soh vai diminuir se os dois (qtdMudaAndarX e qtdMudaAndarY) forem <= ZERO
-		let qtdMudaAndarY;
-		if (qtdAndarY > 0)
-			qtdMudaAndarY = obj1.y - (obj2.y + obj2.height + qtdAndarY);
-		else
-		if (qtdAndarY < 0)
-			qtdMudaAndarY = (obj2.y - qtdAndarY) - obj1.y;
-		else
-			qtdMudaAndarY = 0;
-
-		//TEM QUE SER PROPORCIONAL!! (MAIOR PROPORCIONAL)
-			//pensar se eh pelo proporcional ou nao, e se eh o maior ou menor
-		let proporcaoMudarX = ; */
 	}
   static _qtdPodeAndarEmX(obj1, obj2, qtdAndarX)
   // se jah sabe que vai colidir em X
@@ -572,6 +610,7 @@ class Interseccao
   }
 }
 
+const espacoLadosTela = 4;
 class Tela
 {
 	//JAH SAIU
@@ -580,7 +619,7 @@ class Tela
 		//      saiu p/ direita || saiu p/ esquerda
 		if (obj.menorX >= width || obj.maiorX <= 0) //X
 			return true;
-		//                           saiu p/ direita || saiu p/ esquerda
+		//         saiu p/ baixo                     || saiu p/ cima
 		if (obj.menorY >= height - heightVidaUsuario || obj.maiorY <= 0) //Y
 			return true;
 		return false;
@@ -594,10 +633,10 @@ class Tela
 	static objVaiSairEmX(obj, qtdMuda) //obj = formageometrica
 	{
     //saiu p/ direita
-		if (obj.menorX + qtdMuda >= width)
+		if (obj.maiorX + qtdMuda > width - espacoLadosTela)
 			return Tela.SAIU_DIREITA;
     //saiu p/ esquerda
-    if (obj.maiorX + qtdMuda <= 0)
+    if (obj.menorX + qtdMuda < espacoLadosTela)
       return Tela.SAIU_ESQUERDA;
     return 0; //nao saiu
 	}
@@ -608,12 +647,11 @@ class Tela
     let direcaoSair = Tela.objVaiSairEmX(obj, qtdMuda);
     if (!direcaoSair)
       return qtdMuda;
-    if (direcaoSair == Direcao.SAIU_DIREITA)
-      return width - (obj.x + obj.width);
+    if (direcaoSair == Tela.SAIU_DIREITA)
+      return (width - espacoLadosTela) - (obj.x + obj.width);
     else
-    if (direcaoSair == Direcao.SAIU_ESQUERDA)
-      return obj.x;
-    return -1;
+    //if (direcaoSair == Tela.SAIU_ESQUERDA)
+      return -obj.x + espacoLadosTela;
   }
 
 	static get SAIU_EM_CIMA()
@@ -622,11 +660,11 @@ class Tela
 	{ return 5; }
 	static objVaiSairEmY(obj, qtdMuda) //obj = formageometrica
 	{
-    //saiu p/ direita
-		if (obj.menorY + qtdMuda >= height - heightVidaUsuario)
+    //saiu p/ baixo
+		if (obj.maiorY + qtdMuda > height - heightVidaUsuario - espacoLadosTela)
 			return Tela.SAIU_EMBAIXO;
-    //saiu p/ esquerda
-    if (obj.maiorY + qtdMuda <= 0)
+    //saiu p/ cima
+    if (obj.menorY + qtdMuda < espacoLadosTela)
       return Tela.SAIU_EM_CIMA;
     return 0; //nao saiu
 	}
@@ -637,12 +675,11 @@ class Tela
     let direcaoSair = Tela.objVaiSairEmY(obj, qtdMuda);
     if (!direcaoSair)
       return qtdMuda;
-    if (direcaoSair == Direcao.SAIU_EMBAIXO)
-      return height - heightVidaUsuario - (obj.y + obj.height);
+    if (direcaoSair == Tela.SAIU_EMBAIXO)
+      return (height - heightVidaUsuario - espacoLadosTela) - (obj.y + obj.height);
     else
-    if (direcaoSair == Direcao.SAIU_EM_CIMA)
-      return obj.y;
-    return -1;
+    //if (direcaoSair == Tela.SAIU_EM_CIMA)
+      return -obj.y + espacoLadosTela;
   }
 
   //OUTROS
@@ -685,6 +722,7 @@ class Geometria
 
 
 //andar
+const porcentQrEntrar = 0.05; //quanto maior esse numero, mais efetivo
 class Andar
 {
   //tipos andar
@@ -692,59 +730,84 @@ class Andar
   { return 1; }
   static get INVERTER_QTDANDAR_NAO_SAIR_TELA()
   { return 2; }
+
   static get SEGUIR_PERS()
   { return 3; }
   static get SEGUIR_INIM_MAIS_PROX()
   { return 4; }
 
-  qtdAndarFromTipo(qtdAndarXPadrao, qtdAndarYPadrao, formaGeometrica, tipoAndar, pers, inimSeguir)
-  {
-    let qtdAndar = {x: qtdAndarXPadrao, y: qtdAndarYPadrao};
+  static get DIRECAO_PERS()
+  { return 3; }
+  static get DIRECAO_INIM_MAIS_PROX()
+  { return 4; }
 
-    switch(tipoAndar)
+  static qtdAndarFromTipo(infoAndar, formaGeomVaiAndar, objPerseguido)
+  //infoAndar: qtdAndarXPadrao, qtdAndarYPadrao, tipoAndar, [hipotenusaPadrao] (ultimo soh se for SEGUIR_PERS ou SEGUIR_INIM_MAIS_PROX)
+  //objPerseguido eh ObjetoTela
+  {
+    let qtdAndar = {x: infoAndar.qtdAndarXPadrao, y: infoAndar.qtdAndarYPadrao};
+
+    switch(infoAndar.tipoAndar)
     {
       case Andar.ANDAR_NORMAL:
         break;
       case Andar.INVERTER_QTDANDAR_NAO_SAIR_TELA:
         //se obstaculo vai sair, inverte a direcao
-        if (Tela.objVaiSairEmX(formaGeometrica, qtdAndarXPadrao) ||
-          Tela.objVaiSairEmY(formaGeometrica, qtdAndarYPadrao))
+        if (Tela.objVaiSairEmX(formaGeomVaiAndar, infoAndar.qtdAndarXPadrao) ||
+          Tela.objVaiSairEmY(formaGeomVaiAndar, infoAndar.qtdAndarYPadrao))
         {
           qtdAndar.inverterDirQtdAndar = true;
 
           //jah anda pro outro lado
-          qtdAndar.x = -qtdAndarXPadrao;
-          qtdAndar.y = -qtdAndarYPadrao;
+          qtdAndar.x = -infoAndar.qtdAndarXPadrao;
+          qtdAndar.y = -infoAndar.qtdAndarYPadrao;
         }
         break;
       case Andar.SEGUIR_PERS:
       case Andar.SEGUIR_INIM_MAIS_PROX:
-        let objTela;
-        if (tipoAndar == Andar.SEGUIR_INIM_MAIS_PROX)
-          objTela = inimSeguir;
-        else
-          objTela = pers;
-
         //calcular quanto teria que andar em cada direcao para chegar ao objeto
-        qntQrAndar = Andar.qntAndarParaBater(objTela, formaGeometrica);
+        let qntQrAndar = Andar.qntAndarParaBater(formaGeomVaiAndar, objPerseguido.formaGeometrica);
 
         //calcular quanto andar em cada direcao para andar sempre o mesmo que o padrao
-          //ps: equacoes baseadas em "andar na direcao de algo andando o mesmo.png"
-        qtdAndar.y = ((qtdAndarXPadrao + qtdAndarYPadrao)*qntQrAndar.y)/(qntQrAndar.x + qntQrAndar.y);
-        qtdAndar.x = qtdAndarXPadrao + qtdAndarYPadrao - qtdAndarY;
+        let k = infoAndar.hipotenusaPadrao/Operacoes.hipotenusa(qntQrAndar.x, qntQrAndar.y);
+        qtdAndar.x = k*qntQrAndar.x;
+        qtdAndar.y = k*qntQrAndar.y;
         break;
     }
 
     return qtdAndar;
   }
 
-  qntAndarParaBater(formaGeometrica, objTela)
+  static qntAndarParaBater(formaGeomVaiAndar, formaGeomPerseguido)
   {
-    //calcular quanto teria que andar em cada direcao para chegar ao objeto ("andar na direcao de algo andando o mesmo.png")
-    return {
-      x: (objTela.formaGeometrica.x + objTela.formaGeometrica.width - formaGeometrica.width) - formaGeometrica.x,
-                       //PONTO X
-      y: objTela.formaGeometrica.y - (formaGeometrica.y + (formaGeometrica.y<objTela.formaGeometrica.y)?(formaGeometrica.height-1):1)
-    };
+    //direcao de formaGeomVaiAndar em relacao a formaGeomPerseguido
+    let direcao = Direcao.emQualDirecaoObjEsta(formaGeomPerseguido, formaGeomVaiAndar);
+    console.log(direcao);
+
+    let x,y;
+    if (direcao == Direcao.Cima || direcao == Direcao.Baixo)
+    {
+      x = formaGeomPerseguido.x + (formaGeomPerseguido.width - formaGeomVaiAndar.width)/2;
+      let k = porcentQrEntrar*formaGeomPerseguido.height;
+
+      if (direcao == Direcao.Cima)
+        y = formaGeomPerseguido.y - formaGeomVaiAndar.height + k;
+      else
+        y = formaGeomPerseguido.y + formaGeomPerseguido.height - k;
+    }else
+    //if (direcao == Direcao.Esquerda || direcao == Direcao.Direita)
+    {
+      y = formaGeomPerseguido.y + (formaGeomPerseguido.height - formaGeomVaiAndar.height)/2;
+      let k = porcentQrEntrar*formaGeomPerseguido.width;
+
+      if (direcao == Direcao.Esquerda)
+        x = formaGeomPerseguido.x - formaGeomVaiAndar.width + k;
+      else
+        x = formaGeomPerseguido.x + formaGeomPerseguido.width - k;
+    }
+
+    //return formaGeomPerseguido.centroMassa.menos(formaGeomVaiAndar.centroMassa); //assim fica muito efetivo
+
+    return {x: x, y: y};
   }
 }
