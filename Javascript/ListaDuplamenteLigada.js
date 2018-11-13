@@ -4,8 +4,10 @@ class ListaDuplamenteLigada
   {
     this._prim = null;
     this._ultimo = null;
-    this._atual = null;
     this._qtdElem = 0;
+
+    this._atual = null;
+    this._indexAtual = -1;
   }
 
   //getters
@@ -62,6 +64,12 @@ class ListaDuplamenteLigada
   //atual
   colocarAtualComeco()
   { this._atual = this._prim; }
+  colocarAtualEm(index)
+  {
+    this._atual = this._prim;
+    for (let i = 1; i<=index; i++)
+      this._atual = this._atual.prox;
+  }
   andarAtual()
   {
     if (this._atual == null)
@@ -83,7 +91,7 @@ class ListaDuplamenteLigada
   removerAtual()
   {
     if (this._atual == null)
-      throw "Atual eh nulo! - em removerAtual() ";
+      throw "Atual eh nulo!";
 
     if (this._atual.ant == null)
     {
@@ -91,7 +99,8 @@ class ListaDuplamenteLigada
         if (this._prim == null)
           this._ultimo = null;
     }else
-        this._atual.ant.prox = this._atual.prox;
+      this._atual.ant.prox = this._atual.prox;
+
     this._qtdElem--;
   }
 

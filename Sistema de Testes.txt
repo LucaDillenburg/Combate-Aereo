@@ -1,26 +1,24 @@
-- testar Direcao.emQualDirecaoObjEsta (testar centroMassa)
-- testar Andar.qntAndarParaBater
-
 SISTEMA DE TESTES:
- - tipos andar (falta seguir personagem e direcao personagem de obstaculo)
- - adicionar nos controladores
-   -> inimigos. OK
-   -> tiros. OK
-   -> obstaculos. OK
- - andar de outros objetos
+ - adicionar nos controladores. OK
+ - andar dos objetos. OK
  - colisoes:
-   -> pers com obstaculo : obstaculo muito fino e qtdAndarPers muito grande
-   -> obstaculo com pers : obst empurrando personagem (quando da e qnd nao da)
-   -> pers com inimigo e inimigo com pers
    -> tiros com resto
      .cm personagem. OK
      .cm inimigos. OK
-     .cm obstaculos
+     .cm obstaculos. OK
+   -> pers com inimigo e inimigo com pers. OK
+   -> pers com obstaculo : obstaculo muito fino e qtdAndarPers muito grande. OK
+   -> obstaculo com pers : obst empurrando personagem (quando da e qnd nao da). OK
  - procCriou de todos os ObjetosTela
- - morrer de inimigos
+   -> tiro. OK
+   -> obstaculos. OK
+   -> inimigo. OK
+ - morrer de inimigos. OK
 
- - ver outros metodos
-
+ERROS
+ - QUANDO EU ATIRO NO OBSTACULO O INIMIGO PERDE VIDA (AuxControladores.auxAndarTiro). OK
+ - OBSTACULO NAO ESTAH EMPURRANDO O PERSONAGEM. OK
+ - estah sobrando um tiro que nao estah sendo tirado da lista mesmo depois de morto
 
 Testes Basicos:
  - ListaDuplamenteLigada.js  *OK*
@@ -48,6 +46,7 @@ Conclusoes:
 //Controladores
  - todos os tiros do controladores estavam iguais (parecia um soh) e quanto mais tiros, mais rapido ele andava.
 Descobri que faltava um .clone() nas formasGeometricas. Mudei isso em todos os controladores de objetos
+
 //Andar personagem no Script
  - o andar do personagem estava meio lagado, pois ele soh andava quando o evento de KeyDown acontecia
 (esse evento demorava certo tempo para acontecer principalmente quando muda o que estava clicando)
@@ -55,10 +54,21 @@ Entao fiz ele perceber se as teclas estao apertadas no KeyDown mesmo, mas fiz el
 ps: Tambem fiz sistema com ON, OFF e OPTION para quando tiver uma setinha apertada e aperterem a oposta,
 quando soltarem e se a anterior ainda estiver apertada, ela volte a ser considerada.
 ps: Quando uma setinha for apertada e a oposta estiver ON, deixar ela como OPTION
+
 //GEOMETRIA BASICA
- - estava dando um erro na hora da criacao dos paralelogramos. a diferenca entre o pontoDCerto e do D informado era minuscula e nao significativa.
+ - estava dando um erro na hora da criacao dos paralelogramos. a diferenca entre o pontoDCerto e do D informado era minuscula e nao
+significativa.
 Entao fiz um procedimento que ve se estah quase igual (com uma margem muito pequena) e usei isso para determinar se dois pontos sao iguais,
 caso o parametro EXATAMENTE esteja FALSE (se for nulo ou true, sera feito normalmente)
+
 //ANDAR
  - os tipoAndar Andar.SEGUIR_PERS e Andar.SEGUIR_INIM_MAIS_PROX estao "lagando" muito (por causa do tanto de conta que tem que fazer).
 Solucao: esses tipoAndar soh serao usados em MISSEIS TELEGUIADOS (Poder e arma secreta para inimigos importantes)
+ - quando era DIRECAO_PERS ou DIRECAO_INIM_MAIS_PROX, ele nao funcionava porque ele ainda nao tinha colocado o (x,y) certo,
+entao considerava-se (0,0).
+Mudei o clone do tiro para jah colocar os novos valores na formaGeometrica, pois essa verificacao de achar o qtdAndarPadrao para andar em
+direcao a algo era feito logo no construtor.
+
+//PROCCRIOU
+ - ProcCriou do obstaculo: se o obstaculo fosse ser criado no lugar onde o personagem tava, ele empurrava o personagem ateh que a linha ficava em cima
+da outra linha (ainda esatva intersectando). Empurrei qntNaoColidir a mais (para a linha do personagem nao colidir com a linha do obstaculo criado)

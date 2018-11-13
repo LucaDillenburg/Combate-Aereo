@@ -63,12 +63,8 @@ class ControladorTiros
 		if (tiro == null)
       tiro = this._tiroPadrao;
 
-    let novoTiro = tiro.clone(conjuntoObjetosTela);
+    let novoTiro = tiro.clone(x, y, conjuntoObjetosTela);
     novoTiro._ehDoPers = this._ehPersPrinc;
-    if (x != null)
-      novoTiro.formaGeometrica.x = x;
-    if (y != null)
-      novoTiro.formaGeometrica.y = y;
     this._adicionarTiro(novoTiro, conjuntoObjetosTela);
   }
   _adicionarTiro(novoTiro, conjuntoObjetosTela)
@@ -109,10 +105,7 @@ class ControladorTiros
         quemAndou = ControladorTiros.PERSONAGEM_ANDOU;
 
     //percorrer todos os elementos da lista andando os tiros (se retornar false, remover da lista)
-		this._tiros.colocarAtualComeco();
-
-		while (!this._tiros.atualEhNulo)
-		{
+		for (this._tiros.colocarAtualComeco(); !this._tiros.atualEhNulo; this._tiros.andarAtual())
       if (this._tiros.atual.vivo)
       {
         if (Interseccao.vaiTerInterseccao(this._tiros.atual.formaGeometrica, objTelaColide.formaGeometrica, qtdMudarX, qtdMudarY))
@@ -126,9 +119,6 @@ class ControladorTiros
         //O TIRO MORTO VAI SAIR DA LISTA [...] QUANDO EM QUEM ELE BATEU ANDAR
         if (this._tiros.atual.ehQuemBateu(quemAndou, indexAndou))
           this._tiros.removerAtual();
-
-      this._tiros.andarAtual();
-		}
   }
   static get INIMIGOS_CRIADO()
   { return Tiro.COLIDIU_COM_INIMIGO; }
@@ -142,8 +132,8 @@ class ControladorTiros
       {
         //se objeto tela tem vida
         if (objTelaColide instanceof PersComTiros || objTelaColide instanceof ObstaculoComVida)
-          this_tiros.atual.tirarVidaObjComVida(objTelaColide);
-        this._tiros.atual.morreu(quemAndou, indexAndou);
+          this._tiros.atual.tirarVidaObjCmVida(objTelaColide);
+        this._tiros.atual.morreu(quemFoiCriado, indexAndou);
       }
       //coisas que acabaram de ser criadas ainda nao vao ter colidido com ninguem
   }
@@ -159,14 +149,12 @@ class ControladorTiros
     //desenha todos os tiros
 	draw()
 	{
-		this._tiros.colocarAtualComeco();
-		while (!this._tiros.atualEhNulo)
+		for (this._tiros.colocarAtualComeco(); !this._tiros.atualEhNulo; this._tiros.andarAtual())
     {
       this._tiros.atual.draw();
       //se tiro jah morreu (desenhar ele a ultima vez e depois tirar ele da lista)
       if (!this._tiros.atual.vivo)
         this._tiros.removerAtual();
-      this._tiros.andarAtual();
     }
 	}
 }
@@ -269,13 +257,20 @@ class ControladorObstaculos
   andarObstaculos(conjuntoObjetosTela, indexContrObst)
   //os tres ultimos parametros para caso o obstaculo tenha que empurrar o personagem (pers.mudarXY)
   {
+    let i = 0;
     for (this._obstaculos.colocarAtualComeco(); !this._obstaculos.atualEhNulo; this._obstaculos.andarAtual())
       if (this._obstaculos.atual.vivo)
       {
         //retorna se tiro continua na lista (o morreu() eh feito la dentro)
-        let continuaNaLista = this._obstaculos.atual.andar(conjuntoObjetosTela, indexContrObst);
-        if (!continuaNaLista)
+        let infoAndou = this._obstaculos.atual.andar(conjuntoObjetosTela, indexContrObst);
+
+        if (infoAndou.empurrouPers)
+          this._obstaculos.colocarAtualEm(i);
+
+        if (!infoAndou.continuaNaLista)
           this._obstaculos.removerAtual();
+        else
+          i++;
       }else
         this._obstaculos.removerAtual();
   }
@@ -340,14 +335,12 @@ class ControladorObstaculos
     //desenha todos os obstaculos
 	draw()
 	{
-		this._obstaculos.colocarAtualComeco();
-		while (!this._obstaculos.atualEhNulo)
+		for (this._obstaculos.colocarAtualComeco(); !this._obstaculos.atualEhNulo; this._obstaculos.andarAtual())
     {
       this._obstaculos.atual.draw();
       //se obstaculo jah morreu (desenhar ele a ultima vez e depois tirar ele da lista)
       if (!this._obstaculos.atual.vivo)
         this._obstaculos.removerAtual();
-      this._obstaculos.andarAtual();
     }
 	}
 }
@@ -459,19 +452,8 @@ class ControladorInimigos
  //outros...
 
   //para ver se level acabou
-  algumVivo()
-  {
-		this._inimigos.colocarAtualComeco();
-		while (!this._inimigos.atualEhNulo)
-    {
-      //se inimigo jah morreu (desenhar ele a ultima vez e depois tirar ele da lista)
-      if (this._inimigos.atual.vivo)
-        return true;
-      this._inimigos.andarAtual();
-    }
-
-    return false;
-	}
+  algumInimNaTela()
+  { return !this._inimigos.vazia; }
 
   //colisao com tiro
   verificarColidirComTiro(info, tiro, controladoresTirosJogo, tiroPersAndou)
@@ -550,14 +532,12 @@ class ControladorInimigos
   //draw
   draw(controladoresTirosJogo)
 	{
-		this._inimigos.colocarAtualComeco();
-		while (!this._inimigos.atualEhNulo)
+		for (this._inimigos.colocarAtualComeco(); !this._inimigos.atualEhNulo; this._inimigos.andarAtual())
     {
       this._inimigos.atual.draw();
       //se inimigo jah morreu (desenhar ele a ultima vez e depois tirar ele da lista)
       if (!this._inimigos.atual.vivo)
         this._removerInimAtualCompleto(controladoresTirosJogo);
-      this._inimigos.andarAtual();
     }
 	}
 }
@@ -571,33 +551,31 @@ class AuxControladores
     let qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(objTelaRealAtual.formaGeometrica, tiro.formaGeometrica, info.qtdPodeAndarX, info.qtdPodeAndarY);
     let hipotenusa = Operacoes.hipotenusa(qtdPodeAndar.x, qtdPodeAndar.y);
 
-    let inseriu = false;
-
-    //se tiro vai bater em um obstaculo mais perto que o outro
+    //se tiro vai bater em um obstaculo mais perto ou igual a um que jah bateu
     if (hipotenusa < info.menorHipotenusa || (!info.listaBateu.vazia && hipotenusa == info.menorHipotenusa))
     {
-      info.menorHipotenusa = hipotenusa;
-      info.qtdPodeAndarX = qtdPodeAndar.x;
-      info.qtdPodeAndarY = qtdPodeAndar.y;
-      info.colidiu = true;
-
-      if (!info.listaBateu.vazia && info.listaBateu.primeiroElemento.y != objTelaRealAtual.y)
+      //se a hipotenusa diminuiu (agora tudo serah apenas relacionado a ele)
+      if (hipotenusa < info.menorHipotenusa)
       {
         info.listaBateu.esvaziar();
+
+        info.menorHipotenusa = hipotenusa;
+        info.qtdPodeAndarX = qtdPodeAndar.x;
+        info.qtdPodeAndarY = qtdPodeAndar.y;
 
         info.menorHeight = objTelaRealAtual.formaGeometrica.height;
         info.menorWidth = objTelaRealAtual.formaGeometrica.width;
       }else
+      if (!info.listaBateu.vazia && hipotenusa == info.menorHipotenusa)
       {
         if (objTelaRealAtual.formaGeometrica.height < info.menorHeight)
           info.menorHeight = objTelaRealAtual.formaGeometrica.height;
         if (objTelaRealAtual.formaGeometrica.width < info.menorWidth)
           info.menorWidth = objTelaRealAtual.formaGeometrica.width;
       }
-      info.listaBateu.inserirNoComeco(objTelaRealAtual);
-      inseriu = true;
-    }
 
-    return inseriu;
+      return true;
+    }else
+      return false;
   }
 }

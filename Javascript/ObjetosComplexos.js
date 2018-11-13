@@ -219,7 +219,7 @@ class PersonagemPrincipal extends PersComTiros
   }
   mudarXY(qtdMudaX, qtdMudaY, conjuntoObjetosTela)
   //soh obstaculo usa diretamente
-  //retorna se pode andar tudo aquilo ou nao (para andar do obstaculo)
+  //retorna se pode andar tudo aquilo
   {
     //colisao com:
       // - tiros de inimigos e do jogo => perde vida e mata tiros
@@ -238,6 +238,7 @@ class PersonagemPrincipal extends PersComTiros
     };
     infoQtdMudar.menorHipotenusa = Operacoes.hipotenusa(infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
 
+    //nao conseguiu andar tudo
     if (infoQtdMudar.qtdPodeMudarX == 0 && infoQtdMudar.qtdPodeMudarY == 0)
       return false;
 
@@ -246,8 +247,6 @@ class PersonagemPrincipal extends PersComTiros
     for (let i = 0; i<conjuntoObjetosTela.controladoresObstaculos.length; i++)
       conjuntoObjetosTela.controladoresObstaculos[i].qtdPersPodeAndar(infoQtdMudar, this._formaGeometrica);
     //aqui tudo o que devia ser feito com obstaculos estah OK
-
-    console.log(infoQtdMudar);
 
     //inimigos e tiros deles
     for (let i = 0; i<conjuntoObjetosTela.controladoresInimigos.length; i++)

@@ -51,7 +51,7 @@ class FormaGeometrica
   get centroMassa()
   {
     if (this._centroMassa == null)
-      this._centroMassa = new Ponto(this.x + this.width/2, this.y + this.y + this.height/2);
+      this._centroMassa = new Ponto(this.x + this.width/2, this.y + this.height/2);
     return this._centroMassa;
   }
   // serve perfeitamente para quadrado e retangulo e mais ou menos para o resto
@@ -64,6 +64,15 @@ class FormaGeometrica
 
   colocarNoMeioX()
   { this.x = Tela.xParaEstarNoMeio(this.width); }
+
+  //para clone
+  _colocarLugarEspecificado(x,y)
+  {
+    if (x != null)
+      this.x = x;
+    if (y != null)
+      this.y = y;
+  }
 }
 /*Quem der extends em FormaGeometricaComplexa tem que ter:
   //forma
@@ -87,7 +96,7 @@ class FormaGeometrica
   //forma e cor
   -> draw()
 
-  -> clone()
+  -> clone(x,y)
 
 ps: nao fiz com interface, pois nao faz muito sentido em javascript
 */
@@ -279,8 +288,12 @@ class Retangulo extends FormaGeometricaSimples
   }
 
   //clone
-  clone()
-  { return new Retangulo(this._x, this._y, this._width, this._height, this._corImg); }
+  clone(x,y)
+  {
+    let ret = new Retangulo(this._x, this._y, this._width, this._height, this._corImg);
+    ret._colocarLugarEspecificado(x,y); //coloca no lugar certo
+    return ret;
+  }
 }
 
 class Quadrado extends FormaGeometricaSimples
@@ -329,8 +342,12 @@ class Quadrado extends FormaGeometricaSimples
   { return this._tamLado; }
 
   //clone
-  clone()
-  { return new Quadrado(this._x, this._y, this._tamLado, this._corImg); }
+  clone(x,y)
+  {
+    let ret = new Quadrado(this._x, this._y, this._tamLado, this._corImg);
+    ret._colocarLugarEspecificado(x,y); //coloca no lugar certo
+    return ret;
+  }
 }
 
 
@@ -741,7 +758,7 @@ class FormaGeometricaComplexa extends FormaGeometrica
     for (let i = 0; i<infoOutrosVert.length; i++)
       if (infoOutrosVert[i].vert != null)
         infoOutrosVert[i].angulo = new Angulo(primeiroPonto, pontoCentral,
-          infoOutrosVert[i].vert, tipoAngulo).valor;
+          infoOutrosVert[i].vert, tipoAngulo).valorRad;
 
     //ordenar de maneira crescente os angulos PrimeiroPonto-PontoCentral-VerticeAtual dos vertices
     this._ordenarOutrosVert(infoOutrosVert);
@@ -816,8 +833,12 @@ class Quadrilatero extends FormaGeometricaComplexa
   }
 
   //clone
-  clone()
-  { return new Quadrilatero(this._a, this._b, this._c, this._d, this._corImg); }
+  clone(x,y)
+  {
+    let ret = new Quadrilatero(this._a, this._b, this._c, this._d, this._corImg);
+    ret._colocarLugarEspecificado(x,y); //coloca no lugar certo
+    return ret;
+  }
 }
 
 class Paralelogramo extends Quadrilatero
@@ -861,8 +882,12 @@ class Paralelogramo extends Quadrilatero
   { return 4; }
 
   //clone
-  clone()
-  { return new Paralelogramo(this._a, this._b, this._c, this._d, this._corImg, false); }
+  clone(x,y)
+  {
+    let ret = new Paralelogramo(this._a, this._b, this._c, this._d, this._corImg, false);
+    ret._colocarLugarEspecificado(x,y); //coloca no lugar certo
+    return ret;
+  }
 }
 
 class Triangulo extends FormaGeometricaComplexa
@@ -936,8 +961,12 @@ class Triangulo extends FormaGeometricaComplexa
   }
 
   //clone
-  clone()
-  { return new Triangulo(this._a, this._b, this._c, this._corImg); }
+  clone(x,y)
+  {
+    let ret = new Triangulo(this._a, this._b, this._c, this._corImg);
+    ret._colocarLugarEspecificado(x,y); //coloca no lugar certo
+    return ret;
+  }
 }
 
 //se for adicionar novas formas geometricas complexas,

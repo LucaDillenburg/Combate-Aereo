@@ -88,8 +88,8 @@ class Reta
 {
   constructor(a, b)
   {
-    if (a.x == b.x && a.y == b.y)
-      throw "Esses dois pontos não formam uma reta!"
+    //if (a.x == b.x && a.y == b.y)
+    //  throw "Esses dois pontos não formam uma reta!";
 
     //nao precisa ser necessariamente de cima para baixo
     this._a = a;
@@ -102,6 +102,9 @@ class Reta
   //retorna 0 se estah em cima, >0 se estah a direita e <0 se estiver a esquerda
   ondePontoEstah(ponto)
   {
+    if (this._a.y == this._b.y)
+      return ponto.y - this._a.y;
+
     let widthDeveria = (ponto.y - this._a.y)*this._width/this._height;
     let xDeveria = this._a.x + widthDeveria;
 
@@ -169,7 +172,7 @@ class Angulo
     let ba = a.menos(b);
     let bc = c.menos(b);
 
-    this._angulo = Math.acos(
+    this._anguloRad = Math.acos(
       Angulo._vezes(ba, bc) / (Angulo._magnitude(ba)*Angulo._magnitude(bc))
     );
 
@@ -179,8 +182,10 @@ class Angulo
       let ondeEstah = new Reta(a,b).ondePontoEstah(c);
       if ((tipoAngulo == Angulo.MAIOR_180_CIMA && ondeEstah < 0) ||
         (tipoAngulo == Angulo.MAIOR_180_BAIXO && ondeEstah > 0))
-        this._angulo = 2*Math.PI - this._angulo;
+        this._anguloRad = 2*Math.PI - this._anguloRad;
     }
+
+    this._anguloGraus = this._anguloRad *180/Math.PI;
 
     this._a = a;
     this._b = b;
@@ -194,8 +199,10 @@ class Angulo
   { return 2; }
 
   //getters
-  get valor()
-  { return this._angulo; }
+  get valorRad()
+  { return this._anguloRad; }
+  get valorGraus()
+  { return this._anguloGraus; }
   //vertices: AB^C
   get a()
   { return this._a; }
@@ -217,13 +224,8 @@ class Direcao
   //direcao relativa de obj2 em relacao a obj2
   static emQualDirecaoObjEsta(obj1, obj2) //obj1 e obj2 sao formas geometricas
   {
-    let aux = new Angulo(obj1.centroMassa.mais(new Ponto(3, -3)),
-      obj1.centroMassa, obj2.centroMassa, Angulo.MAIOR_180_CIMA);
-    let angulo = aux.valor;
-
-    stroke(255);
-    line(aux.a.x, aux.a.y, aux.b.x, aux.b.y);
-    line(aux.c.x, aux.c.y, aux.b.x, aux.b.y);
+    let angulo = new Angulo(obj1.centroMassa.mais(new Ponto(50, -50)),
+      obj1.centroMassa, obj2.centroMassa, Angulo.MAIOR_180_CIMA).valorGraus;
 
     if (angulo <= 90) //angulo >= 0
       return Direcao.Direita;
@@ -737,9 +739,9 @@ class Andar
   { return 4; }
 
   static get DIRECAO_PERS()
-  { return 3; }
+  { return 5; }
   static get DIRECAO_INIM_MAIS_PROX()
-  { return 4; }
+  { return 6; }
 
   static qtdAndarFromTipo(infoAndar, formaGeomVaiAndar, objPerseguido)
   //infoAndar: qtdAndarXPadrao, qtdAndarYPadrao, tipoAndar, [hipotenusaPadrao] (ultimo soh se for SEGUIR_PERS ou SEGUIR_INIM_MAIS_PROX)
@@ -782,7 +784,6 @@ class Andar
   {
     //direcao de formaGeomVaiAndar em relacao a formaGeomPerseguido
     let direcao = Direcao.emQualDirecaoObjEsta(formaGeomPerseguido, formaGeomVaiAndar);
-    console.log(direcao);
 
     let x,y;
     if (direcao == Direcao.Cima || direcao == Direcao.Baixo)
@@ -807,7 +808,6 @@ class Andar
     }
 
     //return formaGeomPerseguido.centroMassa.menos(formaGeomVaiAndar.centroMassa); //assim fica muito efetivo
-
-    return {x: x, y: y};
+    return {x: x - formaGeomVaiAndar.x, y: y - formaGeomVaiAndar.y};
   }
 }

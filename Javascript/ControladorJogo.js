@@ -42,7 +42,7 @@ class ControladorJogo
     let corTiro = color(0, 0, 102);
     return new Tiro(new Retangulo(0, 0, 5, 8, {fill: corTiro, stroke: corTiro}),
       {fill: color("black"), stroke: color("black")},
-      {qtdAndarX: 0, qtdAndarY: -15, tipoAndar: Andar.SEGUIR_INIM_MAIS_PROX}, null, true, 5);
+        {qtdAndarX: 0, qtdAndarY: -15, tipoAndar: Andar.ANDAR_NORMAL}, null, true, 5);
   }
   static newTiroNaoPersPadrao()
   {
@@ -105,12 +105,11 @@ class ControladorJogo
 
         let corObst = color("black");
         controladoresObstaculosLvAtual[0] = new ControladorObstaculos(new Obstaculo(
-          new Retangulo(0, 0, 150, 0.7, {stroke: corObst, fill: corObst}),
-          {corImgEspecial: color("green"), corImgMorto: color("white")},
-          {qtdAndarX: 0, qtdAndarY: 0, tipoAndar: Andar.INVERTER_QTDANDAR_NAO_SAIR_TELA},
+          new Retangulo(0, 0, 200, 200, {stroke: corObst, fill: corObst}),
+          {corImgEspecial: {stroke: color("green"), fill: color("green")}, corImgMorto: {stroke: color("white"), fill: color("white")}},
+          {qtdAndarX: 2, qtdAndarY: 2, tipoAndar: Andar.INVERTER_QTDANDAR_NAO_SAIR_TELA},
           this._personagemPrincipal, 20
         ));
-        controladoresObstaculosLvAtual[0].adicionarObstaculo(0, this._conjuntoObjetosTela, 50, 100);
 
       // tiros tela
         controladoresTirosLvAtual = new Array(1);
@@ -130,6 +129,11 @@ class ControladorJogo
     if (controladoresTirosLvAtual != null)
       this._controladoresTiros = controladoresTirosLvAtual;
     this._atualizarConjuntoObjetosTela();
+
+    let _this = this;
+    setTimeout(function(){
+      //_this._controladoresInimigos[0].adicionarInimigoDif(0, _this._personagemPrincipal, 150, 200);
+    }, 5000);
 
     // tira o "Level X" da tela
     let t = this;
@@ -315,7 +319,7 @@ class ControladorJogo
     switch (this._level)
     {
       case 1:
-        return !this._controladoresInimigos[0].algumVivo();
+        return !this._controladoresInimigos[0].algumInimNaTela();
       default:
         return false;
     }

@@ -1,3 +1,4 @@
 Novo:
 - quando for seguir sempre um inimigo seguir a parte mais importante apenas
 - alguns tiros vao na direcao de um outro objeto e depois usam sempre esse qtdAndar (DIRECAO_PERS e DIRECAO_INIM_MAIS_PROXIMO)
+- arrumei Direcao.emQualDirecaoObjEsta e Andar.qntAndarParaBater (angulo estava em radiano e qntAndaParaBater estava retornando ponto para onde quer ir e nao como chegar la)
