@@ -1,2 +1,21 @@
+﻿Quando passar de level fazer animacaozinha para mostrar os inimigos aparecendo
+(fazer classe ObjetoTelaDesign onde ha essas funcionalidades: como ir aumentando e ganhando opacidade aos poucos).
+Como melhorar o design?? Texto passar level, ir inclinando personagem principal para o lado (paralelograma) gradativamente
+quando estiver andando para um lado e para o outro...
+
 Personagem pode tomar poção para diminuir de tamanho
-Poção para andar mais rápido
+Poção para andar mais rápido e mais mortal (triangulo de cores diferentes)
+Poção para ganhar vida
+Pocao para reverter todos os tiros de todos os inimigos que jah atiraram em de personagem e seguindo o inimigo mais proximo (imediatamente apos pegar pocao)
+Pocao para matar todos os inimigos nao essenciais
+Pocao para deixar o tempo mais lento (tudo anda X%)
+Pocao para reverter todos os tiros dos inimigos e do jogo (que estao na tela) para os inimigos mais proximos
+Obstaculo (triangulo) que congela o personagem por alguns segundos
+
+alguns Inimigos atirarem para todos os lados
+
+Transformar em jogo tematico! Batalha de naves espaciais?
+
+mortalidade negativa? dar vida para algo
+
+Aumentar velocidade e mortalidade do tiro definitivo?

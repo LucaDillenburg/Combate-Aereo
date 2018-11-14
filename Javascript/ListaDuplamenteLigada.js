@@ -4,7 +4,10 @@ class ListaDuplamenteLigada
   {
     this._prim = null;
     this._ultimo = null;
+    this._qtdElem = 0;
+
     this._atual = null;
+    this._indexAtual = -1;
   }
 
   //getters
@@ -22,6 +25,8 @@ class ListaDuplamenteLigada
   }
   get vazia()
   { return this._prim == null; }
+  get qtdElem()
+  { return this._qtdElem; }
 
   //adicionar no comeco
   inserirNoComeco(info)
@@ -30,6 +35,8 @@ class ListaDuplamenteLigada
 
     if (this._ultimo == null)
       this._ultimo = this._prim;
+
+    this._qtdElem++;
   }
 
   //tirar do final
@@ -43,16 +50,30 @@ class ListaDuplamenteLigada
       this._prim = null;
     else
       this._ultimo.prox = null;
+    this._qtdElem--;
+  }
+
+  esvaziar()
+  {
+    this._prim = null;
+    this._ultimo = null;
+    this._qtdElem = 0;
   }
 
 
   //atual
   colocarAtualComeco()
   { this._atual = this._prim; }
+  colocarAtualEm(index)
+  {
+    this._atual = this._prim;
+    for (let i = 1; i<=index; i++)
+      this._atual = this._atual.prox;
+  }
   andarAtual()
   {
     if (this._atual == null)
-      throw "Jah esta no ultimo! - em andarAtual() ";
+      throw "Atual eh nulo!";
     this._atual = this._atual.prox;
   }
   atualEstahNoFinal()
@@ -70,14 +91,55 @@ class ListaDuplamenteLigada
   removerAtual()
   {
     if (this._atual == null)
-      throw "Atual eh nulo! - em removerAtual() ";
-      
+      throw "Atual eh nulo!";
+
     if (this._atual.ant == null)
     {
-        this._prim = null;
-        this._ultimo = null;
-    }else        
-        this._atual.ant.prox = this._atual.prox;
+        this._prim = this._atual.prox;
+        if (this._prim == null)
+          this._ultimo = null;
+    }else
+      this._atual.ant.prox = this._atual.prox;
+
+    this._qtdElem--;
+  }
+
+
+  //outros
+  concatenar(outraLista)
+  {
+    if (this.prim == null)
+    //se this eh uma lista vazia, a primeira e ultima posicao dessa lista vai ser a do outro
+    //(sendo a outra vazia ou nao)
+    {
+      this._prim = outraLista._prim;
+      this._ultimo = outraLista._ultimo;
+    }
+    else
+    if (outraLista._ultimo != null)
+    //se this nao for vazia e nem a outra lista
+    {
+      outraLista._prim.ant = this._ultimo;
+      this._ultimo.prox = outraLista._prim;
+
+      this._ultimo = outraLista._ultimo;
+    }
+    //nao tem else porque se a outra lista for vazia nao tem mais o que fazer
+
+    this._qtdElem += outraLista._qtdElem;
+  }
+
+  //outros/aux
+  printar()
+  {
+    let atual = this._prim;
+    let string = "";
+    while(atual != null)
+    {
+      string += atual.info + " -> ";
+      atual = atual.prox;
+    }
+    console.log(string + "null");
   }
 }
 

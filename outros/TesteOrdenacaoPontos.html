@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+
+    <!-- bibliotecas do P5 -->
+    <script src="../Javascript/p5/p5.min.js"></script>
+    <!-- basico geometria e classes auxiliares -->
+    <script src="../Javascript/GeometriaBasica.js"></script>
+    <script src="../Javascript/FormasGeometricas.js"></script>
+
+    <title></title>
+  </head>
+  <body onload="setup()">
+    <script>
+    function setup()
+    {
+      createCanvas(800, 600);
+      background(0);
+      corImg = {stroke: color("white"), fill: color("blue")};
+    }
+    let corImg;
+
+    // teste se os paralelogramos da colisao estao sendo construidos adequadamente (TRIANGULOS)
+    let paralelogramo, p1, p2, p3;
+    document.onclick = function()
+    {
+      if (p1 == null)
+        p1 = new Ponto(mouseX, mouseY);
+      else
+      if (p2 == null)
+        p2 = new Ponto(mouseX, mouseY);
+      else
+      if (p3 == null)
+      {
+        p3 = new Ponto(mouseX, mouseY);
+        paralelogramo = new Paralelogramo(p1, p2, p3, null, corImg, true);
+      }else
+      {
+        p1 = new Ponto(mouseX, mouseY);
+        p2 = null;
+        p3 = null;
+      }
+    }
+
+    function draw()
+    {
+      background(0);
+      if (paralelogramo != null)
+        paralelogramo.draw();
+    }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,77 @@
+ERROS:
+ - NEM TODOS OS TIROS ESTAO TIRANDO VIDA DO INIMIGO
+ - estah sobrando um tiro que nao estah sendo tirado da lista mesmo depois de morto
+
+SISTEMA DE TESTES:
+ - adicionar nos controladores. OK
+ - andar dos objetos. OK
+ - colisoes:
+   -> tiros com resto
+     .cm personagem. OK
+     .cm inimigos. OK
+     .cm obstaculos. OK
+   -> pers com inimigo e inimigo com pers. OK
+   -> pers com obstaculo : obstaculo muito fino e qtdAndarPers muito grande. OK
+   -> obstaculo com pers : obst empurrando personagem (quando da e qnd nao da). OK
+ - procCriou de todos os ObjetosTela
+   -> tiro. OK
+   -> obstaculos. OK
+   -> inimigo. OK
+ - morrer de inimigos. OK
+
+Erros consertados:
+ - QUANDO EU ATIRO NO OBSTACULO O INIMIGO PERDE VIDA (AuxControladores.auxAndarTiro). OK
+ - OBSTACULO NAO ESTAH EMPURRANDO O PERSONAGEM. OK
+
+Testes Basicos:
+ - ListaDuplamenteLigada.js  *OK*
+ - GeometriaBasica.js. ACREDITO QUE SIM (qntPodeAndarAntesIntersectar nao sei)
+ - FormasGeometricas.js. ACREDITO QUE SIM (inclusive ordenar os pontos)
+
+-------------------------------------------------------------------------------------
+
+SISTEMAS DE TESTES OK:
+- pers andando sem interferencia de outros objetos
+  -> esta andando nas direcoes certas. OK
+  -> nao estah saindo da tela. OK
+- paralelogramo
+  -> estah achando o verdadeiro ponto D. OK
+  -> estah ordenando certo quando cria-se novo Paralelogramo e pede para ordenar (o metodo de ordenar em si jah estava certo). OK
+- construcao dos paralelogramos nas colisoes
+  -> os 4 tipos de quadrados/retangulos. OK
+  -> os 5 tipos de triangulos. OK
+- tamanho vida inimigo dependendo da vidaMAX dele
+- testar inimigo que soh bota vida na tela um tempo depois de ser atingido
+- testar atirar
+- tiro tirar vida inimigo (tive que mudar algumas coisas)
+
+Conclusoes:
+//Controladores
+ - todos os tiros do controladores estavam iguais (parecia um soh) e quanto mais tiros, mais rapido ele andava.
+Descobri que faltava um .clone() nas formasGeometricas. Mudei isso em todos os controladores de objetos
+
+//Andar personagem no Script
+ - o andar do personagem estava meio lagado, pois ele soh andava quando o evento de KeyDown acontecia
+(esse evento demorava certo tempo para acontecer principalmente quando muda o que estava clicando)
+Entao fiz ele perceber se as teclas estao apertadas no KeyDown mesmo, mas fiz ele andar no draw.
+ps: Tambem fiz sistema com ON, OFF e OPTION para quando tiver uma setinha apertada e aperterem a oposta,
+quando soltarem e se a anterior ainda estiver apertada, ela volte a ser considerada.
+ps: Quando uma setinha for apertada e a oposta estiver ON, deixar ela como OPTION
+
+//GEOMETRIA BASICA
+ - estava dando um erro na hora da criacao dos paralelogramos. a diferenca entre o pontoDCerto e do D informado era minuscula e nao
+significativa.
+Entao fiz um procedimento que ve se estah quase igual (com uma margem muito pequena) e usei isso para determinar se dois pontos sao iguais,
+caso o parametro EXATAMENTE esteja FALSE (se for nulo ou true, sera feito normalmente)
+
+//ANDAR
+ - os tipoAndar Andar.SEGUIR_PERS e Andar.SEGUIR_INIM_MAIS_PROX estao "lagando" muito (por causa do tanto de conta que tem que fazer).
+Solucao: esses tipoAndar soh serao usados em MISSEIS TELEGUIADOS (Poder e arma secreta para inimigos importantes)
+ - quando era DIRECAO_PERS ou DIRECAO_INIM_MAIS_PROX, ele nao funcionava porque ele ainda nao tinha colocado o (x,y) certo,
+entao considerava-se (0,0).
+Mudei o clone do tiro para jah colocar os novos valores na formaGeometrica, pois essa verificacao de achar o qtdAndarPadrao para andar em
+direcao a algo era feito logo no construtor.
+
+//PROCCRIOU
+ - ProcCriou do obstaculo: se o obstaculo fosse ser criado no lugar onde o personagem tava, ele empurrava o personagem ateh que a linha ficava em cima
+da outra linha (ainda esatva intersectando). Empurrei qntNaoColidir a mais (para a linha do personagem nao colidir com a linha do obstaculo criado)

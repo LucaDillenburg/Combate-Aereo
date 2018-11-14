@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+
+    <script src="Javascript/p5/p5.min.js"></script>
+    <script src="Javascript/p5/addons/p5.dom.min.js"></script>
+    <script src="Javascript/p5/addons/p5.sound.min.js"></script>
+
+    <script src="Javascript/FormasGeometricas.js"></script>
+
+    <title></title>
+  </head>
+  <body onmousemove="mousemove()" onload="setup()">
+    <script>
+
+    let paralelogramo = new Paralelogramo(
+      {'x': 250, 'y': 75},
+      {'x': 100, 'y': 150},
+      {'x': 300, 'y': 200},
+      {'x': 150, 'y': 325});
+    let pontosTriangulo = new Array(3);
+    let qtdPontos = 0;
+    document.onclick = function()
+    {
+      if (qtdPontos >= 3)
+      {
+        qtdPontos = 0;
+        pontosTriangulo = new Array(3);
+      }
+
+      pontosTriangulo[qtdPontos] = {'x': mouseX, 'y': mouseY};
+      qtdPontos++;
+    }
+
+    //LADO DA RETA
+    var p1 = {'x': 10, 'y': 150};
+    var p2 = {'x': 500, 'y': 400};
+    var reta = new Reta(p1, p2);
+    var onde = 0;
+
+    //TRIAGULO
+    //var triangulo = new Triangulo({'x': 400, 'y': 10},
+    //  {'x': 600, 'y': 300}, {'x': 100, 'y': 500});
+    //var dentro = false;
+
+    function mousemove()
+    {
+      onde = reta.ondePontoEstah({'x': mouseX, 'y': mouseY});
+      //dentro = triangulo.pontoEstahDentro({'x': mouseX, 'y': mouseY});
+    }
+
+    function setup()
+    {
+      createCanvas(800, 600);
+      background(0);
+    }
+    function draw()
+    {
+      background(0);
+
+      //linha
+      if (onde > 0)
+        stroke(color("green"));
+      else
+      if (onde < 0)
+        stroke(color("red"));
+      else
+        stroke(255);
+      line(p1.x, p1.y, p2.x, p2.y);
+
+      let triang;
+      //paralelogramo1
+      if (qtdPontos == 3)
+      {
+        triang = new Triangulo(pontosTriangulo[0], pontosTriangulo[1], pontosTriangulo[2]);
+
+        if (paralelogramo.interseccao(triang))
+          fill(color("red"));
+        else
+          fill(color("green"));
+      }else
+        fill(255);
+			stroke(255);
+      paralelogramo.draw();
+
+			if (qtdPontos == 3)
+			{
+				fill(255);
+				triang.draw();
+			}
+
+      //if (dentro)
+      //  fill(color("green"));
+      //else
+      //  fill(color("red"));
+      //triangulo.draw();
+    }
+    </script>
+  </body>
+</html>
