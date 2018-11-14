@@ -1,37 +1,36 @@
-﻿- SISTEMA DE TESTE
-
 - fazer tiro do inimigo bater nos obstaculos tambem (quando bater em ObstaculoComVida nao tirar vida)
 - frequencia de atirar fica em cada controladorInimigo e no PersonagemPrincipal (quando tiro for missil teleguiado)
 - poder atirar para todos lados (quando tiver com a nave especial)
 - colisao com obstaculos: se bate em cima ou em baixo soh anda em Y, o contrario soh anda em X. (para obstaculo empurrando e personagem batendo: adicionar parametro em qntPodeAndarAntesIntersec para nao retornar medidas proporcionais as que eram para andar e sim absoluta)
 - padronizar o perder vida do personagem quando intersecta com inimigo (de acordo com o tempo, nao tira se ele andar la dentro ou se o inimigo andar: variavel int indexInimColidindo)
-- opcao para mudar tamanho personagem, inimigo e obstaculo
-(deve ser super parecido com procCriou, talvez possa usar ele mesmo ou fazer um metodo em comum)
+- opcao para mudar tamanho personagem, inimigo e obstaculo (deve ser super parecido com procCriou, talvez possa usar ele mesmo ou fazer um metodo em comum- o que eh diferente eh se quando ele aumentar, ele for ficar com parte do corpo para fora, dessa maneira ele aumenta de tamanho e depois anda)
+- e colisao de inimigo com inimigo e obstaculo, e obstaculo com inimigo e obstaculo ??
 
 - New Features:
-  .Poder (img, cod, nome, executarPoder)
-  .ControladorPoderes
+  .class Poder (img, cod, nome, executarPoder())
+  .class ObjTelaPoder
+  .class ControladorPoderes (??) -> get temPoderTela, colocarPoderRandomico(), colocarPoderEspecifico(cod)
 
-- variaveis que sao guardadas separadamente e depois tem que juntar, guardar junto (ex: infoAndar). ps: fazer classes para infoAndar por exemplo
-- variavel = null, mudar para delete variavel (nem sempre)
-- considerar um quadradao antes (de onde estava pra onde foi)
+- variaveis que sao guardadas separadamente e depois tem que juntar, guardar junto (ex: infoAndar). ps: fazer classe para infoAndar por exemplo
+- variavel = null, mudar para delete variavel (apagar da memoria quando for interessante)
+- considerar um quadradao (de onde estava pra onde foi) antes de verificar a colisao certinha fazendo paralelogramos e etc
 
 - fazer Interseccao.qntPodeAndarAntesIntersec(...) para Triangulo
 
 - ver comentarios //TODO
 
-- CreateCanvas de um tamanho mínimo: metade de toda tela
-- criar niveis
+- fazer opcao para rotacionar FormasGeometricas (quando personagem fica maluco; obstaculos e inimigos: quanto rotacionar no infoAndar)
+- CreateCanvas de um tamanho mínimo: metade de toda tela + quando o canvas perde o foco, pausa-lo
+- CRIAR NIVEIS
 
-- Sobre LISTA LIGADA: quando mais de um metodo usar a lista ao mesmo tempo ou quando um metodo esta percorrendo a lista e chama outro que tambem
- vai percorrer a lista o atual vai ficar maluco. PORTANTO, VERIFIQUE QUE NAO EH ISSO QUE ESTAH OCORRENDO
+- ORGANIZAR EXPLICACOES: COLOCAR NO GIT EXPLICACOES DO PAPEL (DEIXAR BONITINHA) + MUDAR NOME DOS ARQUIVOS DO PAINT E DEIXAR MAIS BONITINHO TAMBEM
+
+- Sobre LISTA LIGADA: quando mais de um metodo usar a lista ao mesmo tempo ou quando um metodo esta percorrendo a lista e chama outro que tambem vai percorrer a lista o atual vai ficar maluco. PORTANTO, VERIFIQUE QUE NAO EH ISSO QUE ESTAH OCORRENDO
 - fazer Interseccao.vaiTerInterseccao(...) para Paralelogramos e Quadrilateros
-- fazer opcao para rotacionar obstaculos
 - fazer FormaGeometrica para circulo com interseccao e procedimento em Interseccao.
-- quando o canvas perde o foco, pausa-lo
-- podemos saber se um ponto estah dentro de um quadrilatero (ou soh paralelogramo?) se estiver entre as retas de cima e de baixo e da direita e da esquerda
-
+- podemos saber se um ponto estah dentro de um quadrilatero (ou soh paralelogramo?) se estiver entre as retas de cima e de baixo e da direita e da esquerda (qual maneira eh mair rapida??)
 - programar centroMassa de quadrilatero (media de todos os vertices)
+
 - arrumar andar do personagem (quando jah tem duas teclas pressionadas quando uma terceira eh pressionada, o evento nao eh fired)
 - colocar som
 - quando objetos com vida perderem vida abaixar a vida gradativamente (mudarVida gradativamente)

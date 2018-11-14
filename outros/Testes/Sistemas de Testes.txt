@@ -1,7 +1,3 @@
-ERROS:
- - NEM TODOS OS TIROS ESTAO TIRANDO VIDA DO INIMIGO
- - estah sobrando um tiro que nao estah sendo tirado da lista mesmo depois de morto
-
 SISTEMA DE TESTES:
  - adicionar nos controladores. OK
  - andar dos objetos. OK
@@ -22,28 +18,33 @@ SISTEMA DE TESTES:
 Erros consertados:
  - QUANDO EU ATIRO NO OBSTACULO O INIMIGO PERDE VIDA (AuxControladores.auxAndarTiro). OK
  - OBSTACULO NAO ESTAH EMPURRANDO O PERSONAGEM. OK
+ - NEM TODOS OS TIROS ESTAO TIRANDO VIDA DO INIMIGO. OK
+ - estah sobrando um tiro que nao estah sendo tirado da lista mesmo depois de morto. OK
 
 Testes Basicos:
- - ListaDuplamenteLigada.js  *OK*
- - GeometriaBasica.js. ACREDITO QUE SIM (qntPodeAndarAntesIntersectar nao sei)
- - FormasGeometricas.js. ACREDITO QUE SIM (inclusive ordenar os pontos)
+ - ListaDuplamenteLigada.js  OK
+ - GeometriaBasica.js
+ - FormasGeometricas.js
+
 
 -------------------------------------------------------------------------------------
 
+
 SISTEMAS DE TESTES OK:
-- pers andando sem interferencia de outros objetos
-  -> esta andando nas direcoes certas. OK
-  -> nao estah saindo da tela. OK
-- paralelogramo
-  -> estah achando o verdadeiro ponto D. OK
-  -> estah ordenando certo quando cria-se novo Paralelogramo e pede para ordenar (o metodo de ordenar em si jah estava certo). OK
-- construcao dos paralelogramos nas colisoes
-  -> os 4 tipos de quadrados/retangulos. OK
-  -> os 5 tipos de triangulos. OK
-- tamanho vida inimigo dependendo da vidaMAX dele
-- testar inimigo que soh bota vida na tela um tempo depois de ser atingido
-- testar atirar
-- tiro tirar vida inimigo (tive que mudar algumas coisas)
+ - pers andando sem interferencia de outros objetos
+   -> esta andando nas direcoes certas. OK
+   -> nao estah saindo da tela. OK
+ - paralelogramo
+   -> estah achando o verdadeiro ponto D. OK
+   -> estah ordenando certo quando cria-se novo Paralelogramo e pede para ordenar (o metodo de ordenar em si jah estava certo). OK
+ - construcao dos paralelogramos nas colisoes
+   -> os 4 tipos de quadrados/retangulos. OK
+   -> os 5 tipos de triangulos. OK
+ - tamanho vida inimigo dependendo da vidaMAX dele
+ - testar inimigo que soh bota vida na tela um tempo depois de ser atingido
+ - testar atirar
+ - tiro tirar vida inimigo (tive que mudar algumas coisas)
+
 
 Conclusoes:
 //Controladores
@@ -52,7 +53,7 @@ Descobri que faltava um .clone() nas formasGeometricas. Mudei isso em todos os c
 
 //Andar personagem no Script
  - o andar do personagem estava meio lagado, pois ele soh andava quando o evento de KeyDown acontecia
-(esse evento demorava certo tempo para acontecer principalmente quando muda o que estava clicando)
+(esse evento demorava certo tempo para acontecer principalmente quando muda o que estava clicando).
 Entao fiz ele perceber se as teclas estao apertadas no KeyDown mesmo, mas fiz ele andar no draw.
 ps: Tambem fiz sistema com ON, OFF e OPTION para quando tiver uma setinha apertada e aperterem a oposta,
 quando soltarem e se a anterior ainda estiver apertada, ela volte a ser considerada.
