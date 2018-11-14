@@ -548,7 +548,8 @@ class AuxControladores
   //retorna se inseriu
   //info: menorHipotenusa, listaBateu, menorWidth, menorHeight, qtdPodeAndarX, qtdPodeAndarY, colidiu
   {
-    let qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(objTelaRealAtual.formaGeometrica, tiro.formaGeometrica, info.qtdPodeAndarX, info.qtdPodeAndarY);
+    let qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(objTelaRealAtual.formaGeometrica, tiro.formaGeometrica,
+      info.qtdPodeAndarX, info.qtdPodeAndarY);
     let hipotenusa = Operacoes.hipotenusa(qtdPodeAndar.x, qtdPodeAndar.y);
 
     //se tiro vai bater em um obstaculo mais perto ou igual a um que jah bateu
@@ -566,7 +567,7 @@ class AuxControladores
         info.menorHeight = objTelaRealAtual.formaGeometrica.height;
         info.menorWidth = objTelaRealAtual.formaGeometrica.width;
       }else
-      if (!info.listaBateu.vazia && hipotenusa == info.menorHipotenusa)
+      //if (!info.listaBateu.vazia && hipotenusa == info.menorHipotenusa)
       {
         if (objTelaRealAtual.formaGeometrica.height < info.menorHeight)
           info.menorHeight = objTelaRealAtual.formaGeometrica.height;
@@ -574,6 +575,7 @@ class AuxControladores
           info.menorWidth = objTelaRealAtual.formaGeometrica.width;
       }
 
+      info.listaBateu.inserirNoComeco(objTelaRealAtual);
       return true;
     }else
       return false;

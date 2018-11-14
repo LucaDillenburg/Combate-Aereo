@@ -1,3 +1,7 @@
+ERROS:
+ - NEM TODOS OS TIROS ESTAO TIRANDO VIDA DO INIMIGO
+ - estah sobrando um tiro que nao estah sendo tirado da lista mesmo depois de morto
+
 SISTEMA DE TESTES:
  - adicionar nos controladores. OK
  - andar dos objetos. OK
@@ -15,10 +19,9 @@ SISTEMA DE TESTES:
    -> inimigo. OK
  - morrer de inimigos. OK
 
-ERROS
+Erros consertados:
  - QUANDO EU ATIRO NO OBSTACULO O INIMIGO PERDE VIDA (AuxControladores.auxAndarTiro). OK
  - OBSTACULO NAO ESTAH EMPURRANDO O PERSONAGEM. OK
- - estah sobrando um tiro que nao estah sendo tirado da lista mesmo depois de morto
 
 Testes Basicos:
  - ListaDuplamenteLigada.js  *OK*

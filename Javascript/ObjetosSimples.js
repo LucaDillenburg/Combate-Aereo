@@ -321,12 +321,11 @@ class Tiro extends ObjetoTelaMorre
     this._formaGeometrica.y += info.qtdPodeAndarY + qntEntra.y;
 
     //tirar vida de todos os inimigos que bateu (soh ha mais de um objeto se eles estao no mesmo Y)
-    console.log(info.listaBateu.qtdElem);
-
-    for (info.listaBateu.colocarAtualComeco(); !info.listaBateu.atualEhNulo; info.listaBateu.andarAtual())
-      if (info.listaBateu.atual instanceof Inimigo || info.listaBateu.atual instanceof ObstaculoComVida)
-      //se tem vida, tira
-        this.tirarVidaObjCmVida(info.listaBateu.atual);
+    if (colidiu)
+      for (info.listaBateu.colocarAtualComeco(); !info.listaBateu.atualEhNulo; info.listaBateu.andarAtual())
+        if (info.listaBateu.atual instanceof Inimigo || info.listaBateu.atual instanceof ObstaculoComVida)
+        //se tem vida, tira
+          this.tirarVidaObjCmVida(info.listaBateu.atual);
 
     //soh verifica se tiro saiu agora pois o tiro pode acertar o inimigo fora da tela
     if (Tela.objSaiuTotalmente(this._formaGeometrica))
