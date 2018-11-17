@@ -8,7 +8,7 @@ window.addEventListener("keyup", keyUp);
 var controladorJogo;
 
 const tamStroke = 1.5;
-const frameRatePadrao = 40;
+const frameRatePadrao = 1;//40;
 const heightVidaUsuario = 30;
 
 // The statements in the setup() function executes once when the program begins

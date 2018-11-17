@@ -87,6 +87,11 @@ class ListaDuplamenteLigada
   get atualEhNulo()
   { return this._atual == null; }
 
+  guardarAtual()
+  { this._atualGuardado = this._atual; }
+  colocarGuardadoNoAtual()
+  { this._atual = this._atualGuardado; }
+
   //metodos com atual (remover)
   removerAtual()
   {

@@ -1,21 +1,45 @@
-- fazer tiro do inimigo bater nos obstaculos tambem (quando bater em ObstaculoComVida nao tirar vida)
-- frequencia de atirar fica em cada controladorInimigo e no PersonagemPrincipal (quando tiro for missil teleguiado)
-- poder atirar para todos lados (quando tiver com a nave especial)
+QUANDO TIRO COLIDE COM OBSTACULO, ELE ESTAH TIRANDO VIDA DO INIMIGO. OK
+TIRO NAO ESTAH APARECENDO ENTRANDO NO OBSTACULO. OK (era a ordem de andar InimObst e andar tiros no ControladorJogo)
+
+OBSERVACOES COLISAO:
+ - tiro tela e de inimigos batem em obstaculos (e vice-versa)
+   -> procCriou do tiro. OK
+   -> andar do tiro. OK
+   -> procCriou do obstaculo. OK
+   -> andar do obstaculo (ver se nao matou o tiro do inimigo tambem). OK
+ - obstaculos batem em obstaculos (troca os dois de direcao: se quadrado ou retangulo, ver se colidiu soh em X ou nos dois,
+no resto trocar a direcao dos dois)
+   -> procCriou do obstaculo. OK
+   -> andar do obstaculo. OK
+
+- pensar um pouco na colisao de obstaculos...
+
+- andar do personagem quando colide com obstaculo (mesmo que colida em uma direcao, andar na outra: adicionar parametro em Interseccao.qntPodeAndarAntesIntersec)
 - colisao com obstaculos: se bate em cima ou em baixo soh anda em Y, o contrario soh anda em X. (para obstaculo empurrando e personagem batendo: adicionar parametro em qntPodeAndarAntesIntersec para nao retornar medidas proporcionais as que eram para andar e sim absoluta)
 - padronizar o perder vida do personagem quando intersecta com inimigo (de acordo com o tempo, nao tira se ele andar la dentro ou se o inimigo andar: variavel int indexInimColidindo)
+
+//resto:
+- NOVO TIPO ANDAR: andar ateh quando passaria de certo X e/ou Y, e antes de passar mudar a direcao tanto de qtdAndarX quando qtdAndarY
+- frequencia de atirar fica em cada controladorInimigo e no PersonagemPrincipal (quando tiro for missil teleguiado)
+- poder atirar para todos lados (quando tiver com a nave especial)
 - opcao para mudar tamanho personagem, inimigo e obstaculo (deve ser super parecido com procCriou, talvez possa usar ele mesmo ou fazer um metodo em comum- o que eh diferente eh se quando ele aumentar, ele for ficar com parte do corpo para fora, dessa maneira ele aumenta de tamanho e depois anda)
-- e colisao de inimigo com inimigo e obstaculo, e obstaculo com inimigo e obstaculo ??
+
+- colocar opcao para mudar o qtdAndar mudar depois de cada andada (variavel porcentagem que vai fazer objeto acelerar ou desacelerar /*isto eh, mudar o qtdAndar*/ cada vez que ele anda)
 
 - New Features:
   .class Poder (img, cod, nome, executarPoder())
   .class ObjTelaPoder
   .class ControladorPoderes (??) -> get temPoderTela, colocarPoderRandomico(), colocarPoderEspecifico(cod)
 
-- variaveis que sao guardadas separadamente e depois tem que juntar, guardar junto (ex: infoAndar). ps: fazer classe para infoAndar por exemplo
-- variavel = null, mudar para delete variavel (apagar da memoria quando for interessante)
+- fazer Interseccao.qntPodeAndarAntesIntersec(...) para Triangulo
 - considerar um quadradao (de onde estava pra onde foi) antes de verificar a colisao certinha fazendo paralelogramos e etc
 
-- fazer Interseccao.qntPodeAndarAntesIntersec(...) para Triangulo
+- variaveis que sao guardadas separadamente e depois tem que juntar, guardar junto (ex: infoAndar). ps: fazer classe para infoAndar por exemplo
+- variavel = null, mudar para delete variavel (apagar da memoria quando for interessante)
+
+- e colisao de inimigo com inimigo e obstaculo, e obstaculo com inimigo e obstaculo ??
+
+
 
 - ver comentarios //TODO
 

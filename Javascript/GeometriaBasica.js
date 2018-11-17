@@ -80,6 +80,9 @@ class Ponto
     return Exatidao.ehQuaseExato(this.x, outro.x) && Exatidao.ehQuaseExato(this.y, outro.y);
   }
 
+  toString()
+  { return "(" + this.x + "," + this.y + ")"; }
+
   clone()
   { return new Ponto(this.x, this.y); }
 }
@@ -264,7 +267,14 @@ class Interseccao
 				|| (inicio2 + distancia2 >= inicio1 && inicio2 + distancia2 <= inicio1 + distancia1);
 	}
 
-	static interseccao(obj1, obj2) //obj1 e obj2 = ObjetoTela
+  static inteiroDentroDeDirecao(inicio1, distancia1, inicio2, distancia2)
+  // 2 dentro de 1 ou 2 dentro de 1
+	{
+    return (inicio2 >= inicio1 && inicio2 + distancia2 <= inicio1 + distancia1)
+     || (inicio1 >= inicio2 && inicio1 + distancia1 <= inicio2 + distancia2);
+	}
+
+	static interseccao(obj1, obj2) //obj1 e obj2 sao FormaGeometricas
   // retorna se estah intersectando
 	{
 		if (obj1.codForma > obj2.codForma)
@@ -278,6 +288,50 @@ class Interseccao
 		return Interseccao.intersecDirecao(x1, width1, x2, width2) &&
 			Interseccao.intersecDirecao(y1, height1, y2, height2);
 	}
+
+  static menorQtdObjColidePararColidir(objParado, objVaiAndar) //objParado e objVaiAndar sao formasGeometricas
+  {
+    //ver "Explicacao procCriou(...) obstaculo em relacao a colisao com pers.png"
+    let xDireita = {
+      valor: objParado.x + objParado.width - objVaiAndar.x,
+      dir: Direcao.Direita
+    };
+    let xEsquerda = {
+      valor: objVaiAndar.x + objVaiAndar.width - objParado.x,
+      dir: Direcao.Esquerda
+    };
+    let yBaixo = {
+      valor: objParado.y + objParado.height - objVaiAndar.y,
+      dir: Direcao.Baixo
+    };
+    let yCima = {
+      valor: objVaiAndar.y + objVaiAndar.height - objParado.y,
+      dir: Direcao.Cima
+    };
+
+    let menorValorDir = minDirecao(minDirecao(yBaixo, yCima), minDirecao(xDireita, xEsquerda));
+    let qtdAndar = {};
+    switch (menorValorDir.dir)
+    {
+      case Direcao.Direita:
+        qtdAndar.x = menorValorDir.valor + qntNaoColidir;
+        qtdAndar.y = 0;
+        break;
+      case Direcao.Esquerda:
+        qtdAndar.x = -menorValorDir.valor -qntNaoColidir;
+        qtdAndar.y = 0;
+        break;
+      case Direcao.Baixo:
+        qtdAndar.x = 0;
+        qtdAndar.y = menorValorDir.valor + qntNaoColidir;
+        break;
+      case Direcao.Cima:
+        qtdAndar.x = 0;
+        qtdAndar.y = -menorValorDir.valor -qntNaoColidir;
+        break;
+    }
+    return qtdAndar;
+  }
 
 	//VAI INTERSECTAR
   static qntPodeAndarAntesIntersec(obj1, obj2, qtdAndarX, qtdAndarY) //Obj1 e Obj2 devem ser formas geometricas
@@ -683,6 +737,9 @@ class Tela
     //if (direcaoSair == Tela.SAIU_EM_CIMA)
       return -obj.y + espacoLadosTela;
   }
+
+  static objVaiSair(obj, qtdMudaX, qtdMudaY)
+  { return Tela.objVaiSairEmX(obj, qtdMudaX) || Tela.objVaiSairEmY(obj, qtdMudaY); }
 
   //OUTROS
   static xParaEstarNoMeio(widthObj)

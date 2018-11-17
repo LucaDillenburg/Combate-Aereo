@@ -252,7 +252,8 @@ class PersonagemPrincipal extends PersComTiros
     for (let i = 0; i<conjuntoObjetosTela.controladoresInimigos.length; i++)
     {
       conjuntoObjetosTela.controladoresInimigos[i].procPersAndar(this, infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
-      conjuntoObjetosTela.controladoresInimigos[i].procPersColidirTirosTodosInim(this, infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
+      conjuntoObjetosTela.controladoresInimigos[i].procObjTelaAndarColidirTirosTodosInim(this, infoQtdMudar.qtdPodeMudarX,
+        infoQtdMudar.qtdPodeMudarY, ControladorTiros.PERSONAGEM_ANDOU);
     }
 
     //controladoresTiros do jogo
