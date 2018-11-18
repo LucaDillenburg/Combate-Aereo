@@ -1,3 +1,6 @@
+ - NO ANDAR DO INIMIGO TEM QUE SE VERIFICAR SE COLIDIU COM O PERSONAGEM E FAZER AQUELE PROCEDIMENTO MESMO QUE O QTDANDAR SEJA ZERO
+ - ALGUNS PROCEDIMENTOS CHAMADOS DENTRO DE UM FOR QUE VAI ANDANDO O ATUAL DE UMA LISTA PODEM ESTAR MUDANDO O ATUAL DA MESMA LISTA (ISSO VAI FAZER COM QUE DE ERRO NO METODO ANDAR DO "for" DE CIMA, PARA ARRUMAR BASTA FAZER ELE GUARDAR O ATUAL ANTES DE ENTRAR NESSE PROCEDIMENTO E DEPOIS COLOCAR O ATUAL DE VOLTA)
+
  - ha controladores de inimigos, controladores de obstaculos e controladores de tiros
  - nos controladores sempre precisa se verificar se o objeto que ele controla jah morreu ou nao
  - num ObjetoTela, get eh com formaGeometrica dos obstaculos, mas setter soh na propria classe

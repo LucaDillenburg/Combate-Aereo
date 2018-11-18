@@ -165,6 +165,10 @@ class PersonagemPrincipal extends PersComTiros
   {
     super(formaGeometrica, corImgMorto, vida, tiroPadrao, true);
     this.qtdAndar = qtdAndar;
+
+    //lista de inimigos que intersectou
+    this._qtdTirarVidaIntersecInim = 0;
+    this._listaInfoInimIntersec = new ListaDuplamenteLigada();
   }
 
   //mudar qtdAndar
@@ -233,10 +237,8 @@ class PersonagemPrincipal extends PersComTiros
     let infoQtdMudar =
     {
       qtdPodeMudarX : Tela.qtdAndarObjNaoSairX(this._formaGeometrica, qtdMudaX),
-      qtdPodeMudarY : Tela.qtdAndarObjNaoSairY(this._formaGeometrica, qtdMudaY),
-      menorHipotenusa : null
+      qtdPodeMudarY : Tela.qtdAndarObjNaoSairY(this._formaGeometrica, qtdMudaY)
     };
-    infoQtdMudar.menorHipotenusa = Operacoes.hipotenusa(infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
 
     //nao conseguiu andar tudo
     if (infoQtdMudar.qtdPodeMudarX == 0 && infoQtdMudar.qtdPodeMudarY == 0)
@@ -248,10 +250,14 @@ class PersonagemPrincipal extends PersComTiros
       conjuntoObjetosTela.controladoresObstaculos[i].qtdPersPodeAndar(infoQtdMudar, this._formaGeometrica);
     //aqui tudo o que devia ser feito com obstaculos estah OK
 
+    //PS: NAO ZERA A LISTA AQUI POIS SE ALGUM INIMIGO FOR CRIADO TERA SIDO ADICIONADO A LISTA E AINDA NAO
+
     //inimigos e tiros deles
     for (let i = 0; i<conjuntoObjetosTela.controladoresInimigos.length; i++)
     {
-      conjuntoObjetosTela.controladoresInimigos[i].procPersAndar(this, infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
+      //ve se vai colidir com inimigos e adiciona na lista de inimigos intersectados
+      conjuntoObjetosTela.controladoresInimigos[i].procPersAndar(i, this, infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
+      //ve se vai colidir com tiros dos inimigos e tira vida do pers
       conjuntoObjetosTela.controladoresInimigos[i].procObjTelaAndarColidirTirosTodosInim(this, infoQtdMudar.qtdPodeMudarX,
         infoQtdMudar.qtdPodeMudarY, ControladorTiros.PERSONAGEM_ANDOU);
     }
@@ -266,6 +272,36 @@ class PersonagemPrincipal extends PersComTiros
 
     //se consegue andar tudo o que deveria
     return infoQtdMudar.qtdPodeMudarX == qtdMudaX && infoQtdMudar.qtdPodeMudarY == qtdMudaY;
+  }
+
+  //sobre ter intersectar com inimigos
+  zerarInimigosIntersectados()
+  {
+    this._listaInfoInimIntersec.esvaziar();
+    this._qtdTirarVidaIntersecInim = 0;
+  }
+  colidiuInim(indexContr, indexInim, qtdTiraVidaPersQndIntersec)
+  {
+    if (this._jahColidiuInim(indexContr, indexInim))
+    //se personagem jah adicionou que colidiu nao precisa adicionar de novo
+      return;
+
+    //inserir na lista e somar
+    this._listaInfoInimIntersec.inserirNoComeco({indexContr: indexContr, indexInim: indexInim});
+    this._qtdTirarVidaIntersecInim += qtdTiraVidaPersQndIntersec;
+  }
+  _jahColidiuInim(indexContr, indexInim)
+  {
+    for (this._listaInfoInimIntersec.colocarAtualComeco(); !this._listaInfoInimIntersec.atualEhNulo; this._listaInfoInimIntersec.andarAtual())
+      if (this._listaInfoInimIntersec.atual.indexContr == indexContr &&
+        this._listaInfoInimIntersec.atual.indexInim == indexInim)
+        return true;
+    return false;
+  }
+  procTirarVidaIntersecInim()
+  {
+    this.mudarVida(-this._qtdTirarVidaIntersecInim);
+    this.zerarInimigosIntersectados();
   }
 
   //draw
@@ -336,15 +372,9 @@ class Inimigo extends PersComTiros
     }
   }
 
-  //procedimento ao criar: colisao com objetos
+  //procedimento ao criar: colisao com tiros do pers (nao precisa verificar colidir com o personagem aqui!)
   procCriou(pers, indexContrInim)
-  {
-    //colisao com tiros
-    pers.controladorTiros.procedimentoObjTelaColideCriar(this, ControladorTiros.INIMIGO_CRIADO, indexContrInim);
-    //colisao com personagem
-    if (this._vivo && Interseccao.interseccao(this._formaGeometrica, pers.formaGeometrica))
-      this.tirarVidaPersIntersec(pers);
-  }
+  { pers.controladorTiros.procedimentoObjTelaColideCriar(this, ControladorTiros.INIMIGO_CRIADO, indexContrInim); }
 
   //getters e setters andar
   get tipoAndar()
@@ -378,7 +408,7 @@ class Inimigo extends PersComTiros
   { return this._qtdAndarY; }
   //se for adicionar set qtdAndar, mudar this._hipotenusaAndarPadrao de acordo com o tipoAndar
 
-  andar(pers, indexContrInim)
+  andar(pers, indexContrInim, indexInim)
   //retorna se deve continuar na lista
   {
     let qtdAndar = Andar.qtdAndarFromTipo({qtdAndarXPadrao: this._qtdAndarX, qtdAndarYPadrao: this._qtdAndarY,
@@ -397,7 +427,7 @@ class Inimigo extends PersComTiros
 
     //verificar se nao vai intersectar personagem
     if (this._vivo && Interseccao.vaiTerInterseccao(pers.formaGeometrica, this._formaGeometrica, qtdAndar.x, qtdAndar.y))
-      this.tirarVidaPersIntersec(pers);
+      pers.colidiuInim(indexContrInim, indexInim, this._qtdTiraVidaPersQndIntersec);
 
     this._formaGeometrica.x += qtdAndar.x;
     this._formaGeometrica.y += qtdAndar.y;
@@ -409,21 +439,6 @@ class Inimigo extends PersComTiros
   //tirar vida personagem quando intersecta com inimigo
   get qtdTiraVidaPersQndIntersec()
   { return this._qtdTiraVidaPersQndIntersec; }
-  tirarVidaPersIntersec(pers)
-  {
-    pers.mudarVida(-this._qtdTiraVidaPersQndIntersec);
-
-    //se personagem ficar dentro do inimigo ir tirando vida
-    this._auxTirarVidaPers++;
-    let t = this;
-    setTimeout(
-      function()
-      {
-        t._auxTirarVidaPers--;
-        if (t._auxTirarVidaPers == 0 && Interseccao.interseccao(t._formaGeometrica, pers.formaGeometrica))
-          t.tirarVidaPersIntersec(pers);
-      }, frameRatePadrao);
-  }
 
   //mudar vida de inimigo: verificar se deve colocar vida na tela ou nao
   mudarVida(qtdMuda)

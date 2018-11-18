@@ -38,6 +38,15 @@ class ListaDuplamenteLigada
 
     this._qtdElem++;
   }
+  inserirNoFinal(info)
+  {
+    this._ultimo = new _No(this._ultimo, info, null);
+
+    if (this._prim == null)
+      this._prim = this._ultimo;
+
+    this._qtdElem++;
+  }
 
   //tirar do final
   removerDoFinal()

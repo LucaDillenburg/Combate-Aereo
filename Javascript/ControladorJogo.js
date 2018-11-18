@@ -107,9 +107,9 @@ class ControladorJogo
         controladoresObstaculosLvAtual[0] = new ControladorObstaculos(new Obstaculo(
           new Retangulo(0, 0, 200, 200, {stroke: corObst, fill: corObst}),
           {corImgEspecial: {stroke: color("green"), fill: color("green")}, corImgMorto: {stroke: color("white"), fill: color("white")}},
-          {qtdAndarX: 5, qtdAndarY: 0, tipoAndar: Andar.INVERTER_QTDANDAR_NAO_SAIR_TELA},
+          {qtdAndarX: 2, qtdAndarY: 2, tipoAndar: Andar.INVERTER_QTDANDAR_NAO_SAIR_TELA},
           this._personagemPrincipal, 20
-        ), false);
+        ));
 
       // tiros tela
         controladoresTirosLvAtual = new Array(1);
@@ -134,9 +134,6 @@ class ControladorJogo
     setTimeout(function(){
       _this._controladoresObstaculos[0].adicionarObstaculo(0, _this._conjuntoObjetosTela, 40, 150);
     }, 1);
-    setTimeout(function(){
-      _this._controladoresObstaculos[0].adicionarObstaculo(0, _this._conjuntoObjetosTela, 40, 150);
-    }, 2000);
 
     //this._controladoresObstaculos[0].adicionarObstaculoDif(0, this._conjuntoObjetosTela, width - 300, 150,
     //  ControladorObstaculos.INVERTER_QTDANDAR_X);
@@ -187,7 +184,7 @@ class ControladorJogo
 
     //andar inimigos
     for (let i = 0; i<this._controladoresInimigos.length; i++)
-      this._controladoresInimigos[i].andarInimigos(this._personagemPrincipal, this._controladoresTiros);
+      this._controladoresInimigos[i].andarInimigos(i, this._personagemPrincipal, this._controladoresTiros);
   }
   //inimigos atirarem
   _atirarInimigos()
@@ -272,6 +269,10 @@ class ControladorJogo
 
     background(100);
 
+    //nessa ordem especificamente
+    this._andarInimObst();
+    this._personagemPrincipal.procTirarVidaIntersecInim();
+
     // desenha os obstaculos
     for (let i = 0; i<this._controladoresObstaculos.length; i++)
     //desenha todos os obstaculos desse controlador
@@ -294,10 +295,6 @@ class ControladorJogo
       textAlign(LEFT, BASELINE);
     }
 
-    // daqui pra baixo eh nao grafico...
-
-  //nessa ordem especificamente
-    this._andarInimObst();
     this._andarTiros();
     this._atirarInimigos();
 

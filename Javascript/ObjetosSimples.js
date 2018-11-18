@@ -466,6 +466,7 @@ class Tiro extends ObjetoTelaMorre
   }
 }
 
+
 //OBSTACULO
 class Obstaculo extends ObjetoTelaMorre
 {
@@ -636,7 +637,7 @@ class Obstaculo extends ObjetoTelaMorre
     //colidiu = !info.listaBateu.vazia
 
     let qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(conjuntoObjetosTela.pers.formaGeometrica, this._formaGeometrica,
-      qtdAndar.x, qtdAndar.y);
+      qtdAndar.x, qtdAndar.y, false);
     let hipotenusaPers = Operacoes.hipotenusa(qtdPodeAndar.x, qtdPodeAndar.y);
 
     // comparar hipotenusa dos obstaculos com a do personagem
@@ -645,6 +646,7 @@ class Obstaculo extends ObjetoTelaMorre
     {
       let xPersAntes = conjuntoObjetosTela.pers.formaGeometrica.x;
       let yPersAntes = conjuntoObjetosTela.pers.formaGeometrica.y;
+
       let conseguiuAndarTudo = conjuntoObjetosTela.pers.mudarXY(qtdAndar.x - qtdPodeAndar.x, qtdAndar.y - qtdPodeAndar.y, conjuntoObjetosTela);
       if (!conseguiuAndarTudo)
       {
@@ -818,6 +820,7 @@ class ObstaculoComVida extends Obstaculo
 
   //draw (vai desenhar a vida? se sim, como?)
 }
+
 
 function minDirecao(valorDir1, valorDir2)
 {

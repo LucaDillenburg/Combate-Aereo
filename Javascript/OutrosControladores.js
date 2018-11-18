@@ -330,24 +330,20 @@ class ControladorObstaculos
   qtdPersPodeAndar(infoQtdMudar, formaGeomPers, persAndou)
   {
     //o valor default eh TRUE (pois normalmente esse metodo vai ser chamado quando ele andar)
-    if (persAndou == null)
-      persAndou = true;
+    if (persAndou == null) persAndou = true;
 
     //ve quanto que personagem pode mudar
     for (this._obstaculos.colocarAtualComeco(); !this._obstaculos.atualEhNulo; this._obstaculos.andarAtual())
       if (this._obstaculos.atual.vivo)
       {
         let qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(this._obstaculos.atual.formaGeometrica, formaGeomPers,
-          infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
-        let hipotenusa = Operacoes.hipotenusa(qtdPodeAndar.x, qtdPodeAndar.y);
+          infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY, false);
 
         //se tiro vai bater em um obstaculo mais perto que o outro
-        if (hipotenusa < infoQtdMudar.menorHipotenusa)
-        {
-          infoQtdMudar.menorHipotenusa = hipotenusa;
+        if (Math.abs(qtdPodeAndar.x) < Math.abs(infoQtdMudar.qtdPodeMudarX))
           infoQtdMudar.qtdPodeMudarX = qtdPodeAndar.x;
+        if (Math.abs(qtdPodeAndar.y) < Math.abs(infoQtdMudar.qtdPodeMudarY))
           infoQtdMudar.qtdPodeMudarY = qtdPodeAndar.y;
-        }
       }else
         if (persAndou)
           this._obstaculos.removerAtual();
@@ -491,13 +487,14 @@ class ControladorInimigos
   }
 
   //andar
-  andarInimigos(pers, controladoresTirosJogo)
+  andarInimigos(indexContrInim, pers, controladoresTirosJogo)
   {
-    for (this._inimigos.colocarAtualComeco(); !this._inimigos.atualEhNulo; this._inimigos.andarAtual())
+    let indexInim = 0;
+    for (this._inimigos.colocarAtualComeco(); !this._inimigos.atualEhNulo; this._inimigos.andarAtual(), indexInim++)
       if (this._inimigos.atual.vivo)
       {
         //retorna se tiro continua na lista (o morreu() eh feito la dentro)
-        let continuaNaLista = this._inimigos.atual.andar(pers);
+        let continuaNaLista = this._inimigos.atual.andar(pers, indexContrInim, indexInim);
         if (!continuaNaLista)
           this._removerInimAtualCompleto(controladoresTirosJogo);
       }else
@@ -549,13 +546,17 @@ class ControladorInimigos
         indexAndou, podeTirarVidaObjTela);
   }
 
-  procPersAndar(pers, qtdAndarX, qtdAndarY)
+  procPersAndar(indexContr, pers, qtdAndarX, qtdAndarY)
   //pers andou colidir com inimigos
   {
-    for (this._inimigos.colocarAtualComeco(); !this._inimigos.atualEhNulo; this._inimigos.andarAtual())
+    let indexInim = 0;
+    for (this._inimigos.colocarAtualComeco(); !this._inimigos.atualEhNulo; this._inimigos.andarAtual(), indexInim++)
+    {
       if (this._inimigos.atual.vivo && Interseccao.vaiTerInterseccao(this._inimigos.atual.formaGeometrica, pers.formaGeometrica,
         qtdAndarX, qtdAndarY))
-        this._inimigos.atual.tirarVidaPersIntersec(pers);
+        pers.colidiuInim(indexContr, indexInim, this._inimigos.atual.qtdTiraVidaPersQndIntersec);
+      console.log(indexInim);
+    }
   }
   //para andar ateh inimigo
 	qntAndarInimigoMaisProximo(formaGeometrica)
