@@ -139,6 +139,11 @@ class FormaGeometricaSimples extends FormaGeometrica
   }
   _mudouArestas()
   { this._arestas = null; }
+  _mudouAngulosDirecoes()
+  {
+    this._ultimoAngDir = null;
+    //os outros gets ou sao fixos ou dependentes desse mais um valor fixo
+  }
 
   //forma
   set x(x)
@@ -194,6 +199,7 @@ class FormaGeometricaSimples extends FormaGeometrica
     return this._y + this._height > 0 && this._y <= height - heightVidaUsuario;
   }
 
+  //get maior/menor x/y
   get menorX()
   { return this._x; }
   get maiorX()
@@ -202,6 +208,21 @@ class FormaGeometricaSimples extends FormaGeometrica
   { return this._y; }
   get maiorY()
   { return this._y + this.height; }
+
+  //get angulos direcoes
+  get pontoAngInicial()
+  { return this.vertices[1]; }
+  get ultimoAngDir()
+  {
+    if (this._ultimoAngDir == null)
+      this._ultimoAngDir = new Angulo(this.pontoAngInicial, this.centroMassa, this.vertices[2],
+        Angulo.MAIOR_180_CIMA).valorGraus;
+    return this._ultimoAngDir;
+  }
+  get ultimoAngBaixo()
+  { return 180; }
+  get ultimoAngEsq()
+  { return this.ultimoAngDir + 180; }
 
   //draw
   draw()
@@ -262,6 +283,7 @@ class Retangulo extends FormaGeometricaSimples
     this._width += qtdMuda;
 
     this._mudouArestasVerticesCentro();
+    this._mudouAngulosDirecoes();
     return this._width > 0;
   }
   set height(height)
@@ -284,6 +306,7 @@ class Retangulo extends FormaGeometricaSimples
     this._height += qtdMuda;
 
     this._mudouArestasVerticesCentro();
+    this._mudouAngulosDirecoes();
     return this._height > 0;
   }
 
@@ -334,6 +357,7 @@ class Quadrado extends FormaGeometricaSimples
     this._tamLado += qtdMuda;
 
     this._mudouArestasVerticesCentro();
+    this._mudouAngulosDirecoes();
     return this._tamLado > 0;
   }
   get width()
@@ -489,6 +513,7 @@ class FormaGeometricaComplexa extends FormaGeometrica
   get height()
   { return this.maiorY - this.menorY; }
 
+  //maior/menor x/y
   _pegarMenorMaiorXY()
   {
     let maiorX = this.vertices[0].x;
@@ -529,6 +554,16 @@ class FormaGeometricaComplexa extends FormaGeometrica
       this._pegarMenorMaiorXY();
     return this._maiorY;
   }
+
+  //get angulo direcoes
+  get pontoAngInicial()
+  { return this.centroMassa.mais(new Ponto(10, -10)); }
+  get ultimoAngDir()
+  { return 90; }
+  get ultimoAngBaixo()
+  { return 180; }
+  get ultimoAngEsq()
+  { return 270; }
 
   //vertices
   get vertices()

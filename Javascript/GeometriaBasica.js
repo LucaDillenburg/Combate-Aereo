@@ -80,6 +80,9 @@ class Ponto
     return Exatidao.ehQuaseExato(this.x, outro.x) && Exatidao.ehQuaseExato(this.y, outro.y);
   }
 
+  toString()
+  { return "(" + this.x + "," + this.y + ")"; }
+
   clone()
   { return new Ponto(this.x, this.y); }
 }
@@ -221,19 +224,18 @@ class Angulo
 //direcao
 class Direcao
 {
-  //direcao relativa de obj2 em relacao a obj2
+  //obj2 em relacao a obj1 (direcao relativa de obj2 em relacao a obj1)
   static emQualDirecaoObjEsta(obj1, obj2) //obj1 e obj2 sao formas geometricas
   {
-    let angulo = new Angulo(obj1.centroMassa.mais(new Ponto(50, -50)),
-      obj1.centroMassa, obj2.centroMassa, Angulo.MAIOR_180_CIMA).valorGraus;
+    let angulo = new Angulo(obj1.pontoAngInicial, obj1.centroMassa, obj2.centroMassa, Angulo.MAIOR_180_CIMA).valorGraus;
 
-    if (angulo <= 90) //angulo >= 0
+    if (angulo <= obj1.ultimoAngDir) //angulo >= 0
       return Direcao.Direita;
-    if (angulo <= 180) //angulo > 90
+    if (angulo <= obj1.ultimoAngBaixo)
       return Direcao.Baixo;
-    if (angulo <= 270) //angulo > 180
+    if (angulo <= obj1.ultimoAngEsq)
       return Direcao.Esquerda;
-    //if (angulo <= 360) //angulo > 270
+    //if (angulo <= 360)
     return Direcao.Cima;
   }
 
@@ -264,7 +266,14 @@ class Interseccao
 				|| (inicio2 + distancia2 >= inicio1 && inicio2 + distancia2 <= inicio1 + distancia1);
 	}
 
-	static interseccao(obj1, obj2) //obj1 e obj2 = ObjetoTela
+  static inteiroDentroDeDirecao(inicio1, distancia1, inicio2, distancia2)
+  // 2 dentro de 1 ou 2 dentro de 1
+	{
+    return (inicio2 >= inicio1 && inicio2 + distancia2 <= inicio1 + distancia1)
+     || (inicio1 >= inicio2 && inicio1 + distancia1 <= inicio2 + distancia2);
+	}
+
+	static interseccao(obj1, obj2) //obj1 e obj2 sao FormaGeometricas
   // retorna se estah intersectando
 	{
 		if (obj1.codForma > obj2.codForma)
@@ -279,20 +288,78 @@ class Interseccao
 			Interseccao.intersecDirecao(y1, height1, y2, height2);
 	}
 
+  static menorQtdObjColidePararColidir(objParado, objVaiAndar) //objParado e objVaiAndar sao formasGeometricas
+  {
+    //ver "Explicacao procCriou(...) obstaculo em relacao a colisao com pers.png"
+    let xDireita = {
+      valor: objParado.x + objParado.width - objVaiAndar.x,
+      dir: Direcao.Direita
+    };
+    let xEsquerda = {
+      valor: objVaiAndar.x + objVaiAndar.width - objParado.x,
+      dir: Direcao.Esquerda
+    };
+    let yBaixo = {
+      valor: objParado.y + objParado.height - objVaiAndar.y,
+      dir: Direcao.Baixo
+    };
+    let yCima = {
+      valor: objVaiAndar.y + objVaiAndar.height - objParado.y,
+      dir: Direcao.Cima
+    };
+
+    let menorValorDir = minDirecao(minDirecao(yBaixo, yCima), minDirecao(xDireita, xEsquerda));
+    let qtdAndar = {};
+    switch (menorValorDir.dir)
+    {
+      case Direcao.Direita:
+        qtdAndar.x = menorValorDir.valor + qntNaoColidir;
+        qtdAndar.y = 0;
+        break;
+      case Direcao.Esquerda:
+        qtdAndar.x = -menorValorDir.valor -qntNaoColidir;
+        qtdAndar.y = 0;
+        break;
+      case Direcao.Baixo:
+        qtdAndar.x = 0;
+        qtdAndar.y = menorValorDir.valor + qntNaoColidir;
+        break;
+      case Direcao.Cima:
+        qtdAndar.x = 0;
+        qtdAndar.y = -menorValorDir.valor -qntNaoColidir;
+        break;
+    }
+    return qtdAndar;
+  }
+
 	//VAI INTERSECTAR
-  static qntPodeAndarAntesIntersec(obj1, obj2, qtdAndarX, qtdAndarY) //Obj1 e Obj2 devem ser formas geometricas
+  static qntPodeAndarAntesIntersec(obj1, obj2, qtdAndarX, qtdAndarY, andarProporcional) //Obj1 e Obj2 devem ser formas geometricas
   //explicacao: "obj2 quer andar qtdAndarX em X e qtdAndarY em Y"
   //retorna qtdPodeAndar (x,y) para nao intersectar
-  { return Interseccao._interseccaoObjAndando(obj1, obj2, qtdAndarX, qtdAndarY, false); }
+  {
+    if (andarProporcional == null) andarProporcional = true;
+    return Interseccao._interseccaoObjAndando(obj1, obj2, qtdAndarX, qtdAndarY, false, andarProporcional);
+  }
 
   static vaiTerInterseccao(obj1, obj2, qtdAndarX, qtdAndarY) //Obj1 e Obj2 devem ser formas geometricas
   //explicacao: "obj2 quer andar qtdAndarX em X e qtdAndarY em Y"
   { return Interseccao._interseccaoObjAndando(obj1, obj2, qtdAndarX, qtdAndarY, true); }
 
-	static _interseccaoObjAndando(obj1, obj2, qtdAndarX, qtdAndarY, returnTrueFalse) //Obj1 e Obj2 devem ser formas geometricas
-  //explicacao: "obj2 quer andar qtdAndarX em X e qtdAndarY em Y"
+	static _interseccaoObjAndando(obj1, obj2, qtdAndarX, qtdAndarY, returnTrueFalse, andarProporcional)
+  //Obj1 e Obj2 devem ser formas geometricas
 	//se returnTrueFalse, retorna para VaiTerInterseccao; else, retorna para QntPodeAndarAntesIntersec
+  //andarProporcional eh soh para qntPodeAndarAntesIntersec
+  //explicacao: "obj2 quer andar qtdAndarX em X e qtdAndarY em Y"
 	{
+    //se jah estah intersectando antes de andar
+		if (Interseccao.interseccao(obj1, obj2))
+    {
+      if (returnTrueFalse)
+        return true;
+      else
+        return {x: 0, y: 0};
+    }
+
     //se nao quer andar nada
     if (qtdAndarX == 0 && qtdAndarY == 0)
     {
@@ -303,19 +370,11 @@ class Interseccao
     }
     // daqui pra baixo tem que querer andar alguma coisa...
 
-    //se jah estah intersectando antes de andar
-		if (Interseccao.interseccao(obj1, obj2))
-    {
-      if (returnTrueFalse)
-        return true;
-      else
-        return {x: 0, y: 0};
-    }
-
 		let qtdPodeAndar = {x: qtdAndarX, y: qtdAndarY};
 
 		//caso especial mais simples: se o objeto que anda eh um quadrado ou retangulo
     //e soh andou em uma direcao
+    // TODO: ABAIXO SOH FUNCIONA SE AMBOS OS OBJETOS FOREM QUADRADOS OU RETANGULOS (PROGRAMAR EM _montarParalelogramosAndar(...) PARALELOGRAMO PARA QTDANDARX E QTDANDARY = 0)
 		if ((obj2.codForma == Geometria.COD_QUADRADO || obj2.codForma == Geometria.COD_RETANGULO) &&
         (qtdAndarX == 0 || qtdAndarY == 0))
 		{
@@ -330,7 +389,7 @@ class Interseccao
           {
             if (returnTrueFalse)
               return true;
-            qtdPodeAndar.y = Interseccao._qtdPodeAndarEmY(obj1, obj2, qtdAndarY); // TODO : isso soh funciona se os dois forem quadrados ou retangulos
+            qtdPodeAndar.y = Interseccao._qtdPodeAndarEmY(obj1, obj2, qtdAndarY);
           }else
             if (returnTrueFalse)
               return false;
@@ -344,13 +403,11 @@ class Interseccao
           {
             if (returnTrueFalse)
               return true;
-            qtdPodeAndar.y = Interseccao._qtdPodeAndarEmY(obj1, obj2, qtdAndarY); // TODO : isso soh funciona se os dois forem quadrados ou retangulos
+            qtdPodeAndar.y = Interseccao._qtdPodeAndarEmY(obj1, obj2, qtdAndarY);
           }else
             if (returnTrueFalse)
               return false;
 				}
-
-				return qtdPodeAndar;
 			}else
 			//if (qtdAndarY == 0)
 			{
@@ -362,7 +419,7 @@ class Interseccao
           {
             if (returnTrueFalse)
               return true;
-            qtdPodeAndar.x = Interseccao._qtdPodeAndarEmX(obj1, obj2, qtdAndarX); // TODO : isso soh funciona se os dois forem quadrados ou retangulos
+            qtdPodeAndar.x = Interseccao._qtdPodeAndarEmX(obj1, obj2, qtdAndarX);
           }else
             if (returnTrueFalse)
               return false;
@@ -376,14 +433,14 @@ class Interseccao
           {
             if (returnTrueFalse)
               return true;
-            qtdPodeAndar.x = Interseccao._qtdPodeAndarEmX(obj1, obj2, qtdAndarX); // TODO : isso soh funciona se os dois forem quadrados ou retangulos
+            qtdPodeAndar.x = Interseccao._qtdPodeAndarEmX(obj1, obj2, qtdAndarX);
           }else
             if (returnTrueFalse)
               return false;
 				}
-
-				return qtdPodeAndar;
 			}
+
+      return qtdPodeAndar;
 		}
 
 		// daqui pra baixo nao pode ser um quadrado e retangulo que soh anda pra alguma direcao... (tambem quer andar alguma coisa pelo menos)
@@ -410,29 +467,50 @@ class Interseccao
 
     // TODO : isso soh funciona se os dois forem quadrados ou retangulos
 
-    // a partir apenas de X
-    let qtdPodeAndarX1;
-    if (Interseccao.intersecDirecao(obj2.x, obj2.width, obj1.x, obj1.width))
-      qtdPodeAndarX1 = 0;
-    else
-      qtdPodeAndarX1 = Interseccao._qtdPodeAndarEmX(obj1, obj2, qtdAndarX);
-    // regra de 3:
-    let qtdPodeAndarY1 = (qtdPodeAndarX1*qtdAndarY)/qtdAndarX;
+    if (andarProporcional)
+    {
+      // a partir apenas de X
+      let qtdPodeAndarX1;
+      if (Interseccao.intersecDirecao(obj2.x, obj2.width, obj1.x, obj1.width))
+        qtdPodeAndarX1 = 0;
+      else
+        qtdPodeAndarX1 = Interseccao._qtdPodeAndarEmX(obj1, obj2, qtdAndarX);
+      // regra de 3 (a partir de X):
+      let qtdPodeAndarY1 = (qtdPodeAndarX1*qtdAndarY)/qtdAndarX;
 
-    // a partir apenas de Y
-    let qtdPodeAndarY2;
-    if (Interseccao.intersecDirecao(obj2.y, obj2.height, obj1.y, obj1.height))
-      qtdPodeAndarY2 = 0;
-    else
-      qtdPodeAndarY2 = Interseccao._qtdPodeAndarEmY(obj1, obj2, qtdAndarY);
+      // a partir apenas de Y
+      let qtdPodeAndarY2;
+      if (Interseccao.intersecDirecao(obj2.y, obj2.height, obj1.y, obj1.height))
+        qtdPodeAndarY2 = 0;
+      else
+        qtdPodeAndarY2 = Interseccao._qtdPodeAndarEmY(obj1, obj2, qtdAndarY);
 
-    if (Math.abs(qtdPodeAndarY1) >= Math.abs(qtdPodeAndarY2))
-    // 1: a partir de X
-      return {x: qtdPodeAndarX1, y: qtdPodeAndarY1};
-    else
-    // 2: a partir de Y
-      return {x: (qtdPodeAndarY2*qtdAndarX)/qtdAndarY, // regra de 3 (vai andar em X proporcional de quanto andara em Y)
-        y: qtdPodeAndarY2};
+      if (Math.abs(qtdPodeAndarY1) >= Math.abs(qtdPodeAndarY2))
+      // 1: a partir de X
+        return {x: qtdPodeAndarX1, y: qtdPodeAndarY1};
+      else
+      // 2: a partir de Y
+        return {x: (qtdPodeAndarY2*qtdAndarX)/qtdAndarY, // regra de 3 (vai andar em X proporcional de quanto andara em Y)
+          y: qtdPodeAndarY2};
+    }else
+    //se nao precisa andar proporcional (anda o maximo que pode nas duas direcoes)
+    {
+      let qtdPodeAndarY;
+      if (Interseccao.intersecDirecao(obj2.x, obj2.width, obj1.x, obj1.width))
+      //se estah intersectando em X (eh trocado mesmo)
+        qtdPodeAndarY = Interseccao._qtdPodeAndarEmY(obj1, obj2, qtdAndarY);
+      else
+        qtdPodeAndarY = qtdAndarY;
+
+      let qtdPodeAndarX;
+      if (Interseccao.intersecDirecao(obj2.y, obj2.height, obj1.y, obj1.height))
+      //se estah intersectando em Y (eh trocado mesmo)
+        qtdPodeAndarX = Interseccao._qtdPodeAndarEmX(obj1, obj2, qtdAndarX);
+      else
+        qtdPodeAndarX = qtdAndarX;
+
+      return {x: qtdPodeAndarX, y: qtdPodeAndarY};
+    }
 	}
   static _qtdPodeAndarEmX(obj1, obj2, qtdAndarX)
   // se jah sabe que vai colidir em X
@@ -683,6 +761,9 @@ class Tela
     //if (direcaoSair == Tela.SAIU_EM_CIMA)
       return -obj.y + espacoLadosTela;
   }
+
+  static objVaiSair(obj, qtdMudaX, qtdMudaY)
+  { return Tela.objVaiSairEmX(obj, qtdMudaX) || Tela.objVaiSairEmY(obj, qtdMudaY); }
 
   //OUTROS
   static xParaEstarNoMeio(widthObj)

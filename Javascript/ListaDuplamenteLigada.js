@@ -38,6 +38,15 @@ class ListaDuplamenteLigada
 
     this._qtdElem++;
   }
+  inserirNoFinal(info)
+  {
+    this._ultimo = new _No(this._ultimo, info, null);
+
+    if (this._prim == null)
+      this._prim = this._ultimo;
+
+    this._qtdElem++;
+  }
 
   //tirar do final
   removerDoFinal()
@@ -86,6 +95,11 @@ class ListaDuplamenteLigada
   }
   get atualEhNulo()
   { return this._atual == null; }
+
+  guardarAtual()
+  { this._atualGuardado = this._atual; }
+  colocarGuardadoNoAtual()
+  { this._atual = this._atualGuardado; }
 
   //metodos com atual (remover)
   removerAtual()
