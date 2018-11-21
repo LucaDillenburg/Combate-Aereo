@@ -1,11 +1,6 @@
-- NOVO TIPO ANDAR: andar ateh quando passaria de certo X e/ou Y, e antes de passar mudar a direcao tanto de qtdAndarX quando qtdAndarY (pode deixar ou nao sair da tela). OK
-- arrumar erros dos tipos andar. OK
+- poder atirar para todos lados (quando tiver com a nave especial). OK
+- opcao para colocar tiro especial durante um tempo e depois tirar (pode-se mudar o tiroPadraoAtual ao colocar um tiro especial e o proprio tiroPadrao). OK
 
-- colocar propriedade "vivo" em ObjetoTelaMorre. OK
-
-- frequencia de atirar fica em cada controladorInimigo e no PersonagemPrincipal (quando tiro for missil teleguiado). OK
-
-- poder atirar para todos lados (quando tiver com a nave especial)
 - opcao para mudar tamanho personagem, inimigo e obstaculo (deve ser super parecido com procCriou, talvez possa usar ele mesmo ou fazer um metodo em comum- o que eh diferente eh se quando ele aumentar, ele for ficar com parte do corpo para fora, dessa maneira ele aumenta de tamanho e depois anda)
 
 - New Features:

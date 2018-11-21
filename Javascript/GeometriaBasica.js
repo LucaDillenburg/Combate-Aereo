@@ -1056,6 +1056,9 @@ class InfoAndar //qtdAndarX, qtdAndarY, tipoAndar, [atehQualXYPodeAndar], [ultim
         this._ultimoQtdAndar = {x: this._qtdAndarX, y: this._qtdAndarY};
       }
     }else
+    if (tipo == Andar.SEGUIR_PERS)
+      this._ultimoQtdAndar = {x: this._qtdAndarX, y: this._qtdAndarY};
+    else
     {
       if (this._ultimoQtdAndar != null)
         this._ultimoQtdAndar = null;

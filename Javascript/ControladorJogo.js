@@ -95,7 +95,7 @@ class ControladorJogo
         controladoresInimigosLvAtual[0] = new ControladorInimigos(new Inimigo(
           new Quadrado(0, 0, tamInimigo, {stroke: corInim, fill: corInim}), color("black"),
           {vida: 350, corVida: corInim, mostrarVidaSempre: true}, ControladorJogo.newTiroNaoPersPadrao(), 10,
-          2, new InfoAndar(0, 0, Andar.INVERTER_QTDANDAR_NAO_SAIR_TELA), this._personagemPrincipal
+          false, 2, new InfoAndar(0, 0, Andar.INVERTER_QTDANDAR_NAO_SAIR_TELA), this._personagemPrincipal
         ));
         controladoresInimigosLvAtual[0].adicionarInimigo(0, this._personagemPrincipal, Tela.xParaEstarNoMeio(tamInimigo), 20);
 
@@ -116,10 +116,6 @@ class ControladorJogo
         break;
     }
 
-    this._personagemPrincipal.controladorTiros.tiroPadrao = new Tiro(new Retangulo(0, 0, 5, 8, {fill: color("white"), stroke: color("white")}),
-      {fill: color("brown"), stroke: color("brown")}, new InfoAndar(0, -15, Andar.SEGUIR_INIM_MAIS_PROX), null, true, 5);
-    this._personagemPrincipal.procPosMudarTiro();
-
     //colocar tudo na tela depois que jah criou tudo
     if (controladoresInimigosLvAtual != null)
       this._controladoresInimigos = controladoresInimigosLvAtual;
@@ -128,14 +124,6 @@ class ControladorJogo
     if (controladoresTirosLvAtual != null)
       this._controladoresTiros = controladoresTirosLvAtual;
     this._atualizarConjuntoObjetosTela();
-
-    let _this = this;
-    setTimeout(function(){
-      _this._controladoresObstaculos[0].adicionarObstaculo(0, _this._conjuntoObjetosTela, 40, 150);
-    }, 1);
-
-    //this._controladoresObstaculos[0].adicionarObstaculoDif(0, this._conjuntoObjetosTela, width - 300, 150,
-    //  ControladorObstaculos.INVERTER_QTDANDAR_X);
 
     // tira o "Level X" da tela
     let t = this;

@@ -27,18 +27,23 @@ class ControladorTiros
     this._tiros = new ListaDuplamenteLigada();
   }
 
+  //tiroPadrao
   get tiroPadrao()
   { return this._tiroPadrao; }
   set tiroPadrao(novoTiro)
-  {
-    if (this._exTiroPadrao == null)
-      this._exTiroPadrao = this._tiroPadrao;
-    this._tiroPadrao = novoTiro;
-  }
+  { this._tiroPadrao = novoTiro; }
+
+  colocarTiroEspecial(novoTiro)
+  { this._tiroEspecial = novoTiro; }
   voltarTiroPadrao()
+  { this._tiroEspecial = null; }
+
+  get tiroPadraoAtual()
   {
-    this._tiroPadrao = this._exTiroPadrao;
-    this._exTiroPadrao = null;
+    if (this._tiroEspecial == null)
+      return this._tiroPadrao;
+    else
+      return this._tiroEspecial;
   }
 
   //novo tiro
@@ -47,15 +52,17 @@ class ControladorTiros
 	//pode-se chamar uma funcao sem todos os parametros necessarios e os demais ficam como nulos,
 		//porem se for colocar parametros tem que estar na ordem certa
   {
+    tiroPadraoAtual = this.tiroPadraoAtual;
+
     if (x == null)
-      x = this._tiroPadrao.formaGeometrica.x;
+      x = tiroPadraoAtual.formaGeometrica.x;
     if (y == null)
-      y = this._tiroPadrao.formaGeometrica.y;
+      y = tiroPadraoAtual.formaGeometrica.y;
 
     let infoAndar;
     if (qtdAndarX != null || qtdAndarY != null || tipoAndar != null)
     {
-      infoAndar = this._tiroPadrao.infoAndar.clone();
+      infoAndar = tiroPadraoAtual.infoAndar.clone();
       if (tipoAndar == null)
         infoAndar.tipoAndar = tipoAndar;
       if (qtdAndarX == null)
@@ -63,14 +70,14 @@ class ControladorTiros
       if (qtdAndarY == null)
         infoAndar.qtdAndarY = qtdAndarY;
     }else
-      infoAndar = this._tiroPadrao.infoAndar;
+      infoAndar = tiroPadraoAtual.infoAndar;
 
     if (corImgMorto == null)
-      corImgMorto = this._tiroPadrao.corImgMorto;
+      corImgMorto = tiroPadraoAtual.corImgMorto;
     if (mortalidade == null)
-      mortalidade = this._tiroPadrao.mortalidade;
+      mortalidade = tiroPadraoAtual.mortalidade;
     if (formaGeometrica == null)
-      formaGeometrica = this._tiroPadrao.formaGeometrica.clone();
+      formaGeometrica = tiroPadraoAtual.formaGeometrica.clone();
 
     formaGeometrica.x = x;
     formaGeometrica.y = y;
@@ -81,7 +88,7 @@ class ControladorTiros
   adicionarTiro(conjuntoObjetosTela, x, y, tiro)
   {
 		if (tiro == null)
-      tiro = this._tiroPadrao;
+      tiro = this.tiroPadraoAtual;
 
     let novoTiro = tiro.clone(x, y, conjuntoObjetosTela);
     novoTiro._ehDoPers = this._ehPersPrinc;
@@ -415,7 +422,7 @@ class ControladorInimigos
 
   //novo inimigo
   adicionarInimigoDif(indexContrInim, pers, x, y, vida, invQtdAndarDir, qtdAndarX, qtdAndarY, tipoAndar, atehQualXYPodeAndar,
-    qtdTiraVidaPersQndIntersec, freqTiro, tiroPadrao, corVida, mostrarVidaSempre, corImgMorto, formaGeometrica)
+    qtdTiraVidaPersQndIntersec, freqTiro, tiroPadrao, podeAtirarQualquerLado, corVida, mostrarVidaSempre, corImgMorto, formaGeometrica)
   //essa eh a ordem onde os primeiros parametros da funcao sao os que primeiro estariam fora do padrao
 	//pode-se chamar uma funcao sem todos os parametros necessarios e os demais ficam como nulos,
 		//porem se for colocar parametros tem que estar na ordem certa
@@ -439,6 +446,8 @@ class ControladorInimigos
       freqTiro = this._inimigoPadrao.freqTiro;
     if (tiroPadrao == null)
       tiroPadrao = this._inimigoPadrao.controladorTiros.tiroPadrao;
+    if (podeAtirarQualquerLado == null)
+      podeAtirarQualquerLado = this._inimigoPadrao.podeAtirarQualquerLado;
     if (corVida == null)
       corVida = this._inimigoPadrao.corVida;
     if (mostrarVidaSempre == null)
@@ -452,7 +461,7 @@ class ControladorInimigos
     formaGeometrica.y = y;
 
     this._adicionarInimigo(new Inimigo(formaGeometrica, corImgMorto, {vida: vida, corVida: corVida, mostrarVidaSempre: mostrarVidaSempre},
-      tiroPadrao, freqTiro, qtdTiraVidaPersQndIntersec, {qtdAndarX: qtdAndar.x, qtdAndarY: qtdAndar.y, tipoAndar: tipoAndar}, pers),
+      tiroPadrao, freqTiro, podeAtirarQualquerLado, qtdTiraVidaPersQndIntersec, {qtdAndarX: qtdAndar.x, qtdAndarY: qtdAndar.y, tipoAndar: tipoAndar}, pers),
       pers, indexContrInim);
   }
   adicionarInimigo(indexContrInim, pers, x, y, inimigo)
