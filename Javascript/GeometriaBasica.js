@@ -748,7 +748,7 @@ class Tela
 			return Direcao.Baixo;
     //saiu p/ cima
     if (obj.menorY + qtdMuda < espacoLadosTela)
-      return Direcao.Baixo;
+      return Direcao.Cima;
     return 0; //nao saiu
 	}
   static objSaiuEmY(obj) //obj = formageometrica
@@ -875,12 +875,12 @@ class Andar
         //se obstaculo vai sair, inverte a direcao
         if (vaiSairX || vaiSairY)
         {
-          if (inverteApenasDirecao || vaiSairX)
+          if (!inverteApenasDirecao || vaiSairX)
           {
             qtdAndar.inverteuEmX = true;
             qtdAndar.x = -infoAndar.qtdAndarX;
           }
-          if (inverteApenasDirecao || vaiSairY)
+          if (!inverteApenasDirecao || vaiSairY)
           {
             qtdAndar.inverteuEmY = true;
             qtdAndar.y = -infoAndar.qtdAndarY;
@@ -921,20 +921,15 @@ class Andar
       infoAndar.tipoAndar == Andar.INVERTER_DIRECAO_QTDANDAR_NAO_PASSAR_XY_PODE_SAIR_TELA;
 
     //se vai passar de X (de qual lado para o outro que seja)
-    if (!qtdAndar.inverteuEmX && infoAndar.qtdAndarX != 0)
+    if (!qtdAndar.inverteuEmX && (infoAndar.qtdAndarX != 0 || !inverteApenasDirecao) && infoAndar.atehQualXYPodeAndar.x != null)
     //se ainda nao inverteu em X e quer andar alguma coisa
     {
-      let inicio, distancia;
+      let inicio;
       if (infoAndar.qtdAndarX >= 0)
-      {
         inicio = formaGeometrica.x;
-        distancia = infoAndar.qtdAndarX;
-      }
       else
-      {
         inicio = formaGeometrica.x + infoAndar.qtdAndarX;
-        distancia = -infoAndar.qtdAndarX + formaGeometrica.width; //qtdAndarX eh negativo (ent deixa positivo)
-      }
+      let distancia = Math.abs(infoAndar.qtdAndarX) + formaGeometrica.width;
 
       if (Interseccao.xOuYDePontoEstahDentroDirecao(infoAndar.atehQualXYPodeAndar.x, inicio, distancia))
       {
@@ -952,20 +947,15 @@ class Andar
 
     //[igual o if de cima porem com Y ao inves de X]
     //se vai passar de Y (de qual lado para o outro que seja)
-    if (!qtdAndar.inverteuEmY && infoAndar.qtdPodeAndarYPadrao != 0)
+    if (!qtdAndar.inverteuEmY && (infoAndar.qtdAndarY != 0 || !inverteApenasDirecao) && infoAndar.atehQualXYPodeAndar.y != null)
     //se ainda nao inverteu em Y e quer andar alguma coisa
     {
-      let inicio, distancia;
+      let inicio;
       if (infoAndar.qtdAndarY >= 0)
-      {
         inicio = formaGeometrica.y;
-        distancia = infoAndar.qtdAndarY;
-      }
       else
-      {
         inicio = formaGeometrica.y + infoAndar.qtdAndarY;
-        distancia = -infoAndar.qtdAndarY + formaGeometrica.height; //qtdAndarY eh negativo (ent deixa positivo)
-      }
+      let distancia = Math.abs(infoAndar.qtdAndarY) + formaGeometrica.height;
 
       if (Interseccao.xOuYDePontoEstahDentroDirecao(infoAndar.atehQualXYPodeAndar.y, inicio, distancia))
       {
@@ -1021,7 +1011,7 @@ class InfoAndar //qtdAndarX, qtdAndarY, tipoAndar, [atehQualXYPodeAndar], [ultim
     this._qtdAndarX = qtdAndarX;
     this._qtdAndarY = qtdAndarY;
 
-    if (conjuntoObjetosTela == null) //soh armazena (tipo obst/tiro padrao)
+    if (pers == null && controladoresInimigos == null) //soh armazena (tipo obst/tiro padrao)
       this._tipoAndar = tipoAndar;
     else
       this.setTipoAndar(tipoAndar, formaGeometrica, pers, controladoresInimigos);
@@ -1123,8 +1113,8 @@ class InfoAndar //qtdAndarX, qtdAndarY, tipoAndar, [atehQualXYPodeAndar], [ultim
   }
   procAndar(pers, formaGeometrica)
   {
-    if (this._tipoAndar == Andar.SEGUIR_INIM_MAIS_PROX && !this._inimSeguir.vivo ||
-      this._tipoAndar == Andar.SEGUIR_PERS && !pers.vivo)
+    if ((this._tipoAndar == Andar.SEGUIR_INIM_MAIS_PROX && (this._inimSeguir == null || !this._inimSeguir.vivo)) ||
+      (this._tipoAndar == Andar.SEGUIR_PERS && !pers.vivo))
     {
       this.setTipoAndar(Andar.ANDAR_NORMAL);
       this.mudarQtdAndarParaUltimoAndar();

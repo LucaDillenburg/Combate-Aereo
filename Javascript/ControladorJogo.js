@@ -42,14 +42,14 @@ class ControladorJogo
     let corTiro = color(0, 0, 102);
     return new Tiro(new Retangulo(0, 0, 5, 8, {fill: corTiro, stroke: corTiro}),
       {fill: color("white"), stroke: color("white")},
-        {qtdAndarX: 0, qtdAndarY: -15, tipoAndar: Andar.ANDAR_NORMAL}, null, true, 5);
+        new InfoAndar(0, -15, Andar.ANDAR_NORMAL), null, true, 5);
   }
   static newTiroNaoPersPadrao()
   {
     let corTiro = color("red");
     return new Tiro(new Retangulo(0, 0, 2.7, 5, {fill: corTiro, stroke: corTiro}),
       {fill: color("white"), stroke: color("white")},
-      {qtdAndarX: 0, qtdAndarY: 18, tipoAndar: Andar.ANDAR_NORMAL}, null, false, 3);
+      new InfoAndar(0, 18, Andar.ANDAR_NORMAL), null, false, 3);
   }
 
   //inicializacao
@@ -93,12 +93,11 @@ class ControladorJogo
         let corInim = color("red");
         let tamInimigo = 50;
         controladoresInimigosLvAtual[0] = new ControladorInimigos(new Inimigo(
-          new Quadrado(0, 0, tamInimigo, {stroke: corInim, fill: corInim}),
-          color("black"), {vida: 350, corVida: corInim, mostrarVidaSempre: true},
-          ControladorJogo.newTiroNaoPersPadrao(), 2, {qtdAndarX: 0, qtdAndarY: 0,
-          tipoAndar: Andar.INVERTER_QTDANDAR_NAO_SAIR_TELA}, this._personagemPrincipal
+          new Quadrado(0, 0, tamInimigo, {stroke: corInim, fill: corInim}), color("black"),
+          {vida: 350, corVida: corInim, mostrarVidaSempre: true}, ControladorJogo.newTiroNaoPersPadrao(), 10,
+          2, new InfoAndar(0, 0, Andar.INVERTER_QTDANDAR_NAO_SAIR_TELA), this._personagemPrincipal
         ));
-        controladoresInimigosLvAtual[0].adicionarInimigo(0, this._personagemPrincipal, 50/*Tela.xParaEstarNoMeio(tamInimigo)*/, 20);
+        controladoresInimigosLvAtual[0].adicionarInimigo(0, this._personagemPrincipal, Tela.xParaEstarNoMeio(tamInimigo), 20);
 
       // obstaculos
         controladoresObstaculosLvAtual = new Array(1);
@@ -107,8 +106,7 @@ class ControladorJogo
         controladoresObstaculosLvAtual[0] = new ControladorObstaculos(new Obstaculo(
           new Retangulo(0, 0, 200, 200, {stroke: corObst, fill: corObst}),
           {corImgEspecial: {stroke: color("green"), fill: color("green")}, corImgMorto: {stroke: color("white"), fill: color("white")}},
-          {qtdAndarX: 2, qtdAndarY: 2, tipoAndar: Andar.INVERTER_QTDANDAR_NAO_SAIR_TELA},
-          this._personagemPrincipal, 20
+          new InfoAndar(2, 2, Andar.INVERTER_DIRECAO_QTDANDAR_NAO_SAIR_TELA), this._personagemPrincipal, 20
         ));
 
       // tiros tela
@@ -118,8 +116,9 @@ class ControladorJogo
         break;
     }
 
-    // para que inimigo nao atire tao rapido
-    this._auxAtirarInim = 0;
+    this._personagemPrincipal.controladorTiros.tiroPadrao = new Tiro(new Retangulo(0, 0, 5, 8, {fill: color("white"), stroke: color("white")}),
+      {fill: color("brown"), stroke: color("brown")}, new InfoAndar(0, -15, Andar.SEGUIR_INIM_MAIS_PROX), null, true, 5);
+    this._personagemPrincipal.procPosMudarTiro();
 
     //colocar tudo na tela depois que jah criou tudo
     if (controladoresInimigosLvAtual != null)
@@ -189,16 +188,8 @@ class ControladorJogo
   //inimigos atirarem
   _atirarInimigos()
   {
-    this._auxAtirarInim++;
-
-    // para que inimigo nao atire tao constantemente
-    if (this._auxAtirarInim >= 8)
-    {
-      for(let i = 0; i<this._controladoresInimigos.length; i++)
-        this._controladoresInimigos[i].atirarTodosInim(this._conjuntoObjetosTela);
-
-      this._auxAtirarInim = 0;
-    }
+    for(let i = 0; i<this._controladoresInimigos.length; i++)
+      this._controladoresInimigos[i].atirarTodosInim(this._conjuntoObjetosTela);
   }
 
 

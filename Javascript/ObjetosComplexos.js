@@ -13,9 +13,6 @@ class PersComTiros extends ObjetoTelaMorre
 
     //tiros
     this._controladorTiros = new ControladorTiros(tiroPadrao, ehPersPrinc);
-
-    //vivo
-    this._vivo = true;
   }
 
   //get ControladorTiros
@@ -159,11 +156,14 @@ class PersComTiros extends ObjetoTelaMorre
 }
 
 //PERSONAGEM PRINCIPAL
+const freqMissilPers = 40;
 class PersonagemPrincipal extends PersComTiros
 {
   constructor(formaGeometrica, corImgMorto, vida, tiroPadrao, qtdAndar)
   {
     super(formaGeometrica, corImgMorto, vida, tiroPadrao, true);
+    this._ehMissil = false; // o primeiro tiro tem que ser o normal
+
     this.qtdAndar = qtdAndar;
 
     //lista de inimigos que intersectou
@@ -178,6 +178,19 @@ class PersonagemPrincipal extends PersComTiros
   {
     this._qtdAndar = qtdAndar;
     this._qtdAndarCadaDirDiag = this._qtdAndar*Math.sqrt(2)/2;
+  }
+
+  procPosMudarTiro() //se for mudar o tiroPadrao (ou voltarTiroPadrao ou tipoAndar do tiro) chamar esse metodo
+  {
+    if (this._controladorTiros.tiroPadrao.infoAndar.tipoAndar == Andar.SEGUIR_INIM_MAIS_PROX) //se for missil
+    {
+      this._auxFreqTiro = freqMissilPers;
+      this._ehMissil = true;
+    }else
+    {
+      this._auxFreqTiro = null;
+      this._ehMissil = false;
+    }
   }
 
   //mudar (x,y)
@@ -274,6 +287,20 @@ class PersonagemPrincipal extends PersComTiros
     return infoQtdMudar.qtdPodeMudarX == qtdMudaX && infoQtdMudar.qtdPodeMudarY == qtdMudaY;
   }
 
+  atirar(conjuntoObjetosTela)
+  {
+    if (this._ehMissil)
+    {
+      this._auxFreqTiro++;
+      if (this._auxFreqTiro >= freqMissilPers)
+      {
+        this._auxFreqTiro = 0;
+        super.atirar(conjuntoObjetosTela, null);
+      }
+    }else
+      super.atirar(conjuntoObjetosTela, null);
+  }
+
   //sobre ter intersectar com inimigos
   zerarInimigosIntersectados()
   {
@@ -332,11 +359,15 @@ class PersonagemPrincipal extends PersComTiros
 const tempoMostrarVidaPadrao = 675;
 class Inimigo extends PersComTiros
 {
-  constructor(formaGeometrica, corImgMorto, infoVida, tiroPadrao, qtdTiraVidaPersQndIntersec, infoAndar, pers)
+  constructor(formaGeometrica, corImgMorto, infoVida, tiroPadrao, freqTiro, qtdTiraVidaPersQndIntersec, infoAndar, pers)
   // infoVida: vida, corVida, mostrarVidaSempre, [proporcTempoVida] (ultimo eh opcional)
   // infoAndar: qtdAndarX, qtdAndarY, tipoAndar
   {
     super(formaGeometrica, corImgMorto, infoVida.vida, tiroPadrao, false);
+
+    //tiro
+    this._auxFreqTiro = freqTiro;
+    this._freqTiro = freqTiro;
 
     //andar
     this._seEhImpossivelExcep(infoAndar.tipoAndar);
@@ -384,6 +415,7 @@ class Inimigo extends PersComTiros
   }
   //se for adicionar set qtdAndar, mudar this._hipotenusaAndarPadrao de acordo com o tipoAndar
 
+  //ANDAR
   andar(pers, indexContrInim, indexInim)
   //retorna se deve continuar na lista
   {
@@ -403,6 +435,18 @@ class Inimigo extends PersComTiros
     //soh ve agr pois ele pode ter passado por cima de um personagem e depois saido
     return !Tela.objSaiuTotalmente(this._formaGeometrica);
   }
+
+  atirar(conjuntoObjetosTela, ondeColocar)
+  {
+    this._auxFreqTiro++;
+    if (this._auxFreqTiro >= this._freqTiro)
+    {
+      this._auxFreqTiro = 0;
+      super.atirar(conjuntoObjetosTela, ondeColocar);
+    }
+  }
+  get freqTiro()
+  { return this._freqTiro; }
 
   //tirar vida personagem quando intersecta com inimigo
   get qtdTiraVidaPersQndIntersec()
@@ -477,7 +521,7 @@ class Inimigo extends PersComTiros
   {
     return new Inimigo(this._formaGeometrica.clone(), this._corImgMorto,
       {vida: this._vida, corVida: this._corVida, mostrarVidaSempre: this._mostrarVidaSempre},
-      this._controladorTiros.tiroPadrao, this._qtdTiraVidaPersQndIntersec, this._infoAndar, pers);
+      this._controladorTiros.tiroPadrao.clone(), this._freqTiro, this._qtdTiraVidaPersQndIntersec, this._infoAndar, pers);
   }
 
  //outros...

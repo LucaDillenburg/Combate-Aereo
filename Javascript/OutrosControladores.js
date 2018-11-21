@@ -29,6 +29,17 @@ class ControladorTiros
 
   get tiroPadrao()
   { return this._tiroPadrao; }
+  set tiroPadrao(novoTiro)
+  {
+    if (this._exTiroPadrao == null)
+      this._exTiroPadrao = this._tiroPadrao;
+    this._tiroPadrao = novoTiro;
+  }
+  voltarTiroPadrao()
+  {
+    this._tiroPadrao = this._exTiroPadrao;
+    this._exTiroPadrao = null;
+  }
 
   //novo tiro
   adicionarTiroDif(conjuntoObjetosTela, x, y, mortalidade, tipoAndar, qtdAndarX, qtdAndarY, corImgMorto, formaGeometrica)
@@ -404,7 +415,7 @@ class ControladorInimigos
 
   //novo inimigo
   adicionarInimigoDif(indexContrInim, pers, x, y, vida, invQtdAndarDir, qtdAndarX, qtdAndarY, tipoAndar, atehQualXYPodeAndar,
-    qtdTiraVidaPersQndIntersec, tiroPadrao, corVida, mostrarVidaSempre, corImgMorto, formaGeometrica)
+    qtdTiraVidaPersQndIntersec, freqTiro, tiroPadrao, corVida, mostrarVidaSempre, corImgMorto, formaGeometrica)
   //essa eh a ordem onde os primeiros parametros da funcao sao os que primeiro estariam fora do padrao
 	//pode-se chamar uma funcao sem todos os parametros necessarios e os demais ficam como nulos,
 		//porem se for colocar parametros tem que estar na ordem certa
@@ -424,6 +435,8 @@ class ControladorInimigos
 
     if (qtdTiraVidaPersQndIntersec == null)
       qtdTiraVidaPersQndIntersec = this._inimigoPadrao.qtdTiraVidaPersQndIntersec;
+    if (freqTiro == null)
+      freqTiro = this._inimigoPadrao.freqTiro;
     if (tiroPadrao == null)
       tiroPadrao = this._inimigoPadrao.controladorTiros.tiroPadrao;
     if (corVida == null)
@@ -439,7 +452,7 @@ class ControladorInimigos
     formaGeometrica.y = y;
 
     this._adicionarInimigo(new Inimigo(formaGeometrica, corImgMorto, {vida: vida, corVida: corVida, mostrarVidaSempre: mostrarVidaSempre},
-      tiroPadrao, qtdTiraVidaPersQndIntersec, {qtdAndarX: qtdAndar.x, qtdAndarY: qtdAndar.y, tipoAndar: tipoAndar}, pers),
+      tiroPadrao, freqTiro, qtdTiraVidaPersQndIntersec, {qtdAndarX: qtdAndar.x, qtdAndarY: qtdAndar.y, tipoAndar: tipoAndar}, pers),
       pers, indexContrInim);
   }
   adicionarInimigo(indexContrInim, pers, x, y, inimigo)
@@ -541,12 +554,9 @@ class ControladorInimigos
   {
     let indexInim = 0;
     for (this._inimigos.colocarAtualComeco(); !this._inimigos.atualEhNulo; this._inimigos.andarAtual(), indexInim++)
-    {
       if (this._inimigos.atual.vivo && Interseccao.vaiTerInterseccao(this._inimigos.atual.formaGeometrica, pers.formaGeometrica,
         qtdAndarX, qtdAndarY))
         pers.colidiuInim(indexContr, indexInim, this._inimigos.atual.qtdTiraVidaPersQndIntersec);
-      console.log(indexInim);
-    }
   }
   //para andar ateh inimigo
 	qntAndarInimigoMaisProximo(formaGeometrica)

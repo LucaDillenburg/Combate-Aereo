@@ -24,6 +24,7 @@ class ObjetoTelaMorre extends ObjetoTela
   {
     super(formaGeometrica);
     this._corImgMorto = corImgMorto;
+    this._vivo = true;
   }
 
   //getters e setters
@@ -52,15 +53,14 @@ class Tiro extends ObjetoTelaMorre
 
     //andar
     this._seEhImpossivelExcep(infoAndar.tipoAndar);
-    this._infoAndar = infoAndar.clone((conjuntoObjetosTela==null)?null:(this._formaGeometrica, conjuntoObjetosTela.pers,
-      conjuntoObjetosTela.controladoresInimigos));
+    if (conjuntoObjetosTela==null)
+      this._infoAndar = infoAndar.clone();
+    else
+      this._infoAndar = infoAndar.clone(this._formaGeometrica, conjuntoObjetosTela.pers,
+        conjuntoObjetosTela.controladoresInimigos);
 
     //mortalidade
     this._mortalidade = mortalidade;
-
-    //morto
-    this._vivo = true;
-    this._emQuemBateu = {quem: null, index: -1};
   }
 
   //procedimentos quando criar obstaculo
@@ -137,8 +137,7 @@ class Tiro extends ObjetoTelaMorre
         (!this.ehDoPers && quem == Tiro.COLIDIU_COM_INIMIGO))
         throw "ehDoPers e com quem colidiu nao coincidem!";
 
-    this._emQuemBateu.index = index;
-    this._emQuemBateu.quem = quem;
+    this._emQuemBateu = {index: index, quem: quem};
     this._vivo = false;
 
     //muda a imagem ou cor para a de morto
@@ -146,6 +145,7 @@ class Tiro extends ObjetoTelaMorre
   }
   ehQuemBateu(quemAndou, indexAndou)
   {
+    //if (this._emQuemBateu == null) return false; acho que nao precisa
     if (this._emQuemBateu.quem == Tiro.COLIDIU_COM_PERSONAGEM)
       return this._emQuemBateu.quem == quemAndou;
     return this._emQuemBateu.quem == quemAndou && this._emQuemBateu.index == indexAndou;
@@ -365,8 +365,6 @@ class Obstaculo extends ObjetoTelaMorre
     //andar
     this._seEhImpossivelExcep(infoAndar.tipoAndar);
     this._infoAndar = infoAndar.clone(this._formaGeometrica, pers);
-
-    this._vivo = true;
   }
 
   //procedimentos quando criar obstaculo
