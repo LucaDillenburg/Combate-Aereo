@@ -31,7 +31,7 @@ class ControladorTiros
   { return this._tiroPadrao; }
 
   //novo tiro
-  adicionarTiroDif(conjuntoObjetosTela, x, y, mortalidade, tipoAndar, qtdAndar, corImgMorto, formaGeometrica)
+  adicionarTiroDif(conjuntoObjetosTela, x, y, mortalidade, tipoAndar, qtdAndarX, qtdAndarY, corImgMorto, formaGeometrica)
   //essa eh a ordem onde os primeiros parametros da funcao sao os que primeiro estariam fora do padrao
 	//pode-se chamar uma funcao sem todos os parametros necessarios e os demais ficam como nulos,
 		//porem se for colocar parametros tem que estar na ordem certa
@@ -40,11 +40,20 @@ class ControladorTiros
       x = this._tiroPadrao.formaGeometrica.x;
     if (y == null)
       y = this._tiroPadrao.formaGeometrica.y;
-    if (qtdAndar == null)
-      qtdAndar= {x: this._tiroPadrao.qtdAndarX,
-        y: this._tiroPadrao.qtdAndarY};
-    if (tipoAndar == null)
-      tipoAndar = this._tiroPadrao.tipoAndar;
+
+    let infoAndar;
+    if (qtdAndarX != null || qtdAndarY != null || tipoAndar != null)
+    {
+      infoAndar = this._tiroPadrao.infoAndar.clone();
+      if (tipoAndar == null)
+        infoAndar.tipoAndar = tipoAndar;
+      if (qtdAndarX == null)
+        infoAndar.qtdAndarX = qtdAndarX;
+      if (qtdAndarY == null)
+        infoAndar.qtdAndarY = qtdAndarY;
+    }else
+      infoAndar = this._tiroPadrao.infoAndar;
+
     if (corImgMorto == null)
       corImgMorto = this._tiroPadrao.corImgMorto;
     if (mortalidade == null)
@@ -55,8 +64,8 @@ class ControladorTiros
     formaGeometrica.x = x;
     formaGeometrica.y = y;
 
-    this._adicionarTiro(new Tiro(formaGeometrica, corImgMorto, {qtdAndarX: qtdAndar.x, qtdAndarY: qtdAndar.y, tipoAndar: tipoAndar},
-      conjuntoObjetosTela, this._ehPersPrinc, mortalidade), conjuntoObjetosTela);
+    this._adicionarTiro(new Tiro(formaGeometrica, corImgMorto, infoAndar, conjuntoObjetosTela, this._ehPersPrinc, mortalidade),
+      conjuntoObjetosTela);
   }
   adicionarTiro(conjuntoObjetosTela, x, y, tiro)
   {
@@ -182,18 +191,13 @@ class ControladorObstaculos
   get obstaculoPadrao()
   { return this._obstaculoPadrao; }
 
-  static get INVERTER_QTDANDAR_X()
-  { return 1; }
-  static get INVERTER_QTDANDAR_Y()
-  { return 2; }
-  static get INVERTER_QTDANDAR_XY()
-  { return 3; }
-
   //novo obstaculo
-  adicionarObstaculoDif(indexContrObst, conjuntoObjetosTela, x, y, qtdAndar, tipoAndar, vida,
+  adicionarObstaculoDif(indexContrObst, conjuntoObjetosTela, x, y, invQtdAndarDir, qtdAndarX, qtdAndarY, tipoAndar, atehQualXYPodeAndar, vida,
     qtdTiraVidaNaoConsegueEmpurrarPers, corImgEspecial, corImgMorto, formaGeometrica)
   //ps: o parametro vida deve ser false se ele nao tem vida ou o numero da vida inicial do obstaculo se ele tem.
   // se ele for null, sera pego a vida do obstaculo padrao se ele tiver e se ele nao tiver serah considerado false
+
+  //invQtdAndarDir eh a direcao (horizontal ou vertical) que se deseja inverter no qtdAndar a partir de obstaculoPadrao
 
   //essa eh a ordem onde os primeiros parametros da funcao sao os que primeiro estariam fora do padrao
 	//pode-se chamar uma funcao sem todos os parametros necessarios e os demais ficam como nulos,
@@ -204,28 +208,12 @@ class ControladorObstaculos
     if (y == null)
       y = this._obstaculoPadrao.formaGeometrica.y;
 
-    switch (qtdAndar)
-    {
-      case null:
-        qtdAndar = {x: this._obstaculoPadrao.qtdAndarX,
-          y: this._obstaculoPadrao.qtdAndarY};
-        break;
-      case ControladorObstaculos.INVERTER_QTDANDAR_X:
-        qtdAndar = {x: -this._obstaculoPadrao.qtdAndarX,
-          y: this._obstaculoPadrao.qtdAndarY};
-        break;
-      case ControladorObstaculos.INVERTER_QTDANDAR_Y:
-        qtdAndar = {x: this._obstaculoPadrao.qtdAndarX,
-          y: -this._obstaculoPadrao.qtdAndarY};
-        break;
-      case ControladorObstaculos.INVERTER_QTDANDAR_XY:
-        qtdAndar = {x: -this._obstaculoPadrao.qtdAndarX,
-          y: -this._obstaculoPadrao.qtdAndarY};
-        break;
-    }
-
+    let qtdAndar = AuxControladores.qtdAndarDif(this._obstaculoPadrao, invQtdAndarDir, qtdAndarX, qtdAndarY);
     if (tipoAndar == null)
-      tipoAndar = this._obstaculoPadrao.tipoAndar;
+      tipoAndar = this._obstaculoPadrao.infoAndar.tipoAndar;
+    if (atehQualXYPodeAndar == null)
+      atehQualXYPodeAndar = this._obstaculoPadrao.infoAndar.atehQualXYPodeAndar;
+
     if (qtdTiraVidaNaoConsegueEmpurrarPers == null)
       qtdTiraVidaNaoConsegueEmpurrarPers = this._obstaculoPadrao.qtdTiraVidaNaoConsegueEmpurrarPers;
     if (corImgEspecial == null)
@@ -249,7 +237,7 @@ class ControladorObstaculos
         vida = false;
     }
 
-    let infoAndar = {qtdAndarX: qtdAndar.x, qtdAndarY: qtdAndar.y, tipoAndar: tipoAndar};
+    let infoAndar = new InfoAndar(qtdAndar.x, qtdAndar.y, tipoAndar, atehQualXYPodeAndar);
     let coresImgsDiferentes = {corImgEspecial: corImgEspecial, corImgMorto: corImgMorto};
     let novoObstaculo;
     if (vida == false) // se nao tem vida
@@ -415,8 +403,8 @@ class ControladorInimigos
   { return this._inimigoPadrao; }
 
   //novo inimigo
-  adicionarInimigoDif(indexContrInim, pers, x, y, vida, qtdAndar, tipoAndar, qtdTiraVidaPersQndIntersec,
-    tiroPadrao, corVida, mostrarVidaSempre, corImgMorto, formaGeometrica)
+  adicionarInimigoDif(indexContrInim, pers, x, y, vida, invQtdAndarDir, qtdAndarX, qtdAndarY, tipoAndar, atehQualXYPodeAndar,
+    qtdTiraVidaPersQndIntersec, tiroPadrao, corVida, mostrarVidaSempre, corImgMorto, formaGeometrica)
   //essa eh a ordem onde os primeiros parametros da funcao sao os que primeiro estariam fora do padrao
 	//pode-se chamar uma funcao sem todos os parametros necessarios e os demais ficam como nulos,
 		//porem se for colocar parametros tem que estar na ordem certa
@@ -427,11 +415,13 @@ class ControladorInimigos
       y = this._inimigoPadrao.formaGeometrica.y;
     if (vida == null)
       vida = this._inimigoPadrao.vidaMAX;
-    if (qtdAndar == null)
-      qtdAndar = {x: this._inimigoPadrao.qtdAndarX,
-        y: this._inimigoPadrao.qtdAndarY};
+
+    let qtdAndar = AuxControladores.qtdAndarDif(this._obstaculoPadrao, invQtdAndarDir, qtdAndarX, qtdAndarY);
     if (tipoAndar == null)
-      tipoAndar = this._inimigoPadrao.tipoAndar;
+      tipoAndar = this._obstaculoPadrao.infoAndar.tipoAndar;
+    if (atehQualXYPodeAndar == null)
+      atehQualXYPodeAndar = this._obstaculoPadrao.infoAndar.atehQualXYPodeAndar;
+
     if (qtdTiraVidaPersQndIntersec == null)
       qtdTiraVidaPersQndIntersec = this._inimigoPadrao.qtdTiraVidaPersQndIntersec;
     if (tiroPadrao == null)
@@ -651,5 +641,36 @@ class AuxControladores
       return true;
     }else
       return false;
+  }
+
+  static qtdAndarDif(objTelaPadrao, invQtdAndarDir, qtdAndarX, qtdAndarY)
+  {
+    let qtdAndar;
+    switch (invQtdAndarDir)
+    {
+      case null:
+      case false:
+        qtdAndar = {x: objTelaPadrao.infoAndar.qtdAndarX,
+          y: objTelaPadrao.infoAndar.qtdAndarY};
+        break;
+      case Direcao.HORIZONTAL:
+        qtdAndar = {x: -objTelaPadrao.infoAndar.qtdAndarX,
+          y: objTelaPadrao.infoAndar.qtdAndarY};
+        break;
+      case Direcao.VERTICAL:
+        qtdAndar = {x: objTelaPadrao.infoAndar.qtdAndarX,
+          y: -objTelaPadrao.infoAndar.qtdAndarY};
+        break;
+      case Direcao.HORIZONTAL_E_VERTICAL:
+        qtdAndar = {x: -objTelaPadrao.infoAndar.qtdAndarX,
+          y: -objTelaPadrao.infoAndar.qtdAndarY};
+        break;
+    }
+    if (qtdAndarX != null)
+      qtdAndar.x = qtdAndarX;
+    if (qtdAndarY != null)
+      qtdAndar.y = qtdAndarY;
+
+    return qtdAndar;
   }
 }

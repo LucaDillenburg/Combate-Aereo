@@ -2,6 +2,7 @@ FEATURES DIFERENCIAIS:
  - 5 tipos de andar: ANDAR_NORMAL, SEGUIR_PERS, SEGUIR_INIM_MAIS_PROX, DIRECAO_PERS, DIRECAO_INIM_MAIS_PROX
     -> haverao tiros de todos esses tipos tanto para os inimigos dependendo do nivel, quanto para o personagem principal se ele pegar poderes
     -> obstaculos e inimigos (preferencialmente menores) podem andar em direcao/seguir o personagem
+ - pode-se criar um obstaculo ou inimigo indo para outra direcao muito facilmente
  - obstaculos empurram os personagens e quando nao conseguem empurrar explodem dando certo dano ao personagem
  - obstaculos com vida (barreiras que tambem sofrem dano)
  - tiros da tela

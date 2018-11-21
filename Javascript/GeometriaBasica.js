@@ -248,6 +248,14 @@ class Direcao
   { return 3; }
   static get Baixo()
   { return 4; }
+
+  //direcoes: horizontal e vertical
+  static get HORIZONTAL()
+  { return 5; }
+  static get VERTICAL()
+  { return 6; }
+  static get HORIZONTAL_E_VERTICAL()
+  { return 7; }
 }
 
 //operacoes e funcoes basicas de geometria
@@ -287,6 +295,9 @@ class Interseccao
 		return Interseccao.intersecDirecao(x1, width1, x2, width2) &&
 			Interseccao.intersecDirecao(y1, height1, y2, height2);
 	}
+
+  static xOuYDePontoEstahDentroDirecao(xOuYDePonto, inicio, distancia)
+  { return xOuYDePonto >= inicio && xOuYDePonto <= inicio + distancia; }
 
   static menorQtdObjColidePararColidir(objParado, objVaiAndar) //objParado e objVaiAndar sao formasGeometricas
   {
@@ -706,18 +717,14 @@ class Tela
 	}
 
 	//OBJETO VAI SAIR
-	static get SAIU_ESQUERDA()
-	{ return 1; }
-	static get SAIU_DIREITA()
-	{ return 2; }
 	static objVaiSairEmX(obj, qtdMuda) //obj = formageometrica
 	{
     //saiu p/ direita
 		if (obj.maiorX + qtdMuda > width - espacoLadosTela)
-			return Tela.SAIU_DIREITA;
+			return Direcao.Direita;
     //saiu p/ esquerda
     if (obj.menorX + qtdMuda < espacoLadosTela)
-      return Tela.SAIU_ESQUERDA;
+      return Direcao.Esquerda;
     return 0; //nao saiu
 	}
   static objSaiuEmX(obj) //obj = formageometrica
@@ -727,25 +734,21 @@ class Tela
     let direcaoSair = Tela.objVaiSairEmX(obj, qtdMuda);
     if (!direcaoSair)
       return qtdMuda;
-    if (direcaoSair == Tela.SAIU_DIREITA)
+    if (direcaoSair == Direcao.Direita)
       return (width - espacoLadosTela) - (obj.x + obj.width);
     else
-    //if (direcaoSair == Tela.SAIU_ESQUERDA)
+    //if (direcaoSair == Direcao.Esquerda)
       return -obj.x + espacoLadosTela;
   }
 
-	static get SAIU_EM_CIMA()
-	{ return 4; }
-	static get SAIU_EMBAIXO()
-	{ return 5; }
 	static objVaiSairEmY(obj, qtdMuda) //obj = formageometrica
 	{
     //saiu p/ baixo
 		if (obj.maiorY + qtdMuda > height - heightVidaUsuario - espacoLadosTela)
-			return Tela.SAIU_EMBAIXO;
+			return Direcao.Baixo;
     //saiu p/ cima
     if (obj.menorY + qtdMuda < espacoLadosTela)
-      return Tela.SAIU_EM_CIMA;
+      return Direcao.Baixo;
     return 0; //nao saiu
 	}
   static objSaiuEmY(obj) //obj = formageometrica
@@ -755,10 +758,10 @@ class Tela
     let direcaoSair = Tela.objVaiSairEmY(obj, qtdMuda);
     if (!direcaoSair)
       return qtdMuda;
-    if (direcaoSair == Tela.SAIU_EMBAIXO)
+    if (direcaoSair == Direcao.Baixo)
       return (height - heightVidaUsuario - espacoLadosTela) - (obj.y + obj.height);
     else
-    //if (direcaoSair == Tela.SAIU_EM_CIMA)
+    //if (direcaoSair == Direcao.Baixo)
       return -obj.y + espacoLadosTela;
   }
 
@@ -811,41 +814,93 @@ class Andar
   //tipos andar
   static get ANDAR_NORMAL()
   { return 1; }
+
   static get INVERTER_QTDANDAR_NAO_SAIR_TELA()
   { return 2; }
+  static get INVERTER_DIRECAO_QTDANDAR_NAO_SAIR_TELA()
+  { return 3; }
+
+  //tem que falar os pontos ateh onde pode andar: se atehQualXYPodeAndar.x ou .y for nulo, simplesmente desconsiderar
+  //ele nao vai andar ateh esse ponto (exclusivo/vai andar ateh "um" antes)
+  static get INVERTER_QTDANDAR_NAO_PASSAR_XY()
+  // inverte o qtdAndar se for sair da tela tambem
+  // inverte o qtdAndar inteiro (nao soh a direcao que vai ultrapassar)
+  { return 4; }
+  static get INVERTER_DIRECAO_QTDANDAR_NAO_PASSAR_XY()
+  // inverte o qtdAndar se for sair da tela tambem
+  // inverte soh a direcao do qtdAndar que vai ultrapassar
+  { return 5; }
+  static get INVERTER_QTDANDAR_NAO_PASSAR_XY_PODE_SAIR_TELA()
+  // pode sair da tela
+  // inverte o qtdAndar inteiro (nao soh a direcao que vai ultrapassar)
+  { return 6; }
+  static get INVERTER_DIRECAO_QTDANDAR_NAO_PASSAR_XY_PODE_SAIR_TELA()
+  // pode sair da tela
+  // inverte soh a direcao do qtdAndar que vai ultrapassar
+  { return 7; }
 
   static get SEGUIR_PERS()
-  { return 3; }
+  { return 8; }
   static get SEGUIR_INIM_MAIS_PROX()
-  { return 4; }
+  { return 9; }
 
   static get DIRECAO_PERS()
-  { return 5; }
+  { return 10; }
   static get DIRECAO_INIM_MAIS_PROX()
-  { return 6; }
+  { return 11; }
 
   static qtdAndarFromTipo(infoAndar, formaGeomVaiAndar, objPerseguido)
-  //infoAndar: qtdAndarXPadrao, qtdAndarYPadrao, tipoAndar, [hipotenusaPadrao] (ultimo soh se for SEGUIR_PERS ou SEGUIR_INIM_MAIS_PROX)
+  //infoAndar: InfoAndar
+    //*1: soh se for SEGUIR_PERS ou SEGUIR_INIM_MAIS_PROX
+    //*2: soh se for um dos inverter o qtdAndar por passar de algum X ou Y
   //objPerseguido eh ObjetoTela
+  //retorna {x, y, inverteuEmX, inverteuEmY}
   {
-    let qtdAndar = {x: infoAndar.qtdAndarXPadrao, y: infoAndar.qtdAndarYPadrao};
+    let qtdAndar = {x: infoAndar.qtdAndarX, y: infoAndar.qtdAndarY};
 
     switch(infoAndar.tipoAndar)
     {
       case Andar.ANDAR_NORMAL:
         break;
+      case Andar.INVERTER_QTDANDAR_NAO_PASSAR_XY: //tambem nao pode sair da tela
+      case Andar.INVERTER_DIRECAO_QTDANDAR_NAO_PASSAR_XY: //tambem nao pode sair da tela
       case Andar.INVERTER_QTDANDAR_NAO_SAIR_TELA:
-        //se obstaculo vai sair, inverte a direcao
-        if (Tela.objVaiSairEmX(formaGeomVaiAndar, infoAndar.qtdAndarXPadrao) ||
-          Tela.objVaiSairEmY(formaGeomVaiAndar, infoAndar.qtdAndarYPadrao))
-        {
-          qtdAndar.inverterDirQtdAndar = true;
+      case Andar.INVERTER_DIRECAO_QTDANDAR_NAO_SAIR_TELA:
+        let inverteApenasDirecao = infoAndar.tipoAndar == Andar.INVERTER_DIRECAO_QTDANDAR_NAO_PASSAR_XY ||
+          infoAndar.tipoAndar == Andar.INVERTER_DIRECAO_QTDANDAR_NAO_SAIR_TELA;
 
-          //jah anda pro outro lado
-          qtdAndar.x = -infoAndar.qtdAndarXPadrao;
-          qtdAndar.y = -infoAndar.qtdAndarYPadrao;
+        let vaiSairX = Tela.objVaiSairEmX(formaGeomVaiAndar, infoAndar.qtdAndarX);
+        let vaiSairY = Tela.objVaiSairEmY(formaGeomVaiAndar, infoAndar.qtdAndarY);
+
+        //se obstaculo vai sair, inverte a direcao
+        if (vaiSairX || vaiSairY)
+        {
+          if (inverteApenasDirecao || vaiSairX)
+          {
+            qtdAndar.inverteuEmX = true;
+            qtdAndar.x = -infoAndar.qtdAndarX;
+          }
+          if (inverteApenasDirecao || vaiSairY)
+          {
+            qtdAndar.inverteuEmY = true;
+            qtdAndar.y = -infoAndar.qtdAndarY;
+          }
+
+          if (qtdAndar.inverteuEmX && qtdAndar.inverteuEmY)
+            break;
+          //se jah inverteu nas duas direcoes, jah fez tudo
         }
+
+        if (infoAndar.tipoAndar == Andar.INVERTER_QTDANDAR_NAO_SAIR_TELA ||
+          infoAndar.tipoAndar == Andar.INVERTER_DIRECAO_QTDANDAR_NAO_SAIR_TELA)
+          break; //se for INVERTER_..._NAO_SAIR_TELA, jah fez tudo
+
+      case Andar.INVERTER_QTDANDAR_NAO_PASSAR_XY_PODE_SAIR_TELA:
+      case Andar.INVERTER_DIRECAO_QTDANDAR_NAO_PASSAR_XY_PODE_SAIR_TELA:
+      // os outros tipos andar de "nao passar XY" jah entraram no bloco anterior e se nao inverteram os dois lados continuam nesse bloco
+        Andar._mudarDadosTipoNaoPassarXY(infoAndar, qtdAndar, formaGeomVaiAndar); //muda as coisas no metodo e volta diferente (passagem por referencia)
         break;
+
       case Andar.SEGUIR_PERS:
       case Andar.SEGUIR_INIM_MAIS_PROX:
         //calcular quanto teria que andar em cada direcao para chegar ao objeto
@@ -859,6 +914,72 @@ class Andar
     }
 
     return qtdAndar;
+  }
+  static _mudarDadosTipoNaoPassarXY(infoAndar, qtdAndar, formaGeometrica)
+  {
+    let inverteApenasDirecao = infoAndar.tipoAndar == Andar.INVERTER_DIRECAO_QTDANDAR_NAO_PASSAR_XY ||
+      infoAndar.tipoAndar == Andar.INVERTER_DIRECAO_QTDANDAR_NAO_PASSAR_XY_PODE_SAIR_TELA;
+
+    //se vai passar de X (de qual lado para o outro que seja)
+    if (!qtdAndar.inverteuEmX && infoAndar.qtdAndarX != 0)
+    //se ainda nao inverteu em X e quer andar alguma coisa
+    {
+      let inicio, distancia;
+      if (infoAndar.qtdAndarX >= 0)
+      {
+        inicio = formaGeometrica.x;
+        distancia = infoAndar.qtdAndarX;
+      }
+      else
+      {
+        inicio = formaGeometrica.x + infoAndar.qtdAndarX;
+        distancia = -infoAndar.qtdAndarX + formaGeometrica.width; //qtdAndarX eh negativo (ent deixa positivo)
+      }
+
+      if (Interseccao.xOuYDePontoEstahDentroDirecao(infoAndar.atehQualXYPodeAndar.x, inicio, distancia))
+      {
+        qtdAndar.inverteuEmX = true;
+        qtdAndar.x = -infoAndar.qtdAndarX;
+
+        if (!inverteApenasDirecao)
+        {
+          //inverte Y tambem
+          qtdAndar.inverteuEmY = true;
+          qtdAndar.y = -infoAndar.qtdAndarY;
+        }
+      }
+    }
+
+    //[igual o if de cima porem com Y ao inves de X]
+    //se vai passar de Y (de qual lado para o outro que seja)
+    if (!qtdAndar.inverteuEmY && infoAndar.qtdPodeAndarYPadrao != 0)
+    //se ainda nao inverteu em Y e quer andar alguma coisa
+    {
+      let inicio, distancia;
+      if (infoAndar.qtdAndarY >= 0)
+      {
+        inicio = formaGeometrica.y;
+        distancia = infoAndar.qtdAndarY;
+      }
+      else
+      {
+        inicio = formaGeometrica.y + infoAndar.qtdAndarY;
+        distancia = -infoAndar.qtdAndarY + formaGeometrica.height; //qtdAndarY eh negativo (ent deixa positivo)
+      }
+
+      if (Interseccao.xOuYDePontoEstahDentroDirecao(infoAndar.atehQualXYPodeAndar.y, inicio, distancia))
+      {
+        qtdAndar.inverteuEmY = true;
+        qtdAndar.y = -infoAndar.qtdAndarY;
+
+        if (!inverteApenasDirecao)
+        {
+          //inverte X tambem
+          qtdAndar.inverteuEmX = true;
+          qtdAndar.x = -infoAndar.qtdAndarX;
+        }
+      }
+    }
   }
 
   static qntAndarParaBater(formaGeomVaiAndar, formaGeomPerseguido)
@@ -891,4 +1012,163 @@ class Andar
     //return formaGeomPerseguido.centroMassa.menos(formaGeomVaiAndar.centroMassa); //assim fica muito efetivo
     return {x: x - formaGeomVaiAndar.x, y: y - formaGeomVaiAndar.y};
   }
+}
+
+class InfoAndar //qtdAndarX, qtdAndarY, tipoAndar, [atehQualXYPodeAndar], [ultimoQtdAndar e [inimSeguir]]
+{
+  constructor(qtdAndarX, qtdAndarY, tipoAndar, atehQualXYPodeAndar, pers, controladoresInimigos, formaGeometrica)
+  {
+    this._qtdAndarX = qtdAndarX;
+    this._qtdAndarY = qtdAndarY;
+
+    if (conjuntoObjetosTela == null) //soh armazena (tipo obst/tiro padrao)
+      this._tipoAndar = tipoAndar;
+    else
+      this.setTipoAndar(tipoAndar, formaGeometrica, pers, controladoresInimigos);
+
+    if (atehQualXYPodeAndar != null)
+    //soh precisa se for INVERTER_..._NAO_PASSAR_XY
+      this.atehQualXYPodeAndar = atehQualXYPodeAndar; //public
+  }
+
+  get qtdAndarX() { return this._qtdAndarX; }
+  get qtdAndarY() { return this._qtdAndarY; }
+  get tipoAndar() { return this._tipoAndar; }
+
+  //setters
+  set qtdAndarX(qtdAndarX)
+  {
+    this._qtdAndarX = qtdAndarX;
+    this._colocarHipotenusaSePrecisa();
+  }
+  set qtdAndarY(qtdAndarY)
+  {
+    this._qtdAndarY = qtdAndarY;
+    this._colocarHipotenusaSePrecisa();
+  }
+  set tipoAndar(tipo) { this._tipoAndar = tipo; } //soh para guardar
+  setTipoAndar(tipo, formaGeometrica, pers, controladoresInimigos)
+  {
+    this._tipoAndar = null;
+
+    //se tipo eh para seguir inimigo mais proximo, tem que procurar inimigo mais proximo
+    if (tipo == Andar.SEGUIR_INIM_MAIS_PROX)
+    {
+      // se for pra um tiro seguir um inimigo sempre, seguir um dos mais importantes soh
+      let praOndeAndar = null;
+      if (controladoresInimigos.length > 0) // se tem algum controlador
+        praOndeAndar = controladoresInimigos[0].qntAndarInimigoMaisProximo(formaGeometrica);
+      if (praOndeAndar == null || praOndeAndar.inim == null)
+        this._tipoAndar = Andar.ANDAR_NORMAL;
+      else
+      {
+        this._inimSeguir = praOndeAndar.inim;
+        this._ultimoQtdAndar = {x: this._qtdAndarX, y: this._qtdAndarY};
+      }
+    }else
+    {
+      if (this._ultimoQtdAndar != null)
+        this._ultimoQtdAndar = null;
+
+      if (tipo == Andar.DIRECAO_PERS)
+        this._setarQtdAndarTipoDIRECAO(pers, formaGeometrica);
+      else
+      if (tipo == Andar.DIRECAO_INIM_MAIS_PROX)
+      {
+        //descobrir qual inimigo estah mais perto para seguir
+        let praOndeAndar = null;
+        let menorHipotenusa = null;
+        for (let i=0; i<controladoresInimigos.length; i++)
+        {
+          let praOndeAndarAtual = controladoresInimigos[i].qntAndarInimigoMaisProximo(formaGeometrica);
+
+          if (praOndeAndarAtual.inim != null) //se tem algum inimigo nesse controlador
+          {
+            let hipotenusaAtual = Operacoes.hipotenusa(praOndeAndarAtual.x, praOndeAndarAtual.y);
+
+            if (menorHipotenusa == null || hipotenusaAtual < menorHipotenusa)
+            {
+              praOndeAndar = praOndeAndarAtual;
+              menorHipotenusa = hipotenusaAtual;
+            }
+          }
+        }
+
+        if (praOndeAndar != null && praOndeAndar.inim != null)
+          this._setarQtdAndarTipoDIRECAO(praOndeAndar.inim, this._formaGeometrica);
+      }
+    }
+
+    if (this._tipoAndar == null) this._tipoAndar = tipo;
+    this._colocarHipotenusaSePrecisa();
+  }
+  _setarQtdAndarTipoDIRECAO(infoAndar, formaGeomVaiAndar)
+  {
+    //mudar tipo para tipoAndar SEGUIR_...
+    this._tipoAndar = (objSeguir instanceof Inimigo)?Andar.SEGUIR_INIM_MAIS_PROX:Andar.SEGUIR_PERS;
+
+    //ve o qtdAndar
+    let qtdAndar = Andar.qtdAndarFromTipo(this, formaGeomVaiAndar, objSeguir);
+    this._qtdAndarX = qtdAndar.x;
+    this._qtdAndarY = qtdAndar.y;
+
+    //vai andar sempre isso
+    this._tipoAndar = Andar.ANDAR_NORMAL;
+  }
+
+  mudarQtdAndarParaUltimoAndar()
+  {
+    this.qtdAndarX = this._ultimoQtdAndar.x;
+    this.qtdAndarY = this._ultimoQtdAndar.y;
+  }
+  procAndar(pers, formaGeometrica)
+  {
+    if (this._tipoAndar == Andar.SEGUIR_INIM_MAIS_PROX && !this._inimSeguir.vivo ||
+      this._tipoAndar == Andar.SEGUIR_PERS && !pers.vivo)
+    {
+      this.setTipoAndar(Andar.ANDAR_NORMAL);
+      this.mudarQtdAndarParaUltimoAndar();
+    }
+
+    //objSeguir para Andar.qtdAndarFromTipo(...)
+    let objSeguir;
+    if (this._tipoAndar == Andar.SEGUIR_PERS)
+      objSeguir = pers;
+    else
+    if (this._tipoAndar == Andar.SEGUIR_INIM_MAIS_PROX)
+      objSeguir = this._inimSeguir;
+
+    let qtdAndar = Andar.qtdAndarFromTipo(this, formaGeometrica, objSeguir);
+    if (this._tipoAndar == Andar.SEGUIR_INIM_MAIS_PROX || this._tipoAndar == Andar.SEGUIR_PERS)
+    {
+      this._ultimoQtdAndar.x = qtdAndar.x;
+      this._ultimoQtdAndar.y = qtdAndar.y;
+    }
+    else
+      this.inverterDirecaoQtdAndarSePrec(qtdAndar.inverteuEmX, qtdAndar.inverteuEmY);
+
+    return qtdAndar;
+  }
+
+  //aux
+  inverterDirecaoQtdAndarSePrec(inverteuEmX, inverteuEmY)
+  {
+    if (inverteuEmX)
+      this._qtdAndarX *= -1;
+    if (inverteuEmY)
+      this._qtdAndarY *= -1;
+  }
+
+  _colocarHipotenusaSePrecisa()
+  {
+    if (this._tipoTemHipotenusaPadrao())
+      this._colocarHipotenusaPadrao();
+  }
+  _tipoTemHipotenusaPadrao()
+  { return this._tipoAndar == Andar.SEGUIR_PERS || this._tipoAndar == Andar.SEGUIR_INIM_MAIS_PROX; }
+  _colocarHipotenusaPadrao()
+  { this.hipotenusaPadrao = this.hipotenusaPadrao = Operacoes.hipotenusa(this._qtdAndarX, this._qtdAndarY); }
+
+  clone(formaGeometrica, pers, controladoresInimigos)
+  { return new InfoAndar(this._qtdAndarX, this._qtdAndarY, this._tipoAndar, this.atehQualXYPodeAndar, pers, controladoresInimigos, formaGeometrica); }
 }

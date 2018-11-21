@@ -339,15 +339,8 @@ class Inimigo extends PersComTiros
     super(formaGeometrica, corImgMorto, infoVida.vida, tiroPadrao, false);
 
     //andar
-    this._qtdAndarX = infoAndar.qtdAndarX;
-    this._qtdAndarY = infoAndar.qtdAndarY;
-    if (pers == null) // se eh soh para inimigo padrao por exemplo
-    {
-      this._seEhImpossivelExcep(infoAndar.tipoAndar)
-      this._tipoAndar = infoAndar.tipoAndar;
-    }
-    else
-      this.setTipoAndar(infoAndar.tipoAndar, pers); //tem que ser depois
+    this._seEhImpossivelExcep(infoAndar.tipoAndar);
+    this._infoAndar = infoAndar.clone(this._formaGeometrica, pers);
 
     //tirar vida pers
     this._qtdTiraVidaPersQndIntersec = qtdTiraVidaPersQndIntersec;
@@ -377,8 +370,8 @@ class Inimigo extends PersComTiros
   { pers.controladorTiros.procedimentoObjTelaColideCriar(this, ControladorTiros.INIMIGO_CRIADO, indexContrInim); }
 
   //getters e setters andar
-  get tipoAndar()
-  { return this._tipoAndar; }
+  get infoAndar()
+  { return this._infoAndar; }
   _seEhImpossivelExcep(tipo)
   {
     if (tipo == Andar.SEGUIR_INIM_MAIS_PROX)
@@ -387,39 +380,14 @@ class Inimigo extends PersComTiros
   setTipoAndar(tipo, pers)
   {
     this._seEhImpossivelExcep(tipo);
-
-    if (tipo == Andar.DIRECAO_PERS)
-    {
-      let qtdAndar = Andar.qtdAndarFromTipo({qtdAndarXPadrao: this._qtdAndarX, qtdAndarYPadrao: this._qtdAndarY,
-        tipoAndar: Andar.SEGUIR_PERS, hipotenusaPadrao: Operacoes.hipotenusa(this._qtdAndarX, this._qtdAndarY)},
-        this._formaGeometrica, pers);
-      this._qtdAndarX = qtdAndar.x;
-      this._qtdAndarY = qtdAndar.y;
-    }else
-    if (tipo == Andar.SEGUIR_PERS)
-      this._hipotenusaAndarPadrao = Operacoes.hipotenusa(this._qtdAndarX, this._qtdAndarY);
-    else if (this._hipotenusaAndarPadrao != null) this._hipotenusaAndarPadrao = null;
-
-    this._tipoAndar = tipo;
+    this._infoAndar.setTipoAndar(tipo, this._formaGeometrica, pers);
   }
-  get qtdAndarX()
-  { return this._qtdAndarX; }
-  get qtdAndarY()
-  { return this._qtdAndarY; }
   //se for adicionar set qtdAndar, mudar this._hipotenusaAndarPadrao de acordo com o tipoAndar
 
   andar(pers, indexContrInim, indexInim)
   //retorna se deve continuar na lista
   {
-    let qtdAndar = Andar.qtdAndarFromTipo({qtdAndarXPadrao: this._qtdAndarX, qtdAndarYPadrao: this._qtdAndarY,
-      tipoAndar: this._tipoAndar, hipotenusaPadrao: this._hipotenusaAndarPadrao},
-      this._formaGeometrica, pers);
-    if (qtdAndar.inverterDirQtdAndar)
-    {
-      //inverte a direcao do obstaculo
-      this._qtdAndarX = -this._qtdAndarX;
-      this._qtdAndarY = -this._qtdAndarY;
-    }
+    let qtdAndar = this._infoAndar.procAndar(pers, this._formaGeometrica);
 
     //verificar se vai bater em tiros do personagem e se tiro tem que sair da lista porque esse inimigo andou, ele sai
     pers.controladorTiros.procedimentoObjTelaColideAndar(this, qtdAndar.x, qtdAndar.y,
@@ -509,8 +477,7 @@ class Inimigo extends PersComTiros
   {
     return new Inimigo(this._formaGeometrica.clone(), this._corImgMorto,
       {vida: this._vida, corVida: this._corVida, mostrarVidaSempre: this._mostrarVidaSempre},
-      this._controladorTiros.tiroPadrao, this._qtdTiraVidaPersQndIntersec,
-      {qtdAndarX: this._qtdAndarX, qtdAndarY: this._qtdAndarY, tipoAndar: this._tipoAndar}, pers);
+      this._controladorTiros.tiroPadrao, this._qtdTiraVidaPersQndIntersec, this._infoAndar, pers);
   }
 
  //outros...

@@ -1,26 +1,31 @@
-- pensar um pouco na colisao de obstaculos (para onde eles vao quando colidem)
+- NOVO TIPO ANDAR: andar ateh quando passaria de certo X e/ou Y, e antes de passar mudar a direcao tanto de qtdAndarX quando qtdAndarY (pode deixar ou nao sair da tela)
+- tirar const direcoes de outras classes sem ser Direcao. OK
 
-//resto:
-- NOVO TIPO ANDAR: andar ateh quando passaria de certo X e/ou Y, e antes de passar mudar a direcao tanto de qtdAndarX quando qtdAndarY
+- mudar os infoAndar do ControladorJogo para um objeto da classe InfoAndar
+- testar basico
+- testar todos os tiposAndar ..._PASSAR_XY (comecando dos dois lados)
+
 - frequencia de atirar fica em cada controladorInimigo e no PersonagemPrincipal (quando tiro for missil teleguiado)
 - poder atirar para todos lados (quando tiver com a nave especial)
 - opcao para mudar tamanho personagem, inimigo e obstaculo (deve ser super parecido com procCriou, talvez possa usar ele mesmo ou fazer um metodo em comum- o que eh diferente eh se quando ele aumentar, ele for ficar com parte do corpo para fora, dessa maneira ele aumenta de tamanho e depois anda)
 
-- tiros e obstaculos aparentemente nao estao sumindo logo que morrem (estah ficando mais doq um draw, ver se estah tirando depois do draw)
-- colocar opcao para mudar o qtdAndar mudar depois de cada andada (variavel porcentagem que vai fazer objeto acelerar ou desacelerar /*isto eh, mudar o qtdAndar*/ cada vez que ele anda)
+- colocar propriedade "vivo" em ObjetoTelaMorre
 
 - New Features:
   .class Poder (img, cod, nome, executarPoder())
   .class ObjTelaPoder
   .class ControladorPoderes (??) -> get temPoderTela, colocarPoderRandomico(), colocarPoderEspecifico(cod)
 
+- pensar um pouco na colisao de obstaculos (para onde eles vao quando colidem)
 - fazer Interseccao.qntPodeAndarAntesIntersec(...) para Triangulo
 - considerar um quadradao (de onde estava pra onde foi) antes de verificar a colisao certinha fazendo paralelogramos e etc
 
+- tiros e obstaculos aparentemente nao estao sumindo logo que morrem (estah ficando mais doq um draw, ver se estah tirando depois do draw)
+- colocar opcao para mudar o qtdAndar mudar depois de cada andada (variavel porcentagem que vai fazer objeto acelerar ou desacelerar /*isto eh, mudar o qtdAndar*/ cada vez que ele anda)
 - variaveis que sao guardadas separadamente e depois tem que juntar, guardar junto (ex: infoAndar). ps: fazer classe para infoAndar por exemplo
 - variavel = null, mudar para delete variavel (apagar da memoria quando for interessante)
 
-- e colisao de inimigo com inimigo e obstaculo, e obstaculo com inimigo e obstaculo ??
+- e colisao de inimigo com inimigo e obstaculo ??
 
 - ver comentarios //TODO
 
