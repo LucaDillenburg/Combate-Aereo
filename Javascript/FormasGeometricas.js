@@ -64,9 +64,20 @@ class FormaGeometrica
 
   colocarNoMeioX()
   { this.x = Tela.xParaEstarNoMeio(this.width); }
+  colocarParedeEsquerda()
+  { this.x = 0; }
+  colocarParedeDireita()
+  { this.x = width - this.width; }
+
+  colocarNoMeioY()
+  { this.y = Tela.yParaEstarNoMeio(this.height); }
+  colocarParedeCima()
+  { this.y = 0; }
+  colocarParedeBaixo()
+  { this.y = height - heightVidaUsuario - this.height; }
 
   //para clone
-  _colocarLugarEspecificado(x,y)
+  colocarLugarEspecificado(x,y)
   {
     if (x != null)
       this.x = x;
@@ -314,7 +325,7 @@ class Retangulo extends FormaGeometricaSimples
   clone(x,y)
   {
     let ret = new Retangulo(this._x, this._y, this._width, this._height, this._corImg);
-    ret._colocarLugarEspecificado(x,y); //coloca no lugar certo
+    ret.colocarLugarEspecificado(x,y); //coloca no lugar certo
     return ret;
   }
 }
@@ -369,7 +380,7 @@ class Quadrado extends FormaGeometricaSimples
   clone(x,y)
   {
     let ret = new Quadrado(this._x, this._y, this._tamLado, this._corImg);
-    ret._colocarLugarEspecificado(x,y); //coloca no lugar certo
+    ret.colocarLugarEspecificado(x,y); //coloca no lugar certo
     return ret;
   }
 }
@@ -871,7 +882,7 @@ class Quadrilatero extends FormaGeometricaComplexa
   clone(x,y)
   {
     let ret = new Quadrilatero(this._a, this._b, this._c, this._d, this._corImg);
-    ret._colocarLugarEspecificado(x,y); //coloca no lugar certo
+    ret.colocarLugarEspecificado(x,y); //coloca no lugar certo
     return ret;
   }
 }
@@ -920,7 +931,7 @@ class Paralelogramo extends Quadrilatero
   clone(x,y)
   {
     let ret = new Paralelogramo(this._a, this._b, this._c, this._d, this._corImg, false);
-    ret._colocarLugarEspecificado(x,y); //coloca no lugar certo
+    ret.colocarLugarEspecificado(x,y); //coloca no lugar certo
     return ret;
   }
 }
@@ -999,7 +1010,7 @@ class Triangulo extends FormaGeometricaComplexa
   clone(x,y)
   {
     let ret = new Triangulo(this._a, this._b, this._c, this._corImg);
-    ret._colocarLugarEspecificado(x,y); //coloca no lugar certo
+    ret.colocarLugarEspecificado(x,y); //coloca no lugar certo
     return ret;
   }
 }

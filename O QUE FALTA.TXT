@@ -1,16 +1,41 @@
-- poder atirar para todos lados (quando tiver com a nave especial). OK
-- opcao para colocar tiro especial durante um tempo e depois tirar (pode-se mudar o tiroPadraoAtual ao colocar um tiro especial e o proprio tiroPadrao). OK
+﻿- REESTRUTURAÇÃO: InfoObjetoTela + ConjuntoObjetosTela + Timer + FreqFunction
+   -> InfoObjetoTela: todos os controladores guardam InfoObjetoTela. (OK). Beneficios:
+      1. nao precisam ter um ObjetoTela em si
+      2. parametros ficam bem mais organizados (soh passa o InfoObj como parametro e (x,y))
+      3. quando o tipoAndar de InfoAndar eh TipoAndar.Direcao... ele simplesmente guarda isso e nao transforma nos qtdAndarX e Y corretos para aquele inimigo e TipoAndar.Normal
+      4. com isso eh possivel saber quando eh apenas para guardar e quando realmente eh um Objeto em si
 
-- opcao para mudar tamanho personagem, inimigo e obstaculo (deve ser super parecido com procCriou, talvez possa usar ele mesmo ou fazer um metodo em comum- o que eh diferente eh se quando ele aumentar, ele for ficar com parte do corpo para fora, dessa maneira ele aumenta de tamanho e depois anda)
+   -> ConjuntoObjetosTela (static class que guarda todos os objetosTel). (OK). Beneficios:
+      1. nao precisa ficar passando (conjuntoObjetosTela, pers, controladoresInimigos, controladoresObstaculos, controladoresTirosJogo,...)
+      2. nem trocar os parametros se precisar de mais algum ObjetoTela e depois ajustar o resto a isso
+      3. todos os ObjetosTela estao acessiveis em qualquer lugar
+      ps: adequar o resto a essa classe (tirar parametros e pegar objetosTela dessa classe)
+
+   -> Timer. OK
+      1. Para que soh exista um setInterval (todos os timers estao atrelados ao draw)
+      2. O timer soh conta quando estah EstadoJogo.Jogando
+      ps: + Classe static ArmazenadorTimers (ListaLigada de Timers)
+
+   -> FreqFunction. OK
+      1. Para nao ficar repetindo o mesmo estilo de codigo e simplificar e abstrair
+      2. codigo mais limpo
+
+- implementar PosicaoX e Y em construtor de ObjetosTela e todos que extends ele (pontoInicial.posicaoX ou pontoInicial.x, pontoInicial.posicaoY ou pontoInicial.y). OK
+- quando personagem morre tirar todos os Timers da lista. OK
 
 - New Features:
   .class Poder (img, cod, nome, executarPoder())
   .class ObjTelaPoder
   .class ControladorPoderes (??) -> get temPoderTela, colocarPoderRandomico(), colocarPoderEspecifico(cod)
 
+- opcao para mudar tamanho personagem, inimigo e obstaculo (deve ser super parecido com procCriou, talvez possa usar ele mesmo ou fazer um metodo em comum- o que eh diferente eh se quando ele aumentar, ele for ficar com parte do corpo para fora, dessa maneira ele aumenta de tamanho e depois anda)
+
+- mudar class ListaLigada para classe do proprio Javascript (eh possivel remover e adicionar atual??)? (ou passar para Outros.cs)
 - pensar um pouco na colisao de obstaculos (para onde eles vao quando colidem)
 - fazer Interseccao.qntPodeAndarAntesIntersec(...) para Triangulo
 - considerar um quadradao (de onde estava pra onde foi) antes de verificar a colisao certinha fazendo paralelogramos e etc
+
+- testar colocar valores padroes nos parametros ao inves de ver se eh null e depois atribuir
 
 - tiros e obstaculos aparentemente nao estao sumindo logo que morrem (estah ficando mais doq um draw, ver se estah tirando depois do draw)
 - colocar opcao para mudar o qtdAndar mudar depois de cada andada (variavel porcentagem que vai fazer objeto acelerar ou desacelerar /*isto eh, mudar o qtdAndar*/ cada vez que ele anda)
