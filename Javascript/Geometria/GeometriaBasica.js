@@ -80,6 +80,9 @@ class Ponto
     return Exatidao.ehQuaseExato(this.x, outro.x) && Exatidao.ehQuaseExato(this.y, outro.y);
   }
 
+  distancia(ponto)
+  { return Operacoes.hipotenusa(ponto.x - this.x, ponto.y - this.y); }
+
   toString()
   { return "(" + this.x + "," + this.y + ")"; }
 

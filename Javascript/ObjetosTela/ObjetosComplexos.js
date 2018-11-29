@@ -399,6 +399,9 @@ class PersonagemPrincipal extends ObjComTiros
     //lista de inimigos que intersectou
     this._qtdTirarVidaIntersecInim = 0;
     this._listaInfoInimIntersec = new ListaDuplamenteLigada();
+
+    //poderes do pers
+    this._controladorPoderesPers = new ControladorPoderesPers();
   }
 
   get ehPersPrincipal() { return true; }
@@ -574,6 +577,7 @@ class PersonagemPrincipal extends ObjComTiros
   draw()
   {
     super.draw();
+    this._controladorPoderesPers.draw(); //desenha os poderes que o personagem tem guardados
     this._colocacarVidaTela();
   }
   _colocacarVidaTela()

@@ -15,6 +15,7 @@ class ControladorJogo
     this._controladoresInimigos = null;
     this._controladoresObstaculos = null;
     this._controladoresTiros = null;
+    this._controladorPoderTela = null;
     //deixar posicao 0 para tiros de personagens que morrem
 
     this._estadoJogo = EstadoJogo.NaoComecou;
@@ -92,6 +93,8 @@ class ControladorJogo
     this._personagemPrincipal = new PersonagemPrincipal(ControladorJogo.infoPersonagemPrincPadrao());
     this._personagemPrincipal.colocarLugarInicial();
     ConjuntoObjetosTela.adicionarPersonagem(this._personagemPrincipal);
+
+    this._controladorPoderTela = new ControladorPoderTela();
 
     this._level = 1;
     this._iniciarLevel();
@@ -177,6 +180,11 @@ class ControladorJogo
     this._colocarControladoresThis(controladoresInimigosLvAtual, controladoresObstaculosLvAtual, controladoresTirosLvAtual);
     this._atualizarConjuntoObjetosTela();
 
+    //terah no maximo um poder por level:
+    //esse metodo vai adicionar o poder depois de certo tempo (depois de fazer a verificacao de se o level atual
+    //tem poderes e de ver a chance/%) e jah vai programar para tira-lo caso ele nao seja pego dentro do tempo
+    this._controladorPoderTela.colocarPoderEmTempoSeChance(this._level);
+
     // tira o "Level X" da tela
     let _this = this;
     new Timer(function(){_this._passandoLevel = false;}, 3000, false, false);
@@ -194,6 +202,20 @@ class ControladorJogo
   {
     this._level++;
     this._iniciarLevel();
+  }
+
+  static tempoEstimadoLevelAtual(level)
+  //retornar tempo em segundos
+  {
+    switch (level)
+    {
+      case 1: return ;
+      case 2: return ;
+      case 3: return ;
+      case 4: return ;
+      //...
+      // TODO: se tiver mais levels colocar aqui
+    }
   }
 
   //FUNCIONALIDADES PROGRAMA FAZ SOZINHO

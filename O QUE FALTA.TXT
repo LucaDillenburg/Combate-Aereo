@@ -1,34 +1,28 @@
-﻿- REESTRUTURAÇÃO: InfoObjetoTela + ConjuntoObjetosTela + Timer + FreqFunction
-   -> InfoObjetoTela: todos os controladores guardam InfoObjetoTela. (OK). Beneficios:
-      1. nao precisam ter um ObjetoTela em si
-      2. parametros ficam bem mais organizados (soh passa o InfoObj como parametro e (x,y))
-      3. quando o tipoAndar de InfoAndar eh TipoAndar.Direcao... ele simplesmente guarda isso e nao transforma nos qtdAndarX e Y corretos para aquele inimigo e TipoAndar.Normal
-      4. com isso eh possivel saber quando eh apenas para guardar e quando realmente eh um Objeto em si
+- New Features: PODER
+  .class Poder (img, cod, nome, executarPoder()): onde o real procedimento de colocar e tirar o poder na pratica acontece
+  .class ObjetoTelaPoder e ControladorPoderTela: o objeto que fica na tela para o personagem pegar e o controlador dele, respectivamente
+    -> funcao: antes do usuario pegar, se X% de chance, sortear um poder dos possiveis para aquele level e coloca-lo na tela algum tempo depois de poderes soh ficam um certo tempo na tela
+  .class ObjPoderPers e ControladorPoderesPers: quando o personagem jah pegou o poder e nao eh imediato
+    -> depois do usuario pegar (e nao for um poder imediato): deixar "armazenado" em algum lugar visivel ateh que ele deseje usa-lo
+    -> quando usuario decide usar: deixar nome do poder escrito na tela durante algum tempo e mostrar quanto falta do tempo por um semi-circulo
 
-   -> ConjuntoObjetosTela (static class que guarda todos os objetosTel). (OK). Beneficios:
-      1. nao precisa ficar passando (conjuntoObjetosTela, pers, controladoresInimigos, controladoresObstaculos, controladoresTirosJogo,...)
-      2. nem trocar os parametros se precisar de mais algum ObjetoTela e depois ajustar o resto a isso
-      3. todos os ObjetosTela estao acessiveis em qualquer lugar
-      ps: adequar o resto a essa classe (tirar parametros e pegar objetosTela dessa classe)
+Estrutura para poderes OK! Agora falta programa-los!
 
-   -> Timer. OK
-      1. Para que soh exista um setInterval (todos os timers estao atrelados ao draw)
-      2. O timer soh conta quando estah EstadoJogo.Jogando
-      ps: + Classe static ArmazenadorTimers (ListaLigada de Timers)
+- Funcionalidades adicionadas a timer: mudar propriedade TempoRestante de algum objeto + poder remover um timer (pelo codigo dele). OK
 
-   -> FreqFunction. OK
-      1. Para nao ficar repetindo o mesmo estilo de codigo e simplificar e abstrair
-      2. codigo mais limpo
+- Fazer classe: FuncaoEm camadas/niveis. andouCamada(), regrediuCamada() -> retorna se deve fazer a funcao (dar nome para classe de acordo com aquela palavra do livro de Daniel: olhar biblia)
 
-- implementar PosicaoX e Y em construtor de ObjetosTela e todos que extends ele (pontoInicial.posicaoX ou pontoInicial.x, pontoInicial.posicaoY ou pontoInicial.y). OK
-- quando personagem morre tirar todos os Timers da lista. OK
+//resto
+- o que acontece se o personagem pegar duas pocoes ao mesmo tempo?? (eh possivel?? deixar??)
 
-- New Features:
-  .class Poder (img, cod, nome, executarPoder())
-  .class ObjTelaPoder
-  .class ControladorPoderes (??) -> get temPoderTela, colocarPoderRandomico(), colocarPoderEspecifico(cod)
+- ganhar um pouco de vida quando passa o level (ganha mais a cada level)
+- depois do level 10 o personagem ganha uma nave super top que pode atirar para todos os lados (escolhendo em 'A', 'W', 'D', 'S' - quando apertar uma delas deixa esse lado padrao ateh que outra tecla dessa seja apertada)
 
 - opcao para mudar tamanho personagem, inimigo e obstaculo (deve ser super parecido com procCriou, talvez possa usar ele mesmo ou fazer um metodo em comum- o que eh diferente eh se quando ele aumentar, ele for ficar com parte do corpo para fora, dessa maneira ele aumenta de tamanho e depois anda)
+- soh tirar inimigos e obstaculos da lista depois que eles forem mostrados mortos
+
+- ver se tem outra maneira de fazer para diferenciar nulo de undefined e tirar class Nulo
+- colocar parametros com valores padrao nos metodos
 
 - mudar class ListaLigada para classe do proprio Javascript (eh possivel remover e adicionar atual??)? (ou passar para Outros.cs)
 - pensar um pouco na colisao de obstaculos (para onde eles vao quando colidem)
@@ -43,6 +37,7 @@
 - variavel = null, mudar para delete variavel (apagar da memoria quando for interessante)
 
 - e colisao de inimigo com inimigo e obstaculo ??
+- soh pode chamar uma pocao por vez?
 
 - ver comentarios //TODO
 
@@ -51,6 +46,8 @@
 - CRIAR NIVEIS
 
 - ORGANIZAR EXPLICACOES: COLOCAR NO GIT EXPLICACOES DO PAPEL (DEIXAR BONITINHA) + MUDAR NOME DOS ARQUIVOS DO PAINT E DEIXAR MAIS BONITINHO TAMBEM
+
+- Layout: parte de baixo da tela como se fosse o painel da espaco-nave
 
 - Sobre LISTA LIGADA: quando mais de um metodo usar a lista ao mesmo tempo ou quando um metodo esta percorrendo a lista e chama outro que tambem vai percorrer a lista o atual vai ficar maluco. PORTANTO, VERIFIQUE QUE NAO EH ISSO QUE ESTAH OCORRENDO
 - fazer Interseccao.vaiTerInterseccao(...) para Paralelogramos e Quadrilateros

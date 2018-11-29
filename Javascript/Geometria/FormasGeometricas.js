@@ -19,7 +19,13 @@ class FormaGeometrica
   set corImg(corImg)
   {
     this._ehCor = corImg.stroke != null;
-    this._corImg = corImg;
+    if (this._ehCor)
+    {
+      //isso impossibilita que se o corImg for mudado aqui ou la fora o outro seja mudado tambem
+      this._corImg.stroke = corImg.stroke;
+      this._corImg.fill = corImg.fill;
+    }else
+      this._corImg = corImg;
   }
   get ehCor()
   { return this._ehCor; }

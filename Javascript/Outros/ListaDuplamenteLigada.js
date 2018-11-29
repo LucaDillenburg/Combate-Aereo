@@ -49,10 +49,22 @@ class ListaDuplamenteLigada
   }
 
   //tirar do final
+  removerDoComeco()
+  {
+    if (this._prim == null)
+      throw "Nao ha elementos!";
+
+    this._prim = this._prim.prox;
+
+    if (this._prim == null)
+      this._ultimo = null;
+    else
+      this._prim.ant = null;
+  }
   removerDoFinal()
   {
     if (this._ultimo == null)
-      throw "Nao ha elementos! - em removerDoFinal()";
+      throw "Nao ha elementos!";
 
     this._ultimo = this._ultimo.ant;
     if (this._ultimo == null)
