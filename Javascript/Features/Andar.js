@@ -360,5 +360,5 @@ class InfoAndar
   }
 
   clone()
-  { new InfoAndar(this.qtdAndarX, this.qtdAndarY, this.tipoAndar, this.atehQualXYPodeAndar); }
+  { return new InfoAndar(this.qtdAndarX, this.qtdAndarY, this.tipoAndar, this.atehQualXYPodeAndar); }
 }

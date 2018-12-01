@@ -27,6 +27,8 @@ class ControladorTiros
     //LISTA DUPLAMENTE LIGADA (COM PONTEIRO NO ULTIMO)
     // ir adicionando os tiros no comeco e quando eles sairem da tela ou baterem tirar da lista
     this._tiros = new ListaDuplamenteLigada();
+
+    this._auxColTirarTirosEsp = 0;
   }
 
   //infoTiroPadrao
@@ -36,9 +38,17 @@ class ControladorTiros
   { this._infoTiroPadrao = novoInfoTiro; }
 
   colocarInfoTiroEspecial(novoInfoTiro)
-  { this._infoTiroEspecial = novoInfoTiro; }
+  {
+    this._infoTiroEspecial = novoInfoTiro;
+    this._auxColTirarTirosEsp++;
+  }
   voltarInfoTiroPadrao()
-  { this._infoTiroEspecial = null; }
+  {
+    this._auxColTirarTirosEsp--;
+
+    if (this._auxColTirarTirosEsp == 0)
+      this._infoTiroEspecial = null;
+  }
 
   get infoTiroPadraoAtual()
   {
@@ -49,21 +59,21 @@ class ControladorTiros
   }
 
   //novo tiro
-  adicionarTiroDif(pontoInicial, infoTiro, inverterX, inverterY)
+  adicionarTiroDif(pontoInicial, infoTiro, direcaoX, direcaoY, todoQtdDirecao=false)
   //os atributos que forem nulos serao substituidos pelos padronizados e os que forem da classe Nulo serao substituidos por null (soh vai ser verificado se eh dessa classe se puder ser nulo)
   {
     let infoTiroPadraoAtual = this.infoTiroPadraoAtual;
 
     if (infoTiro == null)
     {
-      infoTiro = infoTiroPadraoAtual.clone(); //pode inverter qtdAndar
-      AuxControladores.qtdAndarDifInv(infoTiro.infoAndar, inverterX, inverterY); //inverterX e Y podem nao ser nulos
+      infoTiro = infoTiroPadraoAtual.clone(); //tem que fazer clone porque pode inverter qtdAndar
+      AuxControladores.qtdAndarDifMudarDir(infoTiro.infoAndar, direcaoX, direcaoY, todoQtdDirecao); //direcaoX e Y podem nao ser nulos
     }else
     {
       //infoTiro: formaGeometrica, corImgMorto, infoAndar, ehDoPers, mortalidade
 
       //infoAndar
-      AuxControladores.qtdAndarDif(infoTiro, infoTiroPadraoAtual, inverterX, inverterY);
+      AuxControladores.qtdAndarDif(infoTiro, infoTiroPadraoAtual, direcaoX, direcaoY, todoQtdDirecao);
 
       //corMorto, mortalidade
       if (infoTiro.corImgMorto == null)
@@ -79,7 +89,7 @@ class ControladorTiros
     //(x ou posicaoX, y ou posicaoY)
     pontoInicial = AuxControladores.pontoInicialCorreto(pontoInicial, infoTiroPadraoAtual.formaGeometrica);
 
-    infoTiro.ehDoPers = infoTiroPadraoAtual._ehPersPrinc;
+    infoTiro.ehDoPers = this._ehPersPrinc;
 
     this._adicionarTiro(new Tiro(pontoInicial, infoTiro));
   }
@@ -91,8 +101,8 @@ class ControladorTiros
     //(x ou posicaoX, y ou posicaoY)
     pontoInicial = AuxControladores.pontoInicialCorreto(pontoInicial, infoTiro.formaGeometrica);
 
+    infoTiro.ehDoPers = this._ehPersPrinc;
     let novoTiro = new Tiro(pontoInicial, infoTiro);
-    novoTiro._ehDoPers = this._ehPersPrinc;
     this._adicionarTiro(novoTiro);
   }
   _adicionarTiro(novoTiro)
@@ -177,6 +187,28 @@ class ControladorTiros
     this._tiros.concatenar(controladorTiros._tiros);
   }
 
+  //PODER
+  seVirarContraCriador(seguir)
+  //seguir: true = seguir, false = direcao
+  {
+    //transformar todos os tiros em dePers e mudar tipoAndar
+    for (this._tiros.colocarAtualComeco(); !this._tiros.atualEhNulo; this._tiros.andarAtual())
+    {
+      this._tiros.atual.inverterDono(); //se era do pers fica sendo da tela, e se nao era do pers fica sendo dele
+
+      if (this.ehPersPrinc)
+        this._tiros.atual.setTipoAndar(seguir?TipoAndar.SeguirPers:TipoAndar.DirecaoPers);
+      else
+        this._tiros.atual.setTipoAndar(seguir?TipoAndar.SeguirInimMaisProx:TipoAndar.DirecaoInimMaisProx);
+    }
+
+    //concatenar com controladorTirosJogo se tiros eram originalmente do personagem, e com controladorTiros do personagem se nao eram do personagem
+    if (this._ehPersPrinc)
+      ConjuntoObjetosTela.controladoresTirosJogo[0].concatenarTiros(this);
+    else
+      ConjuntoObjetosTela.pers.controladorTiros.concatenarTiros(this);
+  }
+
 	//draw
     //desenha todos os tiros
 	draw()
@@ -211,18 +243,18 @@ class ControladorObstaculos
   { return this._infoObstaculoPadrao; }
 
   //novo obstaculo
-  adicionarObstaculoDif(indexContrObst, pontoInicial, infoObst, inverterX, inverterY)
+  adicionarObstaculoDif(indexContrObst, pontoInicial, infoObst, direcaoX, direcaoY, todoQtdDirecao=false)
   {
     if (infoObst == null)
     {
-      infoObst = this._infoObstaculoPadrao.clone(); //pode inverter qtdAndar
-      AuxControladores.qtdAndarDifInv(infoObst.infoAndar, inverterX, inverterY); //inverterX e Y podem nao ser nulos
+      infoObst = this._infoObstaculoPadrao.clone(); //tem que fazer clone porque pode inverter qtdAndar
+      AuxControladores.qtdAndarDifMudarDir(infoObst.infoAndar, direcaoX, direcaoY, todoQtdDirecao); //direcaoX e Y podem nao ser nulos
     }else
     {
       //InfoObstaculo: formaGeometrica, corImgMorto, corImgEspecial, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers, [vida]
 
       //infoAndar
-      AuxControladores.qtdAndarDif(infoObst, this._infoObstaculoPadrao, inverterX, inverterY)
+      AuxControladores.qtdAndarDif(infoObst, this._infoObstaculoPadrao, direcaoX, direcaoY, todoQtdDirecao);
 
       //qtdTiraVidaNaoConsegueEmpurrarPers, corImgMorto
       if (infoObst.qtdTiraVidaNaoConsegueEmpurrarPers == null)
@@ -397,7 +429,7 @@ class ControladorInimigos
   //O INIMIGO MORTO SOH VAI SAIR DA LISTA DEPOIS QUE FOR PRINTADO NA TELA, QUANDO TODOS OS INIMIGOS ANDAREM OU
   //QUANDO OS TIROS DO PERSONAGEM ANDAREM (OU QUANDO ELE SAIR DA TELA)
 
-  constructor(infoInimigoPadrao)
+  constructor(infoInimigoPadrao, ehDeInimigosEssenciais = false)
   {
     //padrao
     this._infoInimigoPadrao = infoInimigoPadrao;
@@ -405,24 +437,29 @@ class ControladorInimigos
     //LISTA DUPLAMENTE LIGADA (COM PONTEIRO NO ULTIMO)
     // ir adicionando os obstaculos no comeco e quando ele sair da tela ouir tirando os que jah sairam da tela do final
     this._inimigos = new ListaDuplamenteLigada();
+
+    this._ehDeInimigosEssenciais = ehDeInimigosEssenciais;
   }
 
   get infoInimigoPadrao()
   { return this._infoInimigoPadrao; }
 
+  get ehDeInimigosEssenciais()
+  { return this._ehDeInimigosEssenciais; }
+
   //novo inimigo
-  adicionarInimigoDif(indexContrInim, pontoInicial, infoInimigo, inverterX, inverterY)
+  adicionarInimigoDif(indexContrInim, pontoInicial, infoInimigo, direcaoX, direcaoY, todoQtdDirecao=false)
   {
     if (infoInimigo == null)
     {
-      infoInimigo = this._infoInimigoPadrao.clone(); //pode inverter qtdAndar
-      AuxControladores.qtdAndarDifInv(infoInimigo.infoAndar, inverterX, inverterY); //inverterX e Y podem nao ser nulos
+      infoInimigo = this._infoInimigoPadrao.clone(); //tem que fazer clone porque pode inverter qtdAndar
+      AuxControladores.qtdAndarDifMudarDir(infoInimigo.infoAndar, direcaoX, direcaoY, todoQtdDirecao); //direcaoX e Y podem nao ser nulos
     }else
     {
-      //InfoInimigo: formaGeometrica, corImgMorto, vida, corVida, mostrarVidaSempre, proporcTempoVida, infoTiroPadrao, freqTiro, podeAtirarQualquerLado, qtdTiraVidaPersQndIntersec, infoAndar
+      //InfoInimigo: formaGeometrica, corImgMorto, vida, corVida, mostrarVidaSempre, porcTempoVida, infoTiroPadrao, freqTiro, podeAtirarQualquerLado, qtdTiraVidaPersQndIntersec, infoAndar
 
       //infoAndar
-      AuxControladores.qtdAndarDif(infoInimigo, this._infoInimigoPadrao, inverterX, inverterY)
+      AuxControladores.qtdAndarDif(infoInimigo, this._infoInimigoPadrao, direcaoX, direcaoY, todoQtdDirecao);
 
       //corImgMorto, vida, corVida, mostrarVidaSempre, infoTiroPadrao, freqTiro, podeAtirarQualquerLado, qtdTiraVidaPersQndIntersec
       if (infoInimigo.corImgMorto == null)
@@ -442,17 +479,20 @@ class ControladorInimigos
       if (infoInimigo.qtdTiraVidaPersQndIntersec == null)
         infoInimigo.qtdTiraVidaPersQndIntersec = this._infoInimigoPadrao.qtdTiraVidaPersQndIntersec;
 
-      //proporcTempoVida (pode ser nulo)
-      if (infoInimigo.proporcTempoVida == null)
-        infoInimigo.proporcTempoVida = this._infoInimigoPadrao.proporcTempoVida;
+      //porcTempoVida (pode ser nulo)
+      if (infoInimigo.porcTempoVida == null)
+        infoInimigo.porcTempoVida = this._infoInimigoPadrao.porcTempoVida;
       else
-      if (infoInimigo.proporcTempoVida instanceof Nulo)
-        infoInimigo.proporcTempoVida = null;
+      if (infoInimigo.porcTempoVida instanceof Nulo)
+        infoInimigo.porcTempoVida = null;
 
       //formaGeometrica
       if (infoInimigo.formaGeometrica == null)
         infoInimigo.formaGeometrica = this._infoInimigoPadrao.formaGeometrica;
     }
+
+    //se inimigo eh essencial (todos os inimigos dentro do controlador serao ou nao essenciais)
+    infoInimigo.ehInimEssencial = this._ehDeInimigosEssenciais;
 
     //(x ou posicaoX, y ou posicaoY)
     pontoInicial = AuxControladores.pontoInicialCorreto(pontoInicial, this._infoInimigoPadrao.formaGeometrica);
@@ -463,6 +503,9 @@ class ControladorInimigos
   {
 		if (infoInimigo == null)
       infoInimigo = this._infoInimigoPadrao;
+
+    //se inimigo eh essencial (todos os inimigos dentro do controlador serao ou nao essenciais)
+    infoInimigo.ehInimEssencial = this._ehDeInimigosEssenciais;
 
     //(x ou posicaoX, y ou posicaoY)
     pontoInicial = AuxControladores.pontoInicialCorreto(pontoInicial, infoInimigo.formaGeometrica);
@@ -533,12 +576,12 @@ class ControladorInimigos
   }
 
   //para quando um tiro for criado (ver se colide com inimigos)
-  procColidirTiroCriadoTodosInim(tiro)
+  procColidirTiroCriadoTodosInim(tiro, indexContrInim)
   {
     let colidiu = false;
     for (this._inimigos.colocarAtualComeco(); !this._inimigos.atualEhNulo; this._inimigos.andarAtual())
       if (this._inimigos.atual.vivo)
-        colidiu = this._inimigos.atual.procColidirTiroCriado(tiro) || colidiu;
+        colidiu = this._inimigos.atual.procColidirTiroCriado(tiro, indexContrInim) || colidiu;
     return colidiu;
   }
 
@@ -590,6 +633,33 @@ class ControladorInimigos
     for (this._inimigos.colocarAtualComeco(); !this._inimigos.atualEhNulo; this._inimigos.andarAtual())
       this._inimigos.atual.controladorTiros.procedimentoObjTelaColideCriar(obstCriado, ControladorTiros.OBSTACULOS_CRIADO, indexContrObst, false);
   }
+
+  //PODER
+  persMatouTodosInimNaoEssenc()
+  {
+    if (this._ehDeInimigosEssenciais) return;
+    //soh mata os inimigos nao essenciais
+
+    //mata todos os inimigos
+    for (this._inimigos.colocarAtualComeco(); !this._inimigos.atualEhNulo; this._inimigos.andarAtual())
+      this._inimigos.atual.seMatar();
+  }
+  tirarVidaTodosInim(qtdTira)
+  {
+    //tirar um pouco de vida de todos inimigos
+    for (this._inimigos.colocarAtualComeco(); !this._inimigos.atualEhNulo; this._inimigos.andarAtual())
+      this._inimigos.atual.mudarVida(-qtdTira);
+  }
+  mudarCongelarTodosInim(congelar)
+  //congelar: true = congelar, false = descongelar
+  {
+    for (this._inimigos.colocarAtualComeco(); !this._inimigos.atualEhNulo; this._inimigos.andarAtual())
+      if (congelar)
+        this._inimigos.atual.congelar();
+      else
+        this._inimigos.atual.descongelar();
+  }
+
 
   //aux
   _removerInimAtualCompleto()
@@ -656,7 +726,7 @@ class AuxControladores
       return false;
   }
 
-  static qtdAndarDif(infoNovo, infoObjTelaPadrao, inverterX, inverterY)
+  static qtdAndarDif(infoNovo, infoObjTelaPadrao, direcaoX, direcaoY, todoQtdDirecao)
   {
     if (infoNovo.infoAndar == null)
       infoNovo.infoAndar = infoObjTelaPadrao.infoAndar;
@@ -676,15 +746,38 @@ class AuxControladores
         infoTiro.infoAndar.atehQualXYPodeAndar = null;
     }
 
-    AuxControladores.qtdAndarDifInv(infoTiro.infoAndar, inverterX, inverterY);
+    AuxControladores.qtdAndarDifMudarDir(infoTiro.infoAndar, direcaoX, direcaoY, todoQtdDirecao);
   }
-
-  static qtdAndarDifInv(infoAndar, inverterX, inverterY)
+  static qtdAndarDifMudarDir(infoAndar, direcaoX, direcaoY, todoQtdDirecao)
+  // todoQtdDirecao: somar o qtdAndar das duas direcoes e colocar em um qtdAndar apenas (uma das duas direcoes tem que ser nulas ou direcaoX nao ser Direcao.Direita nem Direcao.Esquerda)
   {
-    if (inverterX)
-      infoAndar.qtdAndarX *= -1;
-    if (inverterY)
-      infoAndar.qtdAndarY *= -1;
+    //nao eh pra dar problema se colocar Direcao.Baixo como DirecaoX por exemplo (mas tambem nao considerar)
+
+    if (!todoQtdDirecao)
+    {
+      if (direcaoX == Direcao.Direita)
+        infoAndar.qtdAndarX = Math.abs(infoAndar.qtdAndarX);
+      else if (direcaoX == Direcao.Esquerda)
+        infoAndar.qtdAndarX = -Math.abs(infoAndar.qtdAndarX);
+
+      if (direcaoY == Direcao.Baixo)
+        infoAndar.qtdAndarY = Math.abs(infoAndar.qtdAndarY);
+      else if (direcaoY == Direcao.Cima)
+        infoAndar.qtdAndarY = -Math.abs(infoAndar.qtdAndarY);
+    }else
+    {
+      if (direcaoX == Direcao.Direita || direcaoX == Direcao.Esquerda)
+      {
+        infoAndar.qtdAndarX = (Math.abs(infoAndar.qtdAndarX) + Math.abs(infoAndar.qtdAndarY)) * ((direcaoX==Direcao.Esquerda)?-1:1);
+        infoAndar.qtdAndarY = 0;
+      }
+      else
+      if (direcaoY == Direcao.Cima || direcaoX == Direcao.Baixo)
+      {
+        infoAndar.qtdAndarX = 0;
+        infoAndar.qtdAndarY = (Math.abs(infoAndar.qtdAndarX) + Math.abs(infoAndar.qtdAndarY)) * ((direcaoY==Direcao.Cima)?-1:1);
+      }
+    }
   }
 
   static pontoInicialCorreto(pontoInicial, formaGeometricaPadrao)

@@ -784,6 +784,9 @@ class Operacoes
 {
 	static hipotenusa(cateto1, cateto2)
 	{ return Math.sqrt(cateto1*cateto1 + cateto2*cateto2); }
+
+  static diagonalQuad(lado)
+  { return lado*Math.sqrt(2)/2; }
 }
 
 class Geometria

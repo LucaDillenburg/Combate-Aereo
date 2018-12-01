@@ -7,12 +7,27 @@
   </head>
   <body>
     <script type="text/javascript" onload="setup()">
+      function x(level)
+      {
+        console.log("aux: " + Math.floor(level-1/5));
+        return Math.floor((level-1)/5)*2 + 3;
+      }
+
+      for (let i = 1; i<15; i++)
+        console.log(x(i));
+
+
+      /*
       function setup()
       {
         // createCanvas must be the first statement
         createCanvas(window.innerWidth-20, window.innerHeight-20);
         background(0);
       }
+
+      window.addEventListener("keydown", function (event) {
+        console.log(event.key);
+      });
 
       function draw()
       {
@@ -52,6 +67,7 @@
         //image(loadImage("img.JPG"), x-12, y-2, 2*raio-10, 2*raio-5);
         text("Poder disso daqui!!!", x-20, y + 2*raio);
       }
+      */
     </script>
   </body>
 </html>

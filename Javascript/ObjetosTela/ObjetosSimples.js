@@ -72,7 +72,7 @@ class InfoTiro extends InfoObjetoTela
   }
 
   clone()
-  { new InfoTiro(this.formaGeometrica, this.corImgEspecial, this.infoAndar, this.ehDoPers, this.mortalidade); }
+  { return new InfoTiro(this.formaGeometrica, AuxInfo.cloneImgCor(this.corImgMorto), this.infoAndar.clone(), this.ehDoPers, this.mortalidade); }
 }
 class Tiro extends ObjetoTela
 {
@@ -115,7 +115,7 @@ class Tiro extends ObjetoTela
     // soh os tiros do personagem verificam colisao com inimigos
       for (let i = 0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
       {
-        let colidiu = ConjuntoObjetosTela.controladoresInimigos[i].procColidirTiroCriadoTodosInim(this);
+        let colidiu = ConjuntoObjetosTela.controladoresInimigos[i].procColidirTiroCriadoTodosInim(this, i);
         if (colidiu && quemBateu == null)
           quemBateu = {quemAndou: Tiro.COLIDIU_COM_INIMIGO, indexAndou: i};
       }
@@ -137,7 +137,10 @@ class Tiro extends ObjetoTela
     this._seEhImpossivelExcep(tipo);
     this._classeAndar.setTipoAndar(tipo, this._formaGeometrica);
   }
-  //pode mudar o qtdAndarXY direto da classe
+
+  inverterDono()
+  //inverte dono (soh para poder)
+  { this._ehDoPers = !this._ehDoPers; }
 
   get mortalidade()
   { return this._mortalidade; }
@@ -247,9 +250,12 @@ class Tiro extends ObjetoTela
 
       //tirar vida de todos os inimigos que bateu (soh ha mais de um objeto se eles estao no mesmo Y)
       for (info.listaBateu.colocarAtualComeco(); !info.listaBateu.atualEhNulo; info.listaBateu.andarAtual())
-        if (info.listaBateu.atual instanceof Inimigo || info.listaBateu.atual instanceof ObstaculoComVida)
-        //se tem vida, tira
-          this.tirarVidaObjCmVida(info.listaBateu.atual);
+        if (info.listaBateu.atual instanceof Inimigo)
+          this.tirarVidaObjCmVida(info.listaBateu.atual, true);
+        else
+        if (info.listaBateu.atual instanceof Obstaculo)
+          info.listaBateu.atual.procColidiuTiro(this);
+          //se tiver com poder TipoPoder.MatarObjetos1Tiro mata, else se tem vida, tira
     }else
     {
       //andar propriamente dito se nao colidiu
@@ -379,7 +385,7 @@ class InfoObstaculo extends InfoObjetoTela
   }
 
   clone()
-  { new InfoObstaculo(this.formaGeometrica, {corImgMorto: this.corImgMorto, corImgEspecial: this.corImgEspecial}, this.infoAndar, this.ehDoPers, this.mortalidade); }
+  { return new InfoObstaculo(this.formaGeometrica, AuxInfo.cloneImgCor(this.corImgMorto), AuxInfo.cloneImgCor(this.corImgEspecial), this.infoAndar.clone(), this.qtdTiraVidaNaoConsegueEmpurrarPers); }
 }
 class Obstaculo extends ObjetoTela
 {
@@ -439,11 +445,9 @@ class Obstaculo extends ObjetoTela
   //vida
   get vivo()
   { return this._vivo; }
-  morreu(explodiu)
+  morreu(explodiu = true)
   //obstaculo normal sempre vai explodir e obstaculo com vida pode ser morto pelo tiro do personagem ou explodir
   {
-    if (explodiu == null)
-      explodiu = true;
     this._explodiu = explodiu;
     this._vivo = false;
 
@@ -631,11 +635,27 @@ class Obstaculo extends ObjetoTela
   {
     if (Interseccao.interseccao(tiro.formaGeometrica, this._formaGeometrica))
     {
-      if (this instanceof ObstaculoComVida)
-        tiro.tirarVidaObjCmVida(this);
+      this.procColidiuTiro(tiro);
       return true;
     }
     return false;
+  }
+
+  procColidiuTiro(tiro)
+  {
+    //se tiro nao for do personagem (for do inimigo ou da tela, nao tira vida)
+    if (!tiro.ehDoPers) return;
+
+    if (ConjuntoObjetosTela.pers.controladorPoderesPegou.codPoderSendoUsado == TipoPoder.MatarObjetos1Tiro)
+      this._seMatar();
+    else
+    if (this instanceof ObstaculoComVida)
+      tiro.tirarVidaObjCmVida(this);
+  }
+  _seMatar()
+  {
+    this._vida = 0;
+    this.morreu(false);
   }
 }
 
@@ -649,7 +669,7 @@ class InfoObstaculoComVida extends InfoObstaculo
   }
 
   clone()
-  { return new InfoObstaculoComVida(this.formaGeometrica, {corImgMorto: this.corImgMorto, corImgEspecial: this.corImgEspecial}, this.infoAndar, this.ehDoPers, this.mortalidade, this.vida); }
+  { return new InfoObstaculoComVida(this.formaGeometrica, AuxInfo.cloneImgCor(this.corImgMorto), AuxInfo.cloneImgCor(this.corImgEspecial), this.infoAndar.clone(), this.qtdTiraVidaNaoConsegueEmpurrarPers, this.vida); }
 }
 class ObstaculoComVida extends Obstaculo
 {
@@ -686,4 +706,15 @@ function minDirecao(valorDir1, valorDir2)
     return valorDir1;
   else
     return valorDir2;
+}
+
+class AuxInfo
+{
+  static cloneImgCor(imgCor)
+  {
+    if (imgCor.stroke==null)
+      return imgCor; //nao precisa de clone
+    else
+      return {stroke: imgCor.stroke, fill: imgCor.fill}; //clone
+  }
 }

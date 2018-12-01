@@ -25,7 +25,7 @@ class Timer
     //jah adiciona o timer
     ConjuntoTimers.adicionarTimer(this);
 
-    this._codTimer = ;
+    this._codTimer = ConjuntoTimers.proximoCodTimer;
   }
 
   get codTimer() { return this._codTimer; }
@@ -57,7 +57,7 @@ class ConjuntoTimers
   static inicializar()
   {
     ConjuntoTimers._timers = new ListaDuplamenteLigada();
-    ConjuntoTimers._ultimoCodTimer = 1;
+    ConjuntoTimers._ultimoCodTimer = 0; //ele incrementa antes de passar o codigo
   }
 
   //para tirar Timers do ConjuntoTimers

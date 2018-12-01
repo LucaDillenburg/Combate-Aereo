@@ -1,3 +1,17 @@
+//constantes executarPoder
+const porcMudaTam = 0.5;
+const porcMudarVelRuim = 0.7;
+
+const qtdAndarMaisRapido = 7;
+const porcMudarVel = 1.4;
+const qtdTiroMaisMortalidade = 3;
+
+const qtdGanhaPoucaVida = 7;
+const qtdPerdeVida = 10;
+const qtdGanhaMuitaVida = 12;
+
+const qtdTiraVidaTodosInim = 40;
+
 //PODER
 class Poder
 {
@@ -13,6 +27,7 @@ class Poder
   { return this._informacoesPoder.nome; }
   get ativadoInstant()
   { return this._informacoesPoder.ativadoInstant; }
+  get codPoder() { return this._codPoder; }
 
   static informacoesPoderFromCod(codPoder, strQuer)
   {
@@ -22,45 +37,42 @@ class Poder
     if (strQuer == "imgMorreu")
       return {fill: color("orange"), stroke: color("orange")};
 
-    switch(codPoder)
+    switch(codPoder) //nao estah na ordem dos levels
     {
       case TipoPoder.DiminuirTamanhoPers:
         /* if (strQuer == "img") return ;
         if (strQuer == "imgMorreu") return ; */
-        return {nome: "Poção anão", ativadoInstant: false};
-
+        return {nome: "Poção anão", ativadoInstant: true};
       case TipoPoder.MatarObjetos1Tiro:
-        return {nome: "Poção Fácil de Matar", ativadoInstant: true};
-
+        return {nome: "Poção Fácil de Matar", ativadoInstant: false};
       case TipoPoder.RUIMPersPerdeVel:
         return {nome: "Poção Space-Mud", ativadoInstant: true};
-
       case TipoPoder.TiroPersMaisRapidoMortal:
         return {nome: "Poção Tiro Master", ativadoInstant: false};
-
       case TipoPoder.MatarInimigosNaoEssenc:
         return {nome: "Poção Destruição em Massa", ativadoInstant: true};
-
       case TipoPoder.ReverterTirosJogoInimDirInim:
         return {nome: "Poção Tiros se Rebelam", ativadoInstant: false};
-
       case TipoPoder.GanharPoucaVida:
         return {nome: "Poção Ajuda dos Deuses", ativadoInstant: true};
-
       case TipoPoder.RUIMPersPerdeVida:
         return {nome: "Poção Burn Alive", ativadoInstant: true};
-
       case TipoPoder.ReverterTirosJogoInimSeguirInim:
         return {nome: "Poção Fúria contra Inimigos", ativadoInstant: true};
-
       case TipoPoder.DeixarTempoMaisLento:
         return {nome: "Poção Flash", ativadoInstant: true};
-
-      case Tipo.RUIMTirosPersDirEle:
+      case TipoPoder.RUIMTirosPersDirEle:
         return {nome: "Poção Feitiço Contra Feiticeiro", ativadoInstant: true};
-
       case TipoPoder.GanharMuitaVida:
         return {nome: "Poção os Deuses te Amam", ativadoInstant: false};
+      case TipoPoder.PersMaisRapido:
+        return {nome: "Poção Bolt", ativadoInstant: false};
+      case TipoPoder.PersComMissil:
+        return {nome: "Poção Míssil", ativadoInstant: true};
+      case TipoPoder.TirarVidaTodosInim:
+        return {nome: "Poção Ácido Corrosivo", ativadoInstant: true};
+      case TipoPoder.CongelarInimigos:
+        return {nome: "Poção Freeze", ativadoInstant: true};
 
       default:
         throw "Esse codigo poder nao existe!";
@@ -112,101 +124,162 @@ class Poder
   }
 
 
-  //QUANDO USUARIO JAH PEGOU (imediatamente ou nao)
+  //QUANDO USUARIO JAH PEGOU (se for imediatamente) ou quando ele usar (nao imediatamente)
   // TODO: colocar poderes
   executarPoder()
   //usar apenas ConjuntoObjetosTela
   {
-    let tempoPoderResta; //quanto tempo o poder fica ativo ateh desaparecer de novo
+    let tempoPoderResta; //quanto tempo o poder fica ativo ateh desaparecer de novo (em milisegundos)
 
     switch(this._codPoder)
     {
       case TipoPoder.DiminuirTamanhoPers:
+        tempoPoderResta = 7500;
+        ConjuntoObjetosTela.pers.mudarTamLados(porcMudaTam); //50% do tamanho
         break;
 
       case TipoPoder.MatarObjetos1Tiro:
+        //mudanca na propria classe Obstaculo e Tiro
         break;
 
       case TipoPoder.RUIMPersPerdeVel:
+        tempoPoderResta = 5000;
+        ConjuntoObjetosTela.pers.mudarVelocidade(porcMudarVelRuim);
         break;
 
       case TipoPoder.TiroPersMaisRapidoMortal:
+        tempoPoderResta = 8500;
+
+        let infoTiroPersPadrao = ControladorJogo.infoTiroPersPadrao();
+        let infoTiroMaisRapido = new InfoTiro(); //formaGeometrica, corImgMorto, infoAndar, ehDoPers, mortalidade
+        infoTiroMaisRapido.formaGeometrica = new Retangulo(0,0, 4, 6, {fill: color("black"), stroke: color("black")});
+        infoTiroMaisRapido.corImgMorto = {fill: color(30), stroke: color(30)};
+        infoTiroMaisRapido.infoAndar = infoTiroPersPadrao.infoAndar;
+        infoTiroMaisRapido.infoAndar.qtdAndarY -= qtdAndarMaisRapido;
+        infoTiroMaisRapido.mortalidade = infoTiroPersPadrao.mortalidade + qtdTiroMaisMortalidade;
+
+        ConjuntoObjetosTela.pers.controladorTiros.colocarInfoTiroEspecial(infoTiroMaisRapido);
         break;
 
       case TipoPoder.MatarInimigosNaoEssenc:
+        for (let i = 0; i<ConjuntoObjetosTela.controladoresInimigos; i++)
+          ConjuntoObjetosTela.controladoresInimigos[i].persMatouTodosInimNaoEssenc();
         break;
 
       case TipoPoder.ReverterTirosJogoInimDirInim:
+        this._reverterTirosContraInimigos(false);
         break;
 
       case TipoPoder.GanharPoucaVida:
+        ConjuntoObjetosTela.pers.mudarVida(qtdGanhaPoucaVida);
         break;
 
       case TipoPoder.RUIMPersPerdeVida:
+        ConjuntoObjetosTela.pers.mudarVida(-qtdPerdeVida);
         break;
 
       case TipoPoder.ReverterTirosJogoInimSeguirInim:
+        this._reverterTirosContraInimigos(true);
         break;
 
       case TipoPoder.DeixarTempoMaisLento:
+        // TODO: poder deixar tempo mais lento
+        tempoPoderResta = 10000;
+        //...
         break;
 
       case Tipo.RUIMTirosPersDirEle:
+        ConjuntoObjetosTela.pers.controladorTiros.seVirarContraCriador(false);
         break;
 
       case TipoPoder.GanharMuitaVida:
+        ConjuntoObjetosTela.pers.mudarVida(qtdGanhaMuitaVida);
+        break;
+
+      case TipoPoder.PersMaisRapido:
+        tempoPoderResta = 7500;
+        ConjuntoObjetosTela.pers.mudarVelocidade(porcMudarVel);
+        break;
+
+      case TipoPoder.PersComMissil: //maior, mais devagar e segue inimigo
+        tempoPoderResta = 4500;
+
+        let infoTiroMissil = new InfoTiro(); //formaGeometrica, corImgMorto, infoAndar, ehDoPers, mortalidade
+        infoTiroMissil.formaGeometrica = new Retangulo(0,0, 8, 10, {fill: color("white"), stroke: color("white")});
+        infoTiroMissil.corImgMorto = {fill: color(200), stroke: color(200)};
+        infoTiroMissil.infoAndar = new InfoAndar(0, -12, TipoAndar.SeguirInimMaisProx);
+        infoTiroMissil.mortalidade = 20;
+
+        ConjuntoObjetosTela.pers.controladorTiros.colocarInfoTiroEspecial(infoTiroMissil);
+        break;
+
+      case TipoPoder.TirarVidaTodosInim:
+        //passa por todos os controladores de inimigos
+        for (let i = 0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
+          ConjuntoObjetosTela.controladoresInimigos[i].tirarVidaTodosInim(qtdTiraVidaTodosInim);
+        break;
+
+      case TipoPoder.CongelarInimigos:
+        //congelar todos os inimigos
+        for (let i=0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
+          ConjuntoObjetosTela.controladoresInimigos[i].mudarCongelarTodosInim(true);
         break;
 
       default:
         throw "Esse codigo poder nao existe!";
     }
 
-    //programa quando quando vai parar com esse poder
-    let _this = this;
-    new Timer(function() { _this.desexecutarPoder(); }, tempoPoderResta, false, false,
-      	{obj: this, atr: "_tempoTotal", estahEmMiliseg: false}); //atualiza quanto tempo falta
+    if (tempoPoderResta != null) //se tem que desexecutar depois de um tempo, programa esse Timer (pode ser soh uma acao pontual)
+    {
+      //programa quando quando vai parar com esse poder
+      let _this = this;
+      new Timer(function() { _this.desexecutarPoder(); }, tempoPoderResta, false, false,
+        	{obj: this, atr: "_tempoTotal", estahEmMiliseg: false}); //atualiza quanto tempo falta
 
-    this._tempoTotal = tempoPoderResta;
-    //this._tempoRestante = tempoPoderResta; nao precisa setar tempoRestante porque Timer jah faz isso
+      this._tempoTotal = tempoPoderResta;
+      //this._tempoRestante = tempoPoderResta; nao precisa setar tempoRestante porque Timer jah faz isso
+    }
   }
   desexecutarPoder()
   {
     switch(this._codPoder)
     {
-      case TipoPoder.DiminuirTamanhoPers:
-        break;
+      //case TipoPoder.MatarObjetos1Tiro: (acao pontual)
+      //case TipoPoder.MatarInimigosNaoEssenc: (acao pontual)
+      //case TipoPoder.ReverterTirosJogoInimDirInim: (acao pontual)
+      //case TipoPoder.GanharPoucaVida: (acao pontual)
+      //case TipoPoder.RUIMPersPerdeVida: (acao pontual)
+      //case TipoPoder.ReverterTirosJogoInimSeguirInim: (acao pontual)
+      //case Tipo.RUIMTirosPersDirEle: (acao pontual)
+      //case TipoPoder.GanharMuitaVida: (acao pontual)
+      //case TipoPoder.TirarVidaTodosInim: (acao pontual)
 
-      case TipoPoder.MatarObjetos1Tiro:
+      case TipoPoder.DiminuirTamanhoPers:
+        ConjuntoObjetosTela.pers.mudarTamLados(Probabilidade.porcVoltarNormal(porcMudaTam)); //200% do tamanho (50%) => vai voltar a 100% (proporcionalmente)
         break;
 
       case TipoPoder.RUIMPersPerdeVel:
+        ConjuntoObjetosTela.pers.mudarVelocidade(Probabilidade.porcVoltarNormal(porcMudarVelRuim)); //aumenta a velocidade (proporcionalmente)
         break;
 
       case TipoPoder.TiroPersMaisRapidoMortal:
+      case TipoPoder.PersComMissil:
+        ConjuntoObjetosTela.pers.controladorTiros.voltarInfoTiroPadrao(); //volta tiro padrao (volta uma camada)
         break;
 
-      case TipoPoder.MatarInimigosNaoEssenc:
+      case TipoPoder.PersMaisRapido:
+        ConjuntoObjetosTela.pers.mudarVelocidade(Probabilidade.porcVoltarNormal(porcMudarVel)); //diminui a velocidade de novo (proporcionalmente)
         break;
 
-      case TipoPoder.ReverterTirosJogoInimDirInim:
-        break;
-
-      case TipoPoder.GanharPoucaVida:
-        break;
-
-      case TipoPoder.RUIMPersPerdeVida:
-        break;
-
-      case TipoPoder.ReverterTirosJogoInimSeguirInim:
+      case TipoPoder.CongelarInimigos:
+        //descongelar todos os inimigos (voltar etapa)
+        for (let i=0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
+          ConjuntoObjetosTela.controladoresInimigos[i].mudarCongelarTodosInim(false);
         break;
 
       case TipoPoder.DeixarTempoMaisLento:
-        break;
-
-      case Tipo.RUIMTirosPersDirEle:
-        break;
-
-      case TipoPoder.GanharMuitaVida:
+        // TODO: fazer isso aqui
+        //...
         break;
 
       default:
@@ -216,60 +289,90 @@ class Poder
     ConjuntoObjetosTela.pers.controladorPoderesPers.acabouUsarPoder();
   }
 
+  //auxiliares
+  _reverterTirosContraInimigos(seguir)
+  {
+    //tiros tela
+    for (let i = 1; i<ConjuntoObjetosTela.controladoresTirosJogo; i++)
+      ConjuntoObjetosTela.controladoresTirosJogo[i].seVirarContraCriador(seguir);
+
+    //tiros dos inimigos
+    for (let i = 1; i<ConjuntoObjetosTela.controladoresInimigos; i++)
+      ConjuntoObjetosTela.controladoresInimigos[i].controladorTiros.seVirarContraCriador(seguir);
+  }
+
   get tempoTotal() { return this._tempoTotal; }
   get tempoRestante() { return this._tempoRestante.toFixed(1); }
 }
 
 const TipoPoder = {
-  "DiminuirTamanhoPers": 1, //nao imediatamente
-  "MatarObjetos1Tiro": 2,
+  "DiminuirTamanhoPers": 1,
+  "TiroPersMaisRapidoMortal": 2,
 
   "RUIMPersPerdeVel": 3,
-  "TiroPersMaisRapidoMortal": 4, //nao imediatamente
-  "MatarInimigosNaoEssenc": 5,
+  "PersMaisRapido": 4,
 
-  "ReverterTirosJogoInimDirInim": 6, //nao imediatamente
-  "GanharPoucaVida": 7,
+  "PersComMissil": 5,
+  "GanharPoucaVida": 6,
 
-  "RUIMPersPerdeVida": 8,
-  "ReverterTirosJogoInimSeguirInim": 9,
+  "RUIMPersPerdeVida": 7,
+  "MatarObjetos1Tiro": 8,
 
-  "DeixarTempoMaisLento": 10,
+  "MatarInimigosNaoEssenc": 9,
 
-  "RUIMTirosPersDirEle": 11,
-  "GanharMuitaVida": 12 //nao imediatamente
+  "TirarVidaTodosInim": 10,
+  "GanharMuitaVida": 11,
+
+  "ReverterTirosJogoInimDirInim": 12,
+  "RUIMTirosPersDirEle": 13,
+
+  "DeixarTempoMaisLento": 14,
+
+  "ReverterTirosJogoInimSeguirInim": 15,
+
+  "CongelarInimigos": 16
 };
 /* IDEIAS DE PODERES:
   Level 3
-- Pocao para diminuir tamanho do personagem (nao imediatamente)
-- Pocao para matar com um tiro todos os inimigos nao essenciais e obstaculos da tela (imediatamente)
+- Poção para diminuir tamanho do personagem (imediatamente)
+- Poção para tiro do pers andar mais rápido e ser mais mortal (nao imediatamente)
 
   Level 4
 - RUIM: Pocao para personagem perder velocidade
-- Poção para tiro do pers andar mais rápido e ser mais mortal (nao imediatamente)
-- Pocao para matar todos os inimigos nao essenciais (imediatamente)
+- Poção para deixar personagem mais rápido (nao imediatamente)
 
   Level 5
-- Pocao para reverter todos os tiros de todos os inimigos e do jogo em de personagem e direcao o inimigo mais proximo (nao imediatamente)
+- Poção para personagem ter tiro de missil (imediatamente)
 - Poção para ganhar um pouco de vida (imediatamente)
 
   Level 6
 - RUIM: Pocao personagem perde vida
-- Pocao para reverter todos os tiros de todos os inimigos e do jogo em de personagem e seguindo o inimigo mais proximo (imediatamente)
+- Poção para matar com um tiro todos os inimigos nao essenciais e obstaculos da tela (nao imediatamente)
 
   Level 7
-- Pocao para deixar o tempo mais lento (tudo anda X%) (imediatamente)
+- Poção para matar todos os inimigos nao essenciais (imediatamente)
 
   Level 8
-- RUIM: Pocao para os tiros do personagem se voltarem na direcao dele (feitico contra o feiticeiro)
+- Poção para tirar um pouco de vida de todos os inimigos (imediatamente)
 - Poção para ganhar muita vida (nao imediatamente)
+
+  Level 9
+- Poção para reverter todos os tiros de todos os inimigos e do jogo em de personagem e direcao o inimigo mais proximo (nao imediatamente)
+- RUIM: Pocao para os tiros do personagem se voltarem na direcao dele (feitico contra o feiticeiro)
+
+  Level 10
+FALTA - Poção para deixar o tempo mais lento (tudo anda X%) (imediatamente)
+
+  Level 11
+- Poção para reverter todos os tiros de todos os inimigos e do jogo em de personagem e seguindo o inimigo mais proximo (imediatamente)
+
+  Level 12
+- Poção para congelar inimigos (imediatamente)
+
+
+DEIXAR TEMPO LENTO: DEIXAR TUDO QUE ANDA MAIS DEVAGAR E AUMENTAR O AUX ATIRAR
 */
 
-POCOES RUINS (imediatas):
- - perder vida (Nome: "Burn")
- - tiros do personagem contra ele mesmo (feitico contra o feiticeiro)
- - perder velocidade "Space-Mud" (X%)
-adicionar nos lugares
 
 //quando personagem ainda nao pegou
 class ObjetoTelaPoder
@@ -308,6 +411,8 @@ class ObjetoTelaPoder
 
 const distanciaMinPersPoder = 350; //calculado a distancia entre os centro-de-massas
 const tempoVaiFicarTela = 7000;
+const primeiroLvComPoder = 3;
+const qtdPoderesUltimosLvs = 5; //se certa probabilidade vai escolher um poder dentro os 5 ultimos
 class ControladorPoderTela
 {
   constructor()
@@ -318,21 +423,20 @@ class ControladorPoderTela
   }
 
   get jahProgramouDeixarPoderTela() { return this._jahProgramouDeixarPoderTela; }
-  static levelTemPoder(level) { return level >= 3; }
+  static levelTemPoder(level) { return level >= primeiroLvComPoder; }
 
   //antes do poder ter sido adicionado a tela
   colocarPoderEmTempoSeChance(level)
   //esse metodo vai adicionar um poder randomico possivel depois de certo tempo (depois de fazer a verificacao de se o
   //level atual tem poderes e de ver a chance/%) e jah vai programar para tira-lo caso ele nao seja pego dentro do tempo
   {
-    if (this._jahProgramouDeixarPoderTela || !ControladorPoderTela.levelTemPoder(this._level) || //se jah fez um timer para colocar poder na tela ou se o level atual nao tem poderes possiveis
-      !Probabilidade.chance(3,5)) // 3/5 = 60% de chance de ter um poder no level (se ainda nao tem um e se o level atual tem poderes disponiveis)
+    if (this._jahProgramouDeixarPoderTela || !ControladorPoderTela.levelTemPoder(level) || //se jah fez um timer para colocar poder na tela ou se o level atual nao tem poderes possiveis
+      !ControladorPoderesPers.probabilidadeFromLevel(level)) // cada level tem uma chance de ter poder diferente (os primeiros levels tem menos, e vai aumentando)
       return;
 
-    let _this = this;
-
     //random de tempo para colocar na tela e jah setar timer para colocar poder na tela
-    let qntTempoFaltaPraColocar = Math.myrandom(2000, (ControladorJogo.tempoEstimadoLevelAtual(level)-1)*1000 - tempoVaiFicarTela); //no minimo 2 segundos e no maximo para acabar um segundo antes do tempo previsto para o level
+    let qntTempoFaltaPraColocar = Math.myrandom(2000, (ControladorJogo.tempoEstimadoLevel(level)-1)*1000 - tempoVaiFicarTela); //no minimo 2 segundos e no maximo para acabar um segundo antes do tempo previsto para o level
+    let _this = this;
     new Timer(function() {
       _this._colocarPoderTela(level);
     }, qntTempoFaltaPraColocar, false, false);
@@ -345,11 +449,20 @@ class ControladorPoderTela
   {
     this._auxColTirPoderTempo++;
 
-    //escolhe poder randomly de todos os que podem naquele level
+    //pega todos os poderes disponiveis naquele level
     let poderesPossiveis = ControladorPoderTela.poderesPossiveisFromLevel(level);
-    if (poderesPossiveis.length == 0) return; //se nao ha nenhum poder possivel nesse level
-    let codPoder = poderesPossiveis[Math.myrandom(0, poderesPossiveis.length)];
 
+    //deixar mais provavel pegar pocoes dos ultimos levels (3/5 de chance)
+    let qtdPoderesPossiveis;
+    if (poderesPossiveis.length > qtdPoderesUltimosLvs && Probabilidade.chance(3,5))
+    //se ha mais poderes disponiveis do que [qtdPoderesUltimosLvs] E se a chance de 3/5 (entao ele pega soh um dos 5 primeiros)
+    //os melhores poderes estao no comeco do vetor (os ultimos levels colocam o poder antes)
+      qtdPoderesPossiveis = qtdPoderesUltimosLvs;
+    else
+      qtdPoderesPossiveis = poderesPossiveis.length;
+
+    //escolher poder randomly
+    let codPoder = poderesPossiveis[Math.myrandom(0, qtdPoderesPossiveis)];
     let poder = new Poder(codPoder); //cria poder a partir do codigo
 
     //ponto onde poder nao estah em cima do pers nem muuito perto dele
@@ -358,6 +471,8 @@ class ControladorPoderTela
 
     this._objPoder = new ObjetoPoder(pontoPode.x, pontoPode.y, poder);
   }
+
+  //onde colocar
   _pontoPodeColocar(medidasFormaGeom)
   {
     let pontoPode = new Ponto(0, 0);
@@ -378,10 +493,11 @@ class ControladorPoderTela
 
     //calcula distancia do centro de massa do personagem ateh o centro de massa do poder
     return ConjuntoObjetosTela.pers.formaGeometrica.centroMassa.distancia
-      (pontoPode.mais({x: medidasFormaGeom.width/2, y: medidasFormaGeom.height/2)) //centroMassa do poder
+      (pontoPode.mais({x: medidasFormaGeom.width/2, y: medidasFormaGeom.height/2})) //centroMassa do poder
         >= distanciaMinPersPoder;
   }
-  // TODO: colocar poderes possiveis
+
+  //qual poder
   static poderesPossiveisFromLevel(level)
   //retorna um vetor com todos os indexes de poderes possiveis
   {
@@ -390,34 +506,60 @@ class ControladorPoderTela
 
     switch(level)
     {
-      // TODO: Se houver mais levels colocar mais cases aqui...
-      case 10:
-      case 9:
-      case 8:
-        poderesPossiveis[qtd++] = TipoPoder.GanharMuitaVida;
-        poderesPossiveis[qtd++] = TipoPoder.RUIMTirosPersDirEle;
-      case 7:
-        poderesPossiveis[qtd++] = TipoPoder.DeixarTempoMaisLento;
-      case 6:
+      // TODO: Se houver mais levels colocar mais cases aqui... (mudar levelTemPoderExclus se colocar poderes em outros levels)
+      case primeiroLvComPoder + 9: //12
+        poderesPossiveis[qtd++] = TipoPoder.CongelarInimigos;
+      case primeiroLvComPoder + 8: //11
         poderesPossiveis[qtd++] = TipoPoder.ReverterTirosJogoInimSeguirInim;
-        poderesPossiveis[qtd++] = TipoPoder.RUIMPersPerdeVida;
-      case 5:
+      case primeiroLvComPoder + 7: //10
+        poderesPossiveis[qtd++] = TipoPoder.DeixarTempoMaisLento;
+      case primeiroLvComPoder + 6: //9
+        poderesPossiveis[qtd++] = TipoPoder.RUIMTirosPersDirEle;
         poderesPossiveis[qtd++] = TipoPoder.ReverterTirosJogoInimDirInim;
-        poderesPossiveis[qtd++] = TipoPoder.GanharPoucaVida;
-      case 4:
-        poderesPossiveis[qtd++] = TipoPoder.TiroPersMaisRapidoMortal;
+      case primeiroLvComPoder + 5: //8
+        poderesPossiveis[qtd++] = TipoPoder.TirarVidaTodosInim;
+        poderesPossiveis[qtd++] = TipoPoder.GanharMuitaVida;
+      case primeiroLvComPoder + 4: //7
         poderesPossiveis[qtd++] = TipoPoder.MatarInimigosNaoEssenc;
-        poderesPossiveis[qtd++] = TipoPoder.RUIMPersPerdeVel;
-      case 3:
-        poderesPossiveis[qtd++] = TipoPoder.DiminuirTamanhoPers;
+      case primeiroLvComPoder + 3: //6
+        poderesPossiveis[qtd++] = TipoPoder.RUIMPersPerdeVida;
         poderesPossiveis[qtd++] = TipoPoder.MatarObjetos1Tiro;
+      case primeiroLvComPoder + 2: //5
+        poderesPossiveis[qtd++] = TipoPoder.PersComMissil;
+        poderesPossiveis[qtd++] = TipoPoder.GanharPoucaVida;
+      case primeiroLvComPoder + 1: //4
+        poderesPossiveis[qtd++] = TipoPoder.RUIMPersPerdeVel;
+        poderesPossiveis[qtd++] = TipoPoder.PersMaisRapido;
+      case primeiroLvComPoder: //3
+        poderesPossiveis[qtd++] = TipoPoder.DiminuirTamanhoPers;
+        poderesPossiveis[qtd++] = TipoPoder.TiroPersMaisRapidoMortal;
         break;
-
-      default:
-        throw "Esse codigo poder nao existe!";
     }
 
     return poderesPossiveis;
+  }
+
+  //probabilidade
+  static probabilidadeFromLevel(level)
+  {
+    switch(level)
+    {
+      // TODO: Se houver mais levels colocar mais cases aqui... (mudar levelTemPoderExclus se colocar poderes em outros levels)
+      case 12:
+      case 11:
+      case 10:
+        return Probabilidade.chance(4,5); //80%
+      case 9:
+      case 8:
+      case 7:
+        return Probabilidade.chance(2,3); //66%
+      case 6:
+      case 5:
+      case 4:
+        return Probabilidade.chance(1,2); //50%
+      case 3:
+        return Probabilidade.chance(1,3); //33%
+    }
   }
 
   tirarPoderTela(tirouPorFaltaTempo = true)
@@ -458,9 +600,11 @@ class ControladorPoderTela
 const heightCadaPoder = 45;
 const espacoEntrePoderes = 5;
 const qtdSubirAdicionarPoder = 3;
-const xPoderes = espacoLadosTela + 5;
-const yPrimeiroPoder = height - heightVidaUsuario - 75;
 const tempoNomePoderApareceTela = 2500;
+
+const xPoderes = espacoLadosTela + 5;
+var yPrimeiroPoder; //vai como uma constante quando ControladorPoderesPers for instanciado (porque o height nao estah definido aqui ainda)
+
 class ObjPoderPers
 {
   constructor(poder, qtdPoderes)
@@ -516,7 +660,7 @@ class ObjPoderPers
       let cor = color("blue");
       if (porcDisponivel == 1)
       {
-        strokeWeight();
+        strokeWeight(6);
         stroke(cor);
         ellipse(x, y, raio);
       }else
@@ -527,11 +671,8 @@ class ObjPoderPers
 
         strokeWeight(6);
         stroke(cor);
-        arc(x, y, raio, raio, -PI/2, proporc*2*PI - PI/2);
-                            //"raio width"
-                                  //"raio height"
-                                      //angulo em radiano onde comeca (lembrar do circulo trigonometrico)
-                                          //angulo em radiano onde termina o circulo (lembrar do circulo trigonometrico)
+        arc(x, y, raio, raio, -PI/2, porcDisponivel*2*PI - PI/2);
+        // (x, y, "raio width", "raio height", angulo em radiano onde comeca, angulo em radiano onde termina o circulo)
         // o circulo trigonometrico usado deve ser no sentido contrario (aumenta em sentido horario)
       }
 
@@ -559,6 +700,18 @@ class ControladorPoderesPers
   {
     this._poderesPers = new ListaDuplamenteLigada();
     //os que nao estao sendo usados e o que estah (se houver)
+
+    //inicializa a variavel e a faz funcionar como uma contante (nao pode ser contante em si porque depende de height, que nao tem um valor literal)
+    yPrimeiroPoder = height - heightVidaUsuario - 75;
+    Object.freeze(yPrimeiroPoder);
+  }
+
+  get codPoderSendoUsado()
+  {
+    if (this._poderesPers.qtdElem == 0 || !this._poderesPers.primeiroElemento.estahSendoUsado)
+    //se personagem nao tem nenhum poder ou se o primeiro poder nao estah sendo usado
+      return null;
+    return this._poderesPers.primeiroElemento.poder.codPoder;
   }
 
   usarPoder()

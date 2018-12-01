@@ -1,9 +1,10 @@
 //Novo metodo RANDOM de um numero a outro
-Math.prototype.myrandom = function (min, max)
+Math.myrandom = function (min, max)
 //inclusive min e exclusive max
 {
   return Math.random() * (max - min) + min;
 };
+//PS: Math isn't a constructor, so it doesn't have prototype property. Instead, just add your method to Math itself as an own property.
 
 
 //Probabilidade
@@ -16,4 +17,7 @@ class Probabilidade
         return true;
     return false;
   }
+
+  static porcVoltarNormal(porcMudou)
+  { return 1/porcMudou; }
 }

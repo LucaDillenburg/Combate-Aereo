@@ -75,9 +75,26 @@ function keyDown(event)
     }
   }else
   {
-    //pausar
-    if (event.key == "Enter")
+    if (event.key == "Enter") //pausar
       controladorJogo.mudarPausado();
+    else
+    if (event.key == "q" || event.key == "Q") //poder
+      controladorJogo.ativarPoderPers();
+    else
+
+    //direcao tiro pers (verifica se personagem jah estah com nave especial)
+    if (event.key == "w" || event.key == "W") //para cima
+      controladorJogo.mudarDirecaoTiroSaiPers(Direcao.Cima);
+    else
+    if (event.key == "d" || event.key == "D") //para direita
+      controladorJogo.mudarDirecaoTiroSaiPers(Direcao.Direita);
+    else
+    if (event.key == "s" || event.key == "S") //para baixo
+      controladorJogo.mudarDirecaoTiroSaiPers(Direcao.Baixo);
+    else
+    if (event.key == "a" || event.key == "A") //para esquerda
+      controladorJogo.mudarDirecaoTiroSaiPers(Direcao.Esquerda);
+
     else
       //mostra que usuário está clicando naquela tecla
       acionarKey(event.key);

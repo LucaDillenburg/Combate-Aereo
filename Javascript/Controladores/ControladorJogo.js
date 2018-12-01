@@ -130,7 +130,7 @@ class ControladorJogo
       // inimigos
         controladoresInimigosLvAtual = new Array(1);
 
-        //InfoInimigo: formaGeometrica, corImgMorto, vida, corVida, mostrarVidaSempre, [proporcTempoVida], infoTiroPadrao, freqTiro, podeAtirarQualquerLado, qtdTiraVidaPersQndIntersec, infoAndar
+        //InfoInimigo: formaGeometrica, corImgMorto, vida, corVida, mostrarVidaSempre, [porcTempoVida], infoTiroPadrao, freqTiro, podeAtirarQualquerLado, qtdTiraVidaPersQndIntersec, infoAndar
 
         //Inimigo 1
         let corInim = color("red");
@@ -141,11 +141,11 @@ class ControladorJogo
         infoInim1.corVida = corInim;
         infoInim1.mostrarVidaSempre = true;
         infoInim1.infoTiroPadrao = ControladorJogo.infoTiroNaoPers();
-        infoInim1.freqTiro = 10;
+        infoInim1.freqTiro = 1000;//10;
         infoInim1.podeAtirarQualquerLado = false;
         infoInim1.qtdTiraVidaPersQndIntersec = 2;
         infoInim1.infoAndar = new InfoAndar(0, 0, TipoAndar.NaoSairTelaInvTudo);
-        controladoresInimigosLvAtual[0] = new ControladorInimigos(infoInim1);
+        controladoresInimigosLvAtual[0] = new ControladorInimigos(infoInim1, true); //sao inimigos essenciais
         controladoresInimigosLvAtual[0].adicionarInimigo(0, {posicaoX: PosicaoX.Meio, y: 20});
 
 
@@ -167,6 +167,11 @@ class ControladorJogo
       // tiros tela (soh pra ter onde colocar os tiros dos inimigos que morrerem)
         controladoresTirosLvAtual = new Array(1);
         controladoresTirosLvAtual[0] = new ControladorTiros(null, false);
+        break;
+
+      case 10:
+        //ganha nave espacial
+        this._personagemPrincipal.colocarNaveEspecial(new Quadrado(null,null, 30, {stroke: color("white"), fill: color("white")}));
         break;
 
       default:
@@ -198,13 +203,22 @@ class ControladorJogo
   _atualizarConjuntoObjetosTela()
   { ConjuntoObjetosTela.adicionarNovoConjunto(this._controladoresInimigos, this._controladoresObstaculos, this._controladoresTiros); }
   //passar de level
+
   _passarLevel()
   {
     this._level++;
+    this._personagemPrincipal.mudarVida(ControladorJogo.qtdGanhaVidaLevel(this._level));
     this._iniciarLevel();
   }
 
-  static tempoEstimadoLevelAtual(level)
+  static qtdGanhaVidaLevel(level)
+  {
+    return Math.floor((level-1)/5)*2 + 3;
+    // de  1 -  5: 3
+    // de  6 - 10: 5
+    // de 10 - 15: 7
+  }
+  static tempoEstimadoLevel(level)
   //retornar tempo em segundos
   {
     switch (level)
@@ -254,18 +268,37 @@ class ControladorJogo
 
 
   //FUNCINALIDADES PERSONAGEM
+ //andar
   andarPers(direcaoX, direcaoY) //setinhas
   {
     //se estah jogando (jah comecou, nao estah pausado e o personagem nao morreu)
     if (this._estadoJogo == EstadoJogo.Jogando)
       this._personagemPrincipal.andar(direcaoX, direcaoY);
   }
+
+ //tiro
   atirar() //espaco
   {
     //se estah jogando (jah comecou, nao estah pausado e o personagem nao morreu)
     if (this._estadoJogo == EstadoJogo.Jogando)
       this._personagemPrincipal.atirar(Direcao.Cima);
   }
+  mudarDirecaoTiroSaiPers(direcao) //W: cima, D: direita, S: baixo, A: esquerda
+  {
+    if (this._estadoJogo == EstadoJogo.Jogando)
+      this._personagemPrincipal.mudarDirecaoTiroSai(direcao);
+      //verifica se estah com nave especial
+  }
+
+ //poder
+  ativarPoderPers() //Q
+  {
+    //se estah jogando (jah comecou, nao estah pausado e o personagem nao morreu)
+    if (this._estadoJogo == EstadoJogo.Jogando)
+      this._personagemPrincipal.controladorPoderesPegou.usarPoder();
+  }
+
+ //pausado/despausado
   mudarPausado() //enter
   {
     if (this._estadoJogo == EstadoJogo.Pausado)
@@ -327,15 +360,15 @@ class ControladorJogo
     this._andarInimObst();
     this._personagemPrincipal.procTirarVidaIntersecInim();
 
-    // desenha os obstaculos
-    for (let i = 0; i<this._controladoresObstaculos.length; i++)
-    //desenha todos os obstaculos desse controlador
-      this._controladoresObstaculos[i].draw();
-
-    // desenha os inimigos
-    for (let i = 0; i<this._controladoresInimigos.length; i++)
+    // desenha os inimigos (do ultimo para o primeiro pois o primeiro eh mais importante)
+    for (let i = this._controladoresInimigos.length-1; i >= 0; i--)
     //deseha todos os inimigos desse controlador e os tiros de cada um
       this._controladoresInimigos[i].draw();
+
+    // desenha os obstaculos (do ultimo pro primeiro pois o primeiro eh mais importante)
+    for (let i = this._controladoresObstaculos.length-1; i >= 0; i--)
+    //desenha todos os obstaculos desse controlador
+      this._controladoresObstaculos[i].draw();
 
     //desenha o personagem, os tiros dele e a vida
     this._personagemPrincipal.draw();
@@ -376,10 +409,14 @@ class ControladorJogo
     //verificar se o level jah acabou
     switch (this._level)
     {
-      case 1:
-        return !this._controladoresInimigos[0].algumInimNaTela();
-      default:
+      case 2: //ultimo level
         return false;
+      default:
+        for (let i = 0; i<this._controladoresInimigos.length; i++)
+          if (this._controladoresInimigos[i].ehDeInimigosEssenciais && this._controladoresInimigos[i].algumInimNaTela())
+          //se ha algum inimigo essencial na tela, nao acabou
+            return false;
+        return true;
     }
 
     return false;

@@ -10,7 +10,10 @@ class FormaGeometrica
   {
     //se nao estah querendo soh a parte de backend (sem colocar na tela)
     if (corImg != null)
+    {
+      this._corImg = {}; //para caso seja cor nao de erro
       this.corImg = corImg;
+    }
   }
 
   //imagem/cor

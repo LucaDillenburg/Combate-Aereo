@@ -61,13 +61,17 @@ class ObjComTiros extends ObjetoTela
 
   //TIROS
   //novo tiro
-  atirar(ondeColocar)
+  atirar(ondeColocar, mudarDirAndarTiroDirSai = false)
   {
     if (ondeColocar == null)
       ondeColocar = this._direcaoPadrao();
     let onde = this._lugarCertoTiro(ondeColocar);
 
-    this._controladorTiros.adicionarTiro(onde);
+    if (mudarDirAndarTiroDirSai)
+      this._controladorTiros.adicionarTiroDif(onde, null, ondeColocar, ondeColocar, true);
+      //se colocar Direcao.Baixo como DirecaoX por exemplo que nao vai dar problema
+    else
+      this._controladorTiros.adicionarTiro(onde);
   }
   _direcaoPadrao()
   {
@@ -124,6 +128,8 @@ class ObjComTiros extends ObjetoTela
 
   //MUDAR TAMANHOS
   // TODO : VERIFICAR SE PODE AUMENTAR E FAZER COLISOES
+  mudarWidth(porc)
+  { this.width = porc * this._formaGeometrica.width; }
   set width(nvWidth)
   {
     if (this._formaGeometrica.codForma != Geometria.COD_RETANGULO)
@@ -133,6 +139,8 @@ class ObjComTiros extends ObjetoTela
       throw "Width inválido!";
     this._formaGeometrica.width = nvWidth;
   }
+  mudarHeight(porc)
+  { this.height = porc * this._formaGeometrica.height; }
   set height(nvHeight)
   {
     if (this._formaGeometrica.codForma != Geometria.COD_RETANGULO)
@@ -142,7 +150,10 @@ class ObjComTiros extends ObjetoTela
       throw "Height inválido!";
     this._formaGeometrica.height = nvHeight;
   }
-  mudarTamLados(qtdMudar)
+
+  mudarTamLados(porc, ehWidth = true)
+  { this.tamLados = porc * (ehWidth?this._formaGeometrica.width:this._formaGeometrica.height); }
+  set tamLados(qtdMudar)
   {
     if (this._formaGeometrica.codForma != Geometria.COD_QUADRADO
       && this._formaGeometrica.codForma != Geometria.COD_RETANGULO)
@@ -165,21 +176,23 @@ class ObjComTiros extends ObjetoTela
 //INIMIGO
 class InfoInimigo extends InfoObjComTiros
 {
-  constructor(formaGeometrica, corImgMorto, vida, corVida, mostrarVidaSempre, proporcTempoVida, infoTiroPadrao, freqTiro, podeAtirarQualquerLado, qtdTiraVidaPersQndIntersec, infoAndar)
+  constructor(formaGeometrica, corImgMorto, vida, corVida, mostrarVidaSempre, porcTempoVida, infoTiroPadrao, freqTiro, podeAtirarQualquerLado, qtdTiraVidaPersQndIntersec, infoAndar, ehInimEssencial)
   {
     super(formaGeometrica, corImgMorto, vida, infoTiroPadrao);
     this.corVida = corVida;
     this.mostrarVidaSempre = mostrarVidaSempre;
-    if (proporcTempoVida != null)
-      this.proporcTempoVida = proporcTempoVida;
+    if (porcTempoVida != null)
+      this.porcTempoVida = porcTempoVida;
     this.freqTiro = freqTiro;
     this.podeAtirarQualquerLado = podeAtirarQualquerLado;
     this.qtdTiraVidaPersQndIntersec = qtdTiraVidaPersQndIntersec;
     this.infoAndar = infoAndar;
+
+    this.ehInimEssencial = ehInimEssencial; //soh o controladorInimigos que coloca
   }
 
   clone()
-  { return new InfoInimigo(this.formaGeometrica, this.corImgMorto, this.vida, this.corVida, this.mostrarVidaSempre, this.proporcTempoVida, this.infoTiroPadrao, this.freqTiro, this.podeAtirarQualquerLado, this.qtdTiraVidaPersQndIntersec, this.infoAndar); }
+  { return new InfoInimigo(this.formaGeometrica, AuxInfo.cloneImgCor(this.corImgMorto), this.vida, this.corVida, this.mostrarVidaSempre, this.porcTempoVida, this.infoTiroPadrao.clone(), this.freqTiro, this.podeAtirarQualquerLado, this.qtdTiraVidaPersQndIntersec, this.infoAndar.clone(), this.ehInimEssencial); }
 }
 const tempoMostrarVidaPadrao = 675;
 class Inimigo extends ObjComTiros
@@ -192,7 +205,8 @@ class Inimigo extends ObjComTiros
     this._auxFreqTiro = infoInimigo.freqTiro;
     this._freqTiro = infoInimigo.freqTiro;
     this._podeAtirarQualquerLado = infoInimigo.podeAtirarQualquerLado;
-    this._colocarProcedimentoAtirar();
+    let _this = this;
+    this._funcFreqAtirar = new FreqFunction(function() { _this._procedimentoAtirar(); }, this._freqTiro, true);
     this.procPosMudarTiro();
 
     //andar
@@ -209,8 +223,7 @@ class Inimigo extends ObjComTiros
     this._corVida = infoInimigo.corVida;
     this._mostrarVidaSempre = infoInimigo.mostrarVidaSempre;
     if (!this._mostrarVidaSempre)
-      this._tempoMostrarVida = (infoInimigo.proporcTempoVida==null) ? tempoMostrarVidaPadrao :
-        infoInimigo.proporcTempoVida*tempoMostrarVidaPadrao;
+      this._tempoMostrarVida = (infoInimigo.porcTempoVida==null) ? tempoMostrarVidaPadrao : infoInimigo.porcTempoVida*tempoMostrarVidaPadrao;
     if (this._mostrarVidaSempre)
     //se soh vai mostrar sempre
       this._mostrarVida = true;
@@ -220,6 +233,13 @@ class Inimigo extends ObjComTiros
       this._auxMostrarVida = 0;
       this._mostrarVidaCertoTempo();
     }
+
+    //essencial
+    this._ehInimEssencial = infoInimigo.ehInimEssencial;
+
+    //congelado
+    this._auxCongelar = 0;
+    this._estahCongelado = false;
   }
 
   //procedimento ao criar: colisao com tiros do pers (nao precisa verificar colidir com o personagem aqui!)
@@ -248,6 +268,8 @@ class Inimigo extends ObjComTiros
   andar(indexContrInim, indexInim)
   //retorna se deve continuar na lista
   {
+    if (this._estahCongelado) return true; //se estah congelado nao anda nem atira
+
     let qtdAndar = this._classeAndar.procAndar(this._formaGeometrica);
 
     //verificar se vai bater em tiros do personagem e se tiro tem que sair da lista porque esse inimigo andou, ele sai
@@ -267,21 +289,18 @@ class Inimigo extends ObjComTiros
 
   //ATIRAR
   atirar()
-  { this._funcFreqAtirar.contar(); /*conta e se jah estiver na hora de atirar de acordo com a frequencia atira*/ }
-  _colocarProcedimentoAtirar()
   {
-    let _this = this;
-    this._funcFreqAtirar = new FreqFunction(
-      function()
-      {
-        if (_this._decidirDirecaoTiro)
-          _this._atirarSuper(Direcao.emQualDirecaoObjEsta(_this._formaGeometrica, ConjuntoObjetosTela.pers.formaGeometrica));
-        else
-          _this._atirarSuper();
-      }, this._freqTiro, true
-    );
+    if (this._estahCongelado) return true; //se estah congelado nao anda nem atira
+
+    this._funcFreqAtirar.contar(); //conta e se jah estiver na hora de atirar de acordo com a frequencia atira
   }
-  _atirarSuper(direcao) { super.atirar(direcao); } //auxiliar para _colocarProcedimentoAtirar (infelizmente nao tem outro jeito de fazer)
+  _procedimentoAtirar()
+  {
+    if (this._decidirDirecaoTiro)
+      super.atirar(Direcao.emQualDirecaoObjEsta(this._formaGeometrica, ConjuntoObjetosTela.pers.formaGeometrica));
+    else
+      super.atirar();
+  }
 
   get freqTiro()
   { return this._freqTiro; }
@@ -293,14 +312,30 @@ class Inimigo extends ObjComTiros
   { return this._qtdTiraVidaPersQndIntersec; }
 
   //mudar vida de inimigo: verificar se deve colocar vida na tela ou nao
-  mudarVida(qtdMuda)
+  mudarVida(qtdMuda, colidiuTiroPers = false)
   {
-    super.mudarVida(qtdMuda);
+    if (colidiuTiroPers && this._ehInimEssencial &&
+      ConjuntoObjetosTela.pers.controladorPoderesPegou.codPoderSendoUsado == TipoPoder.MatarObjetos1Tiro)
+    //se nao eh inimigo essencial e nesse momento mata-se inimigos com 1 tiro, se matar
+      this.seMatar();
+    else
+    {
+      super.mudarVida(qtdMuda);
+
+      //a vida nao pode ser maior do que o maximo
+      if (this._vida > this._vidaMAX)
+        this._vida = this._vidaMAX;
+    }
 
     //se soh mostra vida quando leva tiro
     //(mostra a vida ateh ficar um certo tempo sem levar tiro)
     if (!this._mostrarVidaSempre)
       this._mostrarVidaCertoTempo();
+  }
+  seMatar()
+  {
+    this._vida = 0;
+    this.morreu();
   }
   _mostrarVidaCertoTempo()
   {
@@ -364,10 +399,23 @@ class Inimigo extends ObjComTiros
   {
     if (Interseccao.interseccao(tiro.formaGeometrica, this._formaGeometrica))
     {
-      tiro.tirarVidaObjCmVida(this);
+      tiro.tirarVidaObjCmVida(this, true);
       return true;
-    }
-    return false;
+    }else
+      return false;
+  }
+
+  //congelar e descongelar
+  congelar()
+  {
+    this._auxCongelar++;
+    this._estahCongelado = true;
+  }
+  descongelar()
+  {
+    this._auxCongelar--;
+    if (this._auxCongelar == 0)
+      this._estahCongelado = false;
   }
 }
 
@@ -382,7 +430,7 @@ class InfoPersonagemPrincipal extends InfoObjComTiros
   }
 
   clone()
-  { return new InfoPersonagemPrincipal(this.formaGeometrica, this.corImgMorto, this.vida, this.infoTiroPadrao, this.qtdAndar); }
+  { return new InfoPersonagemPrincipal(this.formaGeometrica, AuxInfo.cloneImgCor(this.corImgMorto), this.vida, this.infoTiroPadrao.clone(), this.qtdAndar); }
 }
 const freqMissilPers = 28;
 class PersonagemPrincipal extends ObjComTiros
@@ -395,24 +443,36 @@ class PersonagemPrincipal extends ObjComTiros
     this._ehMissil = false; // o primeiro tiro tem que ser o normal
 
     this.qtdAndar = infoPersonagemPrincipal.qtdAndar;
+    this._porcAndarPadrao = 1;
 
     //lista de inimigos que intersectou
     this._qtdTirarVidaIntersecInim = 0;
     this._listaInfoInimIntersec = new ListaDuplamenteLigada();
 
     //poderes do pers
-    this._controladorPoderesPers = new ControladorPoderesPers();
+    this._controladorPoderesPegou = new ControladorPoderesPers();
+
+    //para nave especial
+    this._direcaoTiroSaiPersEscolheu = null;
   }
 
   get ehPersPrincipal() { return true; }
 
-  //mudar qtdAndar
-  get qtdAndar()
-  { return this._qtdAndar; }
+  //mudar qtdAndar e adicionar qtdAndarEspecial
   set qtdAndar(qtdAndar)
   {
     this._qtdAndar = qtdAndar;
-    this._qtdAndarCadaDirDiag = this._qtdAndar*Math.sqrt(2)/2;
+    this._qtdAndarCadaDirDiag = Operacoes.diagonalQuad(qtdAndar);
+  }
+  mudarVelocidade(porcentagem)
+  {
+    this._porcAndarPadrao *= porcentagem;
+    this.qtdAndar = porcentagem*this._qtdAndar;
+  }
+  voltarVelocidadePadrao()
+  {
+    this.qtdAndar = this._qtdAndar / this._porcAndarPadrao; //regra de 3 para voltar ao qtdAndar normal
+    this._porcAndarPadrao = 1;
   }
 
   procPosMudarTiro() //se for mudar o infoTiroPadrao (ou voltarTiroPadrao ou tipoAndar do tiro) chamar esse metodo
@@ -428,6 +488,16 @@ class PersonagemPrincipal extends ObjComTiros
     }
   }
 
+  mudarVida(qtdMuda)
+  {
+    let ret = super.mudarVida(qtdMuda);
+
+    //se ganha vida e passa do suposto MAXIMO, ele nao para no maximo, mas sim aumenta o MAXIMO
+    if (this._vida > this._vidaMAX)
+      this._vidaMAX = this._vida;
+
+    return ret;
+  }
   morreu()
   {
     super.morreu();
@@ -529,19 +599,35 @@ class PersonagemPrincipal extends ObjComTiros
     return infoQtdMudar.qtdPodeMudarX == qtdMudaX && infoQtdMudar.qtdPodeMudarY == qtdMudaY;
   }
 
+  //atirar
   atirar()
   {
     if (this._ehMissil)
       this._freqFuncAtirarMissil.contar(); //conta e se jah estiver na hora de atirar de acordo com a frequencia atira
     else
-      super.atirar();
+      super.atirar(this._direcaoTiroSaiPersEscolheu, this._direcaoTiroSaiPersEscolheu!=null);
+      //soh precisa ajustar a direcao do tiro do pers se personagem estah com nave especial e escolhe para que lado atirar
   }
   _colocarProcedimentoAtirarMissil()
   {
     let _this = this;
     this._freqFuncAtirarMissil = new FreqFunction(function() { _this._atirarSuper(); }, freqMissilPers, true);
   }
-  _atirarSuper() { super.atirar(); } //auxiliar para _colocarProcedimentoAtirar (infelizmente nao tem como fazer de outro jeito)
+  _atirarSuper() { super.atirar(this._direcaoTiroSaiPersEscolheu, false); }
+
+  //posicao tiro
+  colocarNaveEspecial(formaGeomNaveEsp)
+  //pode atirar para todos os lados (usuario escolhe)
+  {
+    this._formaGeometrica = formaGeomNaveEsp.clone(this._formaGeometrica.x, this._formaGeometrica.y);
+    this._direcaoTiroSaiPersEscolheu = Direcao.Cima;
+  }
+  mudarDirecaoTiroSai(direcao)
+  {
+    if (this._direcaoTiroSaiPersEscolheu != null)
+    //se ele jah pode escolher o lado do tiro
+      this._direcaoTiroSaiPersEscolheu = direcao;
+  }
 
   //sobre ter intersectar com inimigos
   zerarInimigosIntersectados()
@@ -573,12 +659,16 @@ class PersonagemPrincipal extends ObjComTiros
     this.zerarInimigosIntersectados();
   }
 
+  //PODERES
+  get controladorPoderesPegou()
+  { return this._controladorPoderesPegou; }
+
   //draw
   draw()
   {
     super.draw();
-    this._controladorPoderesPers.draw(); //desenha os poderes que o personagem tem guardados
     this._colocacarVidaTela();
+    this._controladorPoderesPegou.draw(); //desenha os poderes que o personagem tem guardados
   }
   _colocacarVidaTela()
   {
