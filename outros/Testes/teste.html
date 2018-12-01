@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <script src="../../Javascript/p5/p5.min.js"></script>
+  </head>
+  <body>
+    <script type="text/javascript" onload="setup()">
+      function x(level)
+      {
+        console.log("aux: " + Math.floor(level-1/5));
+        return Math.floor((level-1)/5)*2 + 3;
+      }
+
+      for (let i = 1; i<15; i++)
+        console.log(x(i));
+
+
+      /*
+      function setup()
+      {
+        // createCanvas must be the first statement
+        createCanvas(window.innerWidth-20, window.innerHeight-20);
+        background(0);
+      }
+
+      window.addEventListener("keydown", function (event) {
+        console.log(event.key);
+      });
+
+      function draw()
+      {
+        //https://p5js.org/reference/#/p5/arc
+
+        // angulo final: regra de (porc * 2*PI) - PI/2
+        let proporc = 0.5;
+
+        fill(100);
+        let raio = 55;
+        let x = 10 + raio;
+        let y = height - 100 - raio;
+
+        let cor = color("red");
+        if (proporc == 1)
+        {
+          strokeWeight(10);
+          stroke(cor);
+          ellipse(x, y, raio);
+        }else
+        {
+          strokeWeight(3); //8.5 para 10 (desse strokeWeight para o de baixo)
+          stroke(30);//color("white"));
+          ellipse(x, y, raio);
+
+          strokeWeight(4.5);
+          stroke(cor);
+          arc(x, y, raio, raio, -PI/2, proporc*2*PI - PI/2);
+                              //"raio width"
+                                    //"raio height"
+                                        //angulo em radiano onde comeca (lembrar do circulo trigonometrico)
+                                            //angulo em radiano onde termina o circulo (lembrar do circulo trigonometrico)
+          // o circulo trigonometrico usado deve ser no sentido contrario (aumenta em sentido horario)
+        }
+
+        noStroke(); fill(255);
+        //image(loadImage("img.JPG"), x-12, y-2, 2*raio-10, 2*raio-5);
+        text("Poder disso daqui!!!", x-20, y + 2*raio);
+      }
+      */
+    </script>
+  </body>
+</html>

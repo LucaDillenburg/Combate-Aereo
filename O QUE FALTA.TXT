@@ -1,26 +1,40 @@
-- pensar um pouco na colisao de obstaculos (para onde eles vao quando colidem)
+- Programar tecla para quando usuario usar poder. OK
+- Programar PODERES em si. OK
+- depois do level 10 o personagem ganha uma nave super top que pode atirar para todos os lados (escolhendo em 'A', 'W', 'D', 'S' - quando apertar uma delas deixa esse lado padrao ateh que outra tecla dessa seja apertada). OK
+- ganhar um pouco de vida quando passa o level (ganha mais a cada level). OK
 
-//resto:
-- NOVO TIPO ANDAR: andar ateh quando passaria de certo X e/ou Y, e antes de passar mudar a direcao tanto de qtdAndarX quando qtdAndarY
-- frequencia de atirar fica em cada controladorInimigo e no PersonagemPrincipal (quando tiro for missil teleguiado)
-- poder atirar para todos lados (quando tiver com a nave especial)
+- FALTA DEIXAR TEMPO MAIS DEVAGAR
+- ver como faz quando pega poder instantaneo (colocar nome na tela?, colocar que jah estah usando poder?, soh pegar se nao estah usando outro poder?)
+
+.inimigos essenciais nao precisam ser apenas os do primeiro controlador (o controladorInimigos eh essencial entao todos os inimigos que vem dele tambem serao). pesquisar "== 0", "==0", "essencial", mudar o "ganhar" do ControladorJogo e deixa-lo como default e criar um case 2 que retorna false
+.obstaculos sem vida podem morrer por tiro se for poder 1TiroMata
+
+- fazer esquema para criar timers todo level e coloca-los em um vetor, entao quando for passar de level deletar esses timers
+
 - opcao para mudar tamanho personagem, inimigo e obstaculo (deve ser super parecido com procCriou, talvez possa usar ele mesmo ou fazer um metodo em comum- o que eh diferente eh se quando ele aumentar, ele for ficar com parte do corpo para fora, dessa maneira ele aumenta de tamanho e depois anda)
+- soh tirar inimigos e obstaculos da lista depois que eles forem mostrados mortos
 
-- tiros e obstaculos aparentemente nao estao sumindo logo que morrem (estah ficando mais doq um draw, ver se estah tirando depois do draw)
-- colocar opcao para mudar o qtdAndar mudar depois de cada andada (variavel porcentagem que vai fazer objeto acelerar ou desacelerar /*isto eh, mudar o qtdAndar*/ cada vez que ele anda)
+- Fazer classe: FuncaoEm camadas/niveis. andouCamada(), regrediuCamada() -> retorna se deve fazer a funcao (dar nome para classe de acordo com aquela palavra do livro de Daniel: olhar biblia)
+- ver se tem outra maneira de fazer para diferenciar nulo de undefined e tirar class Nulo
+- colocar parametros com valores padrao nos metodos
+- colocar o index dos controladoresObjetos como atributo do controladorObjetos
+- tirar static gets que definem qual ObjetoTela que eh e criar um const enum que define isso (trocar todos os usos desses static gets)
 
-- New Features:
-  .class Poder (img, cod, nome, executarPoder())
-  .class ObjTelaPoder
-  .class ControladorPoderes (??) -> get temPoderTela, colocarPoderRandomico(), colocarPoderEspecifico(cod)
-
+- mudar class ListaLigada para classe do proprio Javascript (eh possivel remover e adicionar atual??)? (ou passar para Outros.cs)
+- pensar um pouco na colisao de obstaculos (para onde eles vao quando colidem)
 - fazer Interseccao.qntPodeAndarAntesIntersec(...) para Triangulo
 - considerar um quadradao (de onde estava pra onde foi) antes de verificar a colisao certinha fazendo paralelogramos e etc
 
+- o que acontece se o personagem pegar duas pocoes ao mesmo tempo?? (eh possivel?? deixar??)
+- testar colocar valores padroes nos parametros ao inves de ver se eh null e depois atribuir
+
+- tiros e obstaculos aparentemente nao estao sumindo logo que morrem (estah ficando mais doq um draw, ver se estah tirando depois do draw)
+- colocar opcao para mudar o qtdAndar mudar depois de cada andada (variavel porcentagem que vai fazer objeto acelerar ou desacelerar /*isto eh, mudar o qtdAndar*/ cada vez que ele anda)
 - variaveis que sao guardadas separadamente e depois tem que juntar, guardar junto (ex: infoAndar). ps: fazer classe para infoAndar por exemplo
 - variavel = null, mudar para delete variavel (apagar da memoria quando for interessante)
 
-- e colisao de inimigo com inimigo e obstaculo, e obstaculo com inimigo e obstaculo ??
+- e colisao de inimigo com inimigo e obstaculo ??
+- soh pode chamar uma pocao por vez?
 
 - ver comentarios //TODO
 
@@ -29,6 +43,8 @@
 - CRIAR NIVEIS
 
 - ORGANIZAR EXPLICACOES: COLOCAR NO GIT EXPLICACOES DO PAPEL (DEIXAR BONITINHA) + MUDAR NOME DOS ARQUIVOS DO PAINT E DEIXAR MAIS BONITINHO TAMBEM
+
+- Layout: parte de baixo da tela como se fosse o painel da espaco-nave
 
 - Sobre LISTA LIGADA: quando mais de um metodo usar a lista ao mesmo tempo ou quando um metodo esta percorrendo a lista e chama outro que tambem vai percorrer a lista o atual vai ficar maluco. PORTANTO, VERIFIQUE QUE NAO EH ISSO QUE ESTAH OCORRENDO
 - fazer Interseccao.vaiTerInterseccao(...) para Paralelogramos e Quadrilateros

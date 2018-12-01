@@ -10,7 +10,10 @@ class FormaGeometrica
   {
     //se nao estah querendo soh a parte de backend (sem colocar na tela)
     if (corImg != null)
+    {
+      this._corImg = {}; //para caso seja cor nao de erro
       this.corImg = corImg;
+    }
   }
 
   //imagem/cor
@@ -19,7 +22,13 @@ class FormaGeometrica
   set corImg(corImg)
   {
     this._ehCor = corImg.stroke != null;
-    this._corImg = corImg;
+    if (this._ehCor)
+    {
+      //isso impossibilita que se o corImg for mudado aqui ou la fora o outro seja mudado tambem
+      this._corImg.stroke = corImg.stroke;
+      this._corImg.fill = corImg.fill;
+    }else
+      this._corImg = corImg;
   }
   get ehCor()
   { return this._ehCor; }
@@ -64,9 +73,20 @@ class FormaGeometrica
 
   colocarNoMeioX()
   { this.x = Tela.xParaEstarNoMeio(this.width); }
+  colocarParedeEsquerda()
+  { this.x = 0; }
+  colocarParedeDireita()
+  { this.x = width - this.width; }
+
+  colocarNoMeioY()
+  { this.y = Tela.yParaEstarNoMeio(this.height); }
+  colocarParedeCima()
+  { this.y = 0; }
+  colocarParedeBaixo()
+  { this.y = height - heightVidaUsuario - this.height; }
 
   //para clone
-  _colocarLugarEspecificado(x,y)
+  colocarLugarEspecificado(x,y)
   {
     if (x != null)
       this.x = x;
@@ -314,7 +334,7 @@ class Retangulo extends FormaGeometricaSimples
   clone(x,y)
   {
     let ret = new Retangulo(this._x, this._y, this._width, this._height, this._corImg);
-    ret._colocarLugarEspecificado(x,y); //coloca no lugar certo
+    ret.colocarLugarEspecificado(x,y); //coloca no lugar certo
     return ret;
   }
 }
@@ -369,7 +389,7 @@ class Quadrado extends FormaGeometricaSimples
   clone(x,y)
   {
     let ret = new Quadrado(this._x, this._y, this._tamLado, this._corImg);
-    ret._colocarLugarEspecificado(x,y); //coloca no lugar certo
+    ret.colocarLugarEspecificado(x,y); //coloca no lugar certo
     return ret;
   }
 }
@@ -871,7 +891,7 @@ class Quadrilatero extends FormaGeometricaComplexa
   clone(x,y)
   {
     let ret = new Quadrilatero(this._a, this._b, this._c, this._d, this._corImg);
-    ret._colocarLugarEspecificado(x,y); //coloca no lugar certo
+    ret.colocarLugarEspecificado(x,y); //coloca no lugar certo
     return ret;
   }
 }
@@ -920,7 +940,7 @@ class Paralelogramo extends Quadrilatero
   clone(x,y)
   {
     let ret = new Paralelogramo(this._a, this._b, this._c, this._d, this._corImg, false);
-    ret._colocarLugarEspecificado(x,y); //coloca no lugar certo
+    ret.colocarLugarEspecificado(x,y); //coloca no lugar certo
     return ret;
   }
 }
@@ -999,7 +1019,7 @@ class Triangulo extends FormaGeometricaComplexa
   clone(x,y)
   {
     let ret = new Triangulo(this._a, this._b, this._c, this._corImg);
-    ret._colocarLugarEspecificado(x,y); //coloca no lugar certo
+    ret.colocarLugarEspecificado(x,y); //coloca no lugar certo
     return ret;
   }
 }
