@@ -116,9 +116,9 @@ class Poder
     this._personagemJahPegou = true;
 
     if (this._informacoesPoder.ativadoInstant)
-      this.executarPoder();
+      ConjuntoObjetosTela.pers.controladorPoderesPegou.adicionarPoderUsando(this);
     else
-      ConjuntoObjetosTela.pers.controladorPoderesPers.adicionarPoder(this);
+      ConjuntoObjetosTela.pers.controladorPoderesPegou.adicionarPoder(this);
 
     return this._informacoesPoder.ativadoInstant;
   }
@@ -286,7 +286,7 @@ class Poder
         throw "Esse codigo poder nao existe!";
     }
 
-    ConjuntoObjetosTela.pers.controladorPoderesPers.acabouUsarPoder();
+    ConjuntoObjetosTela.pers.controladorPoderesPegou.acabouUsarPoder();
   }
 
   //auxiliares
@@ -542,9 +542,12 @@ class ControladorPoderTela
   //probabilidade
   static probabilidadeFromLevel(level)
   {
+    if (level > 13) level = 13; //para entrar no ultimo case
     switch(level)
     {
-      // TODO: Se houver mais levels colocar mais cases aqui... (mudar levelTemPoderExclus se colocar poderes em outros levels)
+      case 13:
+        return true; //100%
+
       case 12:
       case 11:
       case 10:
@@ -577,7 +580,9 @@ class ControladorPoderTela
   //depois que poder jah foi adicionado a tela
   verificarPersPegouPoder(qtdAndarX, qtdAndarY)
   {
-    if (this._objPoder != null && this._objPoder.intersectaPers(qtdAndarX, qtdAndarY))
+    //soh pode pegar o poder se nao tiver usando
+    if (!ConjuntoObjetosTela.pers.controladorPoderesPegou.estahUsandoPoder &&
+      this._objPoder != null && this._objPoder.intersectaPers(qtdAndarX, qtdAndarY))
       this._objPoder.morreu(); //ainda nao tira da tela (soh quando desenhar a ultima vez)
   }
 
@@ -597,8 +602,7 @@ class ControladorPoderTela
 
 //quando personagem jah pegou
 //frontend
-const heightCadaPoder = 45;
-const espacoEntrePoderes = 5;
+const heightCadaPoder = 50;
 const qtdSubirAdicionarPoder = 3;
 const tempoNomePoderApareceTela = 2500;
 
@@ -616,7 +620,7 @@ class ObjPoderPers
     //tela
     this._formaGeometrica = this._poder.getFormaGeometrica();
     this._formaGeometrica.x = xPoderes;
-    this._formaGeometrica.y = yPrimeiroPoder - qtdPoderes*heightCadaPoder - (qtdPoderes-1)*espacoEntrePoderes;
+    this._formaGeometrica.y = yPrimeiroPoder;
 
     this._estahSendoUsado = false;
   }
@@ -636,11 +640,11 @@ class ObjPoderPers
   { return this._poder; }
 
   mudarY(instrucao)
-  //instrucao: 0 = removeu, 1 = comecou a usar, 2 = adicionou
+  //InstrucaoArrumarLugar: removeu, comecou a usar, adicionou
   {
-    if (instrucao != 1)
-      this._formaGeometrica.y += heightCadaPoder*(adicionou?-1:1);
-    else
+    if (instrucao != InstrucaoArrumarLugar.comecouAUsar) //adicionou ou removeu
+      this._formaGeometrica.y += heightCadaPoder*(instrucao==InstrucaoArrumarLugar.adicionou?-1:1);
+    else //comecou a usar
       this._formaGeometrica.y -= qtdSubirAdicionarPoder / (this._estahSendoUsado?2:1);
       //ps: se estah sendo usado soh sobe metade (soh pela metade de baixo do circlo)
   }
@@ -713,8 +717,27 @@ class ControladorPoderesPers
       return null;
     return this._poderesPers.primeiroElemento.poder.codPoder;
   }
+  estahUsandoPoder() { return this.codPoderSendoUsado != null; }
 
-  usarPoder()
+  adicionarPoderUsando(poder)
+  //jah tem que ter verificado se nao tem um usando no momento
+  {
+    this.adicionarPoder(poder, false); //nao remove o poder se jah tiver no maximo
+    this.usarPoderAtual();
+  }
+  adicionarPoder(poder, removerPorSePrec = true)
+  {
+    this._poderesPers.inserirNoComeco(new ObjPoderPers(poder, this._poderesPers.qtdElem+1));
+
+    if (removerPorSePrec && this._poderesPers.qtdElem >= maxPoderesAcumulados + 1)
+    //se tem mais poderes do que pode
+      this._poderesPers.removerDoFinal();
+
+    //arrumar lugar dos poderes agora que adicionou um embaixo
+    this._arrumarLugarPoderes(InstrucaoArrumarLugar.adicionou);
+  }
+
+  usarPoderAtual()
   {
     if (this._poderesPers.qtdElem > 0 && !this._poderesPers.primeiroElemento.estahSendoUsado)
     // se tem algum poder para usar && se nao tem nenhum poder sendo usado (soh pode usar um poder por vez)
@@ -726,17 +749,6 @@ class ControladorPoderesPers
       this._arrumarLugarPoderes(InstrucaoArrumarLugar.comecouAUsar);
     }
   }
-  adicionarPoder(poder)
-  {
-    this._poderesPers.inserirNoComeco(new ObjPoderPers(poder, this._poderesPers.qtdElem+1));
-
-    if (this._poderesPers.qtdElem >= maxPoderesAcumulados + 1)
-    //se tem mais poderes do que pode
-      this._poderesPers.removerDoFinal();
-
-    //arrumar lugar dos poderes agora que adicionou um embaixo
-    this._arrumarLugarPoderes(InstrucaoArrumarLugar.adicionou);
-  }
 
   acabouUsarPoder()
   {
@@ -746,6 +758,9 @@ class ControladorPoderesPers
 
     //arrumar lugar dos poderes agora que removeu o de baixo
     this._arrumarLugarPoderes(InstrucaoArrumarLugar.removeu);
+
+    //personagem podia estar em cima do poder mas nao poder pegar porque jah estava usando um, quando esse acaba verifica se pode pegar instantaneamente (sem esperar ele andar)
+    ConjuntoObjetosTela.controladorPoderTela.verificarPersPegouPoder();
   }
 
   _arrumarLugarPoderes(instrucao)

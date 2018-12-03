@@ -565,7 +565,7 @@ class PersonagemPrincipal extends ObjComTiros
       qtdPodeMudarY : Tela.qtdAndarObjNaoSairY(this._formaGeometrica, qtdMudaY)
     };
 
-    //nao conseguiu andar tudo
+    //nao conseguiu andar nada (por colidir com parede)
     if (infoQtdMudar.qtdPodeMudarX == 0 && infoQtdMudar.qtdPodeMudarY == 0)
       return false;
 
@@ -590,6 +590,9 @@ class PersonagemPrincipal extends ObjComTiros
     //controladoresTiros do jogo
     for (let i = 0; i<ConjuntoObjetosTela.controladoresTirosJogo.length; i++)
       ConjuntoObjetosTela.controladoresTirosJogo[i].procedimentoObjTelaColideAndar(this, infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY, ControladorTiros.PERSONAGEM_ANDOU);
+
+    //verifica se colidiu com poder
+    ConjuntoObjetosTela.controladorPoderTela.verificarPersPegouPoder(infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
 
     //aqui qtdVaiMudarX e qtdVaiMudarY sao os maiores possiveis (a menor distancia que bateu)
     this._formaGeometrica.x += infoQtdMudar.qtdPodeMudarX;

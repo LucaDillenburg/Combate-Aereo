@@ -95,6 +95,7 @@ class ControladorJogo
     ConjuntoObjetosTela.adicionarPersonagem(this._personagemPrincipal);
 
     this._controladorPoderTela = new ControladorPoderTela();
+    ConjuntoObjetosTela.adicionarControladorPoderTela(this._controladorPoderTela);
 
     this._level = 1;
     this._iniciarLevel();
@@ -295,7 +296,7 @@ class ControladorJogo
   {
     //se estah jogando (jah comecou, nao estah pausado e o personagem nao morreu)
     if (this._estadoJogo == EstadoJogo.Jogando)
-      this._personagemPrincipal.controladorPoderesPegou.usarPoder();
+      this._personagemPrincipal.controladorPoderesPegou.usarPoderAtual();
   }
 
  //pausado/despausado
@@ -431,6 +432,9 @@ class ConjuntoObjetosTela
   static adicionarPersonagem(pers)
   { ConjuntoObjetosTela._pers = pers; }
 
+  static adicionarControladorPoderTela(controladorPoderTela)
+  { ConjuntoObjetosTela._controladorPoderTela = controladorPoderTela; }
+
   static adicionarNovoConjunto(controladoresInimigos, controladoresObstaculos, controladoresTirosJogo)
   {
     //colocar os novos controladores e pers na classe
@@ -448,4 +452,6 @@ class ConjuntoObjetosTela
   { return ConjuntoObjetosTela._controladoresObstaculos; }
   static get controladoresTirosJogo()
   { return ConjuntoObjetosTela._controladoresTirosJogo; }
+  static get controladorPoderTela()
+  { return ConjuntoObjetosTela._controladorPoderTela; }
 }
