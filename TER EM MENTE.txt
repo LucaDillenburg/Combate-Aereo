@@ -1,9 +1,49 @@
-- NAO USAR TIMEOUT: USAR TIMER
+ - NAO USAR TIMEOUT: USAR TIMER
 
  - SE FOR PEGAR OU MUDAR O TIRO PADRAO VER A DIFERENCA DE TIROPADRAO E TIROPADRAOATUAL E COLOCARTIROESPECIAL E ESCOLHER O ADEQUADO (o tiroPadrao nem sempre eh o que sera adicionado a lista, mas sim o tiroPadraoAtual que pode ser o tiroPadrao ou tiroEspecial se ha um). PS: SE FOR MUDAR TIRO DE PERSONAGEM OU INIMIGO CHAMAR O PROCMUDOUTIRO DELES
  - NO ANDAR DO INIMIGO TEM QUE SE VERIFICAR SE COLIDIU COM O PERSONAGEM E FAZER AQUELE PROCEDIMENTO MESMO QUE O QTDANDAR SEJA ZERO
  - ALGUNS PROCEDIMENTOS CHAMADOS DENTRO DE UM FOR QUE VAI ANDANDO O ATUAL DE UMA LISTA PODEM ESTAR MUDANDO O ATUAL DA MESMA LISTA (ISSO VAI FAZER COM QUE DE ERRO NO METODO ANDAR DO "for" DE CIMA, PARA ARRUMAR BASTA FAZER ELE GUARDAR O ATUAL ANTES DE ENTRAR NESSE PROCEDIMENTO E DEPOIS COLOCAR O ATUAL DE VOLTA)
 
+ - soh vou usar undefined se uma propriedade de um objeto nao existe
+
  - ha controladores de inimigos, controladores de obstaculos e controladores de tiros
  - nos controladores sempre precisa se verificar se o objeto que ele controla jah morreu ou nao
  - num ObjetoTela, get eh com formaGeometrica dos obstaculos, mas setter soh na propria classe
+
+
+ EXPLICACAO: em cada level terá vários
+    .GRUPOS DE OBSTACULOS: todos obstáculos do grupo
+    (vetor de ControladorObstaculos no ControladorJogo)
+      -> será com ou sem vida
+      -> vão ficar parados, andar sempre com o msm qtdAndarX e qtdAndarY, inverter qtdAndarX e qtdAndarY para nao sair da tela ou
+        andam em direcao ao pers
+    .GRUPOS DE INIMIGOS: todos os inimigos do grupo
+    (vetor de ControladorInimigos no ControladorJogo)
+      -> vão ser essenciais ou não (os essenciais são aqueles que quando forem mortos o level acabará)
+      -> vão mostrar a vida sempre ou só quando forem atingidos
+      -> vão andar sempre com o msm qtdAndarX e qtdAndarY, inverter o qtdAndarX e qtdAndarY ao nao deixar sair da vidaNaTela [ou de outra forma]
+    .GRUPOS DE TIROS: todos os tiros do grupo
+    (vetor de ControladorTiros no ControladorJogo e nos Inimigos e Personagem)
+      -> serão do personagem ou nao
+      -> podem andar sempre a mesma coisa ou seguir o personagem
+    .GRUPO DE POCOES (ver IDEIAS.txt)
+    (classe Pocao: metodo para colocar a pocao na pratica, img,... e ControladorPocao: vai criar uma pocao "aleatorio" pra por na tela)
+      -> A pocao vai ficar guardada ou vai ser usada logo que o usuario o pegar dependendo da pocao
+      -> A pocao vai ser pontual ou temporario dependendo da pocao
+  ps: Tudo, exceto o personagem, mudará a cada level
+
+
+ EXPLICAÇÃO COLISÃO DE OBJETOS:
+    . tiros
+      -> colide com obstaculos (independente de ser ou nao do pers, porem soh tira vida dele se for do pers)
+      -> se de pers, colide com inimigos, se não com personagem
+    . personagem (com tiros dos inimigos e normal, com inimigos e com obstáculos)
+      -> colide com tiros dos inimigos e do jogo (perde vida)
+      -> colide com inimigos (perde vida periodicamente quando estiver dentro: nao perde mais se inimigo ou personagem ficarem andando la dentro)
+      -> colisao com obstaculos: eh empurrado por eles e se eles nao conseguem empurrar, eles explodem e pers perde vida
+    . inimigos (com personagens, tiros do pers)
+      -> colide com personagem (tira vida periodicamente)
+      -> colide com tiros do pers
+    . obstáculos (com personagens e tiros do pers)
+      -> colisao com os tiros em geral
+      -> colisao com personagem (empurra)

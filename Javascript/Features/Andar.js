@@ -12,14 +12,17 @@ class ClasseAndar
 
     this.setTipoAndar(infoAndar.tipoAndar, formaGeom);
 
-    if (infoAndar.atehQualXYPodeAndar != null)
+    if (infoAndar.atehQualXYPodeAndar !== undefined)
     //soh precisa se for INVERTER_..._NAO_PASSAR_XY
-      this.atehQualXYPodeAndar = infoAndar.atehQualXYPodeAndar; //public
+      this._atehQualXYPodeAndar = infoAndar.atehQualXYPodeAndar;
   }
 
   get qtdAndarX() { return this._qtdAndarX; }
   get qtdAndarY() { return this._qtdAndarY; }
   get tipoAndar() { return this._tipoAndar; }
+
+  get atehQualXYPodeAndar() { return this._atehQualXYPodeAndar; }
+  set atehQualXYPodeAndar(ponto) { this._atehQualXYPodeAndar = ponto; }
 
   //setters
   set qtdAndarX(qtdAndarX)
@@ -38,69 +41,75 @@ class ClasseAndar
     this._tipoAndar = null;
 
     //se tipo eh para seguir inimigo mais proximo, tem que procurar inimigo mais proximo
-    if (tipo == TipoAndar.SeguirInimMaisProx)
+    if (tipo === TipoAndar.SeguirInimMaisProx)
     {
-      // se for pra um tiro seguir um inimigo sempre, seguir um dos mais importantes soh
-      let praOndeAndar = null;
-      if (ConjuntoObjetosTela.controladoresInimigos.length > 0) // se tem algum controlador
-        praOndeAndar = ConjuntoObjetosTela.controladoresInimigos[0].qntAndarInimigoMaisProximo(formaGeom);
-      if (praOndeAndar == null || praOndeAndar.inim == null)
-        this._tipoAndar = TipoAndar.Normal;
+      // se for pra um tiro seguir um inimigo sempre, seguir um dos mais importantes (essenciais)
+      const infoInimSeguir = this._getInfoInimigoMaisProximo(formaGeom, true);
+      if (infoInimSeguir !== null)
+        this._inimSeguir = infoInimSeguir.inimigo;
       else
-      {
-        this._inimSeguir = praOndeAndar.inim;
-        this._ultimoQtdAndar = {x: this._qtdAndarX, y: this._qtdAndarY};
-      }
-    }else
-    if (tipo == TipoAndar.SeguirPers)
+        this._tipoAndar = TipoAndar.Normal;
+    } //sem else mesmo, porque seguir inim mais proximo tambem vai adicionar ultimo qtdAndar
+    if (tipo === TipoAndar.SeguirPers || tipo === TipoAndar.SeguirInimMaisProx)
       this._ultimoQtdAndar = {x: this._qtdAndarX, y: this._qtdAndarY};
     else
     {
-      if (this._ultimoQtdAndar != null)
-        this._ultimoQtdAndar = null;
-      if (this._hipotenusaPadrao != null)
-        this._hipotenusaPadrao = null;
+      if (this._ultimoQtdAndar !== undefined)
+        delete this._ultimoQtdAndar;
+      if (this._hipotenusaPadrao !== undefined)
+        delete this._hipotenusaPadrao;
 
-      if (tipo == TipoAndar.DirecaoPers)
-        this._setarQtdAndarTipoDIRECAO(formaGeom, ConjuntoObjetosTela.pers);
+      if (tipo === TipoAndar.DirecaoPers)
+        this._setarQtdAndarTipoDirecao(formaGeom, ConjuntoObjetosTela.pers);
       else
-      if (tipo == TipoAndar.DirecaoInimMaisProx)
+      if (tipo === TipoAndar.DirecaoInimMaisProx)
       {
-        //descobrir qual inimigo estah mais perto para seguir
-        let praOndeAndar = null;
-        let menorHipotenusa = null;
-        for (let i=0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
-        {
-          let praOndeAndarAtual = ConjuntoObjetosTela.controladoresInimigos[i].qntAndarInimigoMaisProximo(formaGeom);
-
-          if (praOndeAndarAtual.inim != null) //se tem algum inimigo nesse controlador
-          {
-            let hipotenusaAtual = Operacoes.hipotenusa(praOndeAndarAtual.x, praOndeAndarAtual.y);
-
-            if (menorHipotenusa == null || hipotenusaAtual < menorHipotenusa)
-            {
-              praOndeAndar = praOndeAndarAtual;
-              menorHipotenusa = hipotenusaAtual;
-            }
-          }
-        }
-
-        if (praOndeAndar != null && praOndeAndar.inim != null)
-          this._setarQtdAndarTipoDIRECAO(formaGeom, praOndeAndar.inim);
+        //retorna inimigo mais proximo em .inimigo e qtd quer andar em .qtdQrAndar
+        const infoInimSeguir = this._getInfoInimigoMaisProximo(formaGeom);
+        if (infoInimSeguir !== null)
+          this._setarQtdAndarTipoDirecao(formaGeom, infoInimSeguir.inimigo, infoInimSeguir.qtdQrAndar);
+        else
+          this._tipoAndar = TipoAndar.Normal;
+          //nao tem nenhum inimigo para ir na direcao, entao anda normal
       }
     }
 
-    if (this._tipoAndar == null) this._tipoAndar = tipo;
+    if (this._tipoAndar === null) this._tipoAndar = tipo;
     this._colocarHipotenusaSePrecisa();
   }
-  _setarQtdAndarTipoDIRECAO(formaGeomVaiAndar, objSeguir)
+  _getInfoInimigoMaisProximo(formaGeom, sohEssenciais = false)
+  {
+    //descobrir qual inimigo estah mais perto para seguir
+    let praOndeAndar=null, menorHipotenusa=null;
+    for (let i=0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
+    {
+      //se tiver que ser soh inimigos essenciais e esse nao for, ele volta pro "cabecalho" do for
+      if (sohEssenciais && !ConjuntoObjetosTela.controladoresInimigos[i].ehDeInimigosEssenciais) continue;
+
+      //informacoes de quanto andaria ateh inimigo mais proximo desse controlador
+      const praOndeAndarAtual = ConjuntoObjetosTela.controladoresInimigos[i].qntAndarInimigoMaisProximo(formaGeom);
+      if (praOndeAndarAtual.inim !== undefined) //se tem algum inimigo nesse controlador
+      {
+        const hipotenusaAtual = Operacoes.hipotenusa(praOndeAndarAtual.x, praOndeAndarAtual.y);
+        if (menorHipotenusa === null || hipotenusaAtual < menorHipotenusa)
+        {
+          praOndeAndar = praOndeAndarAtual;
+          menorHipotenusa = hipotenusaAtual;
+        }
+      }
+    }
+
+    if (praOndeAndar === null) return null;
+    return {inimigo: praOndeAndar.inim, qtdQrAndar: {x: praOndeAndar.x, y: praOndeAndar.y}};
+  }
+  _setarQtdAndarTipoDirecao(formaGeomVaiAndar, objSeguir, qtdQrAndar)
   //objSeguir eh ObjetoTela
   {
     //tem que colocar hipotenusa padrao porque this._qtdAndarSeguir vai usar
     this._colocarHipotenusaPadrao();
 
     //ve o qtdAndar
-    let qtdAndar = this._qtdAndarSeguir(formaGeomVaiAndar, objSeguir);
+    const qtdAndar = this._qtdAndarSeguir(formaGeomVaiAndar, objSeguir, qtdQrAndar);
     this._qtdAndarX = qtdAndar.x;
     this._qtdAndarY = qtdAndar.y;
 
@@ -110,8 +119,8 @@ class ClasseAndar
 
   procAndar(formaGeom)
   {
-    if ((this._tipoAndar == TipoAndar.SeguirInimMaisProx && (this._inimSeguir == null || !this._inimSeguir.vivo)) ||
-      (this._tipoAndar == TipoAndar.SeguirPers && !ConjuntoObjetosTela.pers.vivo))
+    if ((this._tipoAndar === TipoAndar.SeguirInimMaisProx && !this._inimSeguir.vivo) ||
+      (this._tipoAndar === TipoAndar.SeguirPers && !ConjuntoObjetosTela.pers.vivo))
     {
       this.mudarQtdAndarParaUltimoAndar();
       this.setTipoAndar(TipoAndar.Normal);
@@ -119,16 +128,14 @@ class ClasseAndar
 
     //objSeguir para this._qtdAndarFromTipo(...)
     let objSeguir;
-    if (this._tipoAndar == TipoAndar.SeguirPers)
+    if (this._tipoAndar === TipoAndar.SeguirPers)
       objSeguir = ConjuntoObjetosTela.pers;
     else
-    if (this._tipoAndar == TipoAndar.SeguirInimMaisProx)
+    if (this._tipoAndar === TipoAndar.SeguirInimMaisProx)
       objSeguir = this._inimSeguir;
 
-    let qtdAndar = this._qtdAndarFromTipo(formaGeom, objSeguir);
     //jah faz procedimentos de inverter qtdAndar(se precisar) e adicionar qtdAndar no ultimoQtdAndar
-
-    return qtdAndar;
+    return this._qtdAndarFromTipo(formaGeom, objSeguir);
   }
   mudarQtdAndarParaUltimoAndar()
   {
@@ -142,7 +149,7 @@ class ClasseAndar
       this._colocarHipotenusaPadrao();
   }
   _tipoTemHipotenusaPadrao()
-  { return this._tipoAndar == TipoAndar.SeguirPers || this._tipoAndar == TipoAndar.SeguirInimMaisProx; }
+  { return this._tipoAndar === TipoAndar.SeguirPers || this._tipoAndar === TipoAndar.SeguirInimMaisProx; }
   _colocarHipotenusaPadrao()
   { this._hipotenusaPadrao = Operacoes.hipotenusa(this._qtdAndarX, this._qtdAndarY); }
 
@@ -154,7 +161,7 @@ class ClasseAndar
   {
     let qtdAndar = {x: this._qtdAndarX, y: this._qtdAndarY};
 
-    let inverter; // comum ao 2o e 3o case
+    let inverter = {x: false, y: false}; // comum ao 2o e 3o case
     switch(this._tipoAndar)
     {
       case TipoAndar.Normal:
@@ -163,13 +170,11 @@ class ClasseAndar
       case TipoAndar.NaoPassarXYNemSairTelaInvDir: //tambem nao pode sair da tela
       case TipoAndar.NaoSairTelaInvTudo:
       case TipoAndar.NaoSairTelaInvDir:
-        let inverteApenasDirecao = (this._tipoAndar == TipoAndar.NaoSairTelaInvDir ||
-          this._tipoAndar == TipoAndar.NaoPassarXYNemSairTelaInvDir);
+        const inverteApenasDirecao = (this._tipoAndar === TipoAndar.NaoSairTelaInvDir ||
+          this._tipoAndar === TipoAndar.NaoPassarXYNemSairTelaInvDir);
 
-        let vaiSairX = Tela.objVaiSairEmX(formaGeomVaiAndar, this._qtdAndarX);
-        let vaiSairY = Tela.objVaiSairEmY(formaGeomVaiAndar, this._qtdAndarY);
-
-        inverter = {x: false, y: false};
+        const vaiSairX = Tela.objVaiSairEmX(formaGeomVaiAndar, this._qtdAndarX);
+        const vaiSairY = Tela.objVaiSairEmY(formaGeomVaiAndar, this._qtdAndarY);
 
         //se obstaculo vai sair, inverte a direcao
         if (vaiSairX || vaiSairY)
@@ -190,15 +195,13 @@ class ClasseAndar
           //se jah inverteu nas duas direcoes, jah fez tudo
         }
 
-        if (this._tipoAndar == TipoAndar.NaoSairTelaInvTudo ||
-          this._tipoAndar == TipoAndar.NaoSairTelaInvDir)
+        if (this._tipoAndar === TipoAndar.NaoSairTelaInvTudo ||
+          this._tipoAndar === TipoAndar.NaoSairTelaInvDir)
           break; //se for INVERTER_..._NAO_SAIR_TELA, jah fez tudo
 
       case TipoAndar.NaoPassarXYPodeSairTelaInvTudo:
       case TipoAndar.NaoPassarXYPodeSairTelaInvDir:
-      // os outros tipos andar de "nao passar XY" jah entraram no bloco anterior e se nao inverteram os dois lados continuam nesse bloco
-        if (inverter == null)
-          inverter = {x: false, y: false};
+      // os outros tipos andar de "nao passar XY" jah entraram no bloco anterior e se nao inverteram os dois lados continuam nesse bloco...
         this._mudarDadosTipoNaoPassarXY(qtdAndar, inverter, formaGeomVaiAndar); //muda as coisas no metodo e volta diferente (passagem por referencia)
         break;
 
@@ -213,19 +216,18 @@ class ClasseAndar
     }
 
     //inverter qtdAndarX e/ou Y se precisar
-    if (inverter != null)
-      this.inverterDirecoesQtdAndar(inverter.x, inverter.y);
+    this.inverterDirecoesQtdAndar(inverter.x, inverter.y);
 
     return qtdAndar;
   }
   _mudarDadosTipoNaoPassarXY(qtdAndar, inverter, formaGeometrica)
   //funciona por passagem por referencia
   {
-    let inverteApenasDirecao = (this._tipoAndar == TipoAndar.NaoPassarXYNemSairTelaInvDir ||
-      this._tipoAndar == TipoAndar.NaoPassarXYPodeSairTelaInvDir);
+    const inverteApenasDirecao = (this._tipoAndar === TipoAndar.NaoPassarXYNemSairTelaInvDir ||
+      this._tipoAndar === TipoAndar.NaoPassarXYPodeSairTelaInvDir);
 
     //se vai passar de X (de qual lado para o outro que seja)
-    if (!inverter.x && (this._qtdAndarX != 0 || !inverteApenasDirecao) && this.atehQualXYPodeAndar.x != null)
+    if (!inverter.x && (this._qtdAndarX !== 0 || !inverteApenasDirecao) && this._atehQualXYPodeAndar.x !== undefined)
     //se ainda nao inverteu em X e quer andar alguma coisa
     {
       let inicio;
@@ -233,9 +235,9 @@ class ClasseAndar
         inicio = formaGeometrica.x;
       else
         inicio = formaGeometrica.x + this._qtdAndarX;
-      let distancia = Math.abs(this._qtdAndarX) + formaGeometrica.width;
+      const distancia = Math.abs(this._qtdAndarX) + formaGeometrica.width;
 
-      if (Interseccao.xOuYDePontoEstahDentroDirecao(this.atehQualXYPodeAndar.x, inicio, distancia))
+      if (Interseccao.xOuYDePontoEstahDentroDirecao(this._atehQualXYPodeAndar.x, inicio, distancia))
       {
         inverter.x = true;
         qtdAndar.x = -this._qtdAndarX;
@@ -251,7 +253,7 @@ class ClasseAndar
 
     //[igual o if de cima porem com Y ao inves de X]
     //se vai passar de Y (de qual lado para o outro que seja)
-    if (!inverter.y && (this._qtdAndarY != 0 || !inverteApenasDirecao) && this.atehQualXYPodeAndar.y != null)
+    if (!inverter.y && (this._qtdAndarY !== 0 || !inverteApenasDirecao) && this._atehQualXYPodeAndar.y !== undefined)
     //se ainda nao inverteu em Y e quer andar alguma coisa
     {
       let inicio;
@@ -259,9 +261,9 @@ class ClasseAndar
         inicio = formaGeometrica.y;
       else
         inicio = formaGeometrica.y + this._qtdAndarY;
-      let distancia = Math.abs(this._qtdAndarY) + formaGeometrica.height;
+      const distancia = Math.abs(this._qtdAndarY) + formaGeometrica.height;
 
-      if (Interseccao.xOuYDePontoEstahDentroDirecao(this.atehQualXYPodeAndar.y, inicio, distancia))
+      if (Interseccao.xOuYDePontoEstahDentroDirecao(this._atehQualXYPodeAndar.y, inicio, distancia))
       {
         inverter.y = true;
         qtdAndar.y = -this._qtdAndarY;
@@ -275,14 +277,14 @@ class ClasseAndar
       }
     }
   }
-  _qtdAndarSeguir(formaGeomVaiAndar, objPerseguido)
+  _qtdAndarSeguir(formaGeomVaiAndar, objPerseguido, qntQrAndar)
   {
-    //calcular quanto teria que andar em cada direcao para chegar ao objeto
-    let qntQrAndar = ClasseAndar.qntAndarParaBater(formaGeomVaiAndar, objPerseguido.formaGeometrica);
+    if (qntQrAndar === undefined)
+      qntQrAndar = ClasseAndar.qntAndarParaBater(formaGeomVaiAndar, objPerseguido.formaGeometrica);
+      //calcular quanto teria que andar em cada direcao para chegar ao objeto
 
     //calcular quanto andar em cada direcao para andar sempre o mesmo que o padrao
-    let k = this._hipotenusaPadrao/Operacoes.hipotenusa(qntQrAndar.x, qntQrAndar.y);
-
+    const k = this._hipotenusaPadrao/Operacoes.hipotenusa(qntQrAndar.x, qntQrAndar.y);
     return {x: k*qntQrAndar.x, y: k*qntQrAndar.y};
   }
   inverterDirecoesQtdAndar(inverterX, inverterY)
@@ -296,25 +298,25 @@ class ClasseAndar
   static qntAndarParaBater(formaGeomVaiAndar, formaGeomPerseguido)
   {
     //direcao de formaGeomVaiAndar em relacao a formaGeomPerseguido
-    let direcao = Direcao.emQualDirecaoObjEsta(formaGeomPerseguido, formaGeomVaiAndar);
+    const direcao = Direcao.emQualDirecaoObjEsta(formaGeomPerseguido, formaGeomVaiAndar);
 
     let x,y;
-    if (direcao == Direcao.Cima || direcao == Direcao.Baixo)
+    if (direcao === Direcao.Cima || direcao === Direcao.Baixo)
     {
       x = formaGeomPerseguido.x + (formaGeomPerseguido.width - formaGeomVaiAndar.width)/2;
-      let k = porcentQrEntrar*formaGeomPerseguido.height;
 
-      if (direcao == Direcao.Cima)
+      const k = porcentQrEntrar*formaGeomPerseguido.height;
+      if (direcao === Direcao.Cima)
         y = formaGeomPerseguido.y - formaGeomVaiAndar.height + k;
       else
         y = formaGeomPerseguido.y + formaGeomPerseguido.height - k;
     }else
-    //if (direcao == Direcao.Esquerda || direcao == Direcao.Direita)
+    //if (direcao === Direcao.Esquerda || direcao === Direcao.Direita)
     {
       y = formaGeomPerseguido.y + (formaGeomPerseguido.height - formaGeomVaiAndar.height)/2;
-      let k = porcentQrEntrar*formaGeomPerseguido.width;
 
-      if (direcao == Direcao.Esquerda)
+      const k = porcentQrEntrar*formaGeomPerseguido.width;
+      if (direcao === Direcao.Esquerda)
         x = formaGeomPerseguido.x - formaGeomVaiAndar.width + k;
       else
         x = formaGeomPerseguido.x + formaGeomPerseguido.width - k;

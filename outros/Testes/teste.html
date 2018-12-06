@@ -4,9 +4,97 @@
     <meta charset="utf-8">
     <title></title>
     <script src="../../Javascript/p5/p5.min.js"></script>
+    <script src="../../Javascript/Outros/ListaDuplamenteLigada.js"></script>
   </head>
   <body>
     <script type="text/javascript" onload="setup()">
+
+const LIMIT = 10000;
+let arr = new Array(LIMIT);
+console.time("ArrayBuffer");
+for (let i = 0; i < LIMIT; i++)
+    arr[i] = i;
+console.timeEnd("ArrayBuffer");
+
+console.time("ArrayBuffer rem");
+for (let i = 0; i < LIMIT; i++)
+{
+  arr[i] = 0;
+  arr.splice(i, 1);
+}
+console.timeEnd("ArrayBuffer rem");
+
+console.log("%c asdf", 'color: green');
+
+let lista = new ListaDuplamenteLigada();
+console.time("lista");
+for (let i = 0; i < LIMIT; i++)
+    lista.inserirNoFinal(i);
+console.timeEnd("lista");
+
+console.time("lista rem");
+for (lista.colocarAtualComeco(); !lista.atualEhNulo; lista.andarAtual())
+    lista.removerAtual();
+console.timeEnd("lista rem");
+
+
+/*
+  let array = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+  for( var i = 0; i < array.length-1; i++)
+     if ( array[i] === 5) array.splice(i, 1);
+  console.table(array);
+
+//=> [1, 2, 3, 4, 6, 7, 8, 9, 0]
+
+    /*
+    let lista = new ListaDuplamenteLigada();
+    lista.inserirNoFinal(9);
+    lista.printar();
+    lista.inserirNoFinal(1);
+    lista.printar();
+
+    /*
+    var a = [];
+    a.push(12);
+    a.push(5);
+    console.table(a);
+
+    console.log("foreach")
+    a.forEach(function(valor, chave){
+      console.log(valor);
+    });
+
+    /*
+    var b = null;// = undefined;
+    alert(b);
+
+    var a = {};
+    alert(a .x === undefined);
+
+    //alert(null === undefined); //false
+
+    //delete variables
+    class A
+    {
+      constructor()
+      {
+        this.ola = null;
+      }
+    }
+    var a = new A();
+    console.log(a.ola);
+    delete a.ola;
+    console.log(a.ola);
+
+    /*
+      function a()
+      {
+        const a;
+        a = 23;
+        console.log(a);
+      }
+      a(); //ERRO
+
       function x(level)
       {
         console.log("aux: " + Math.floor(level-1/5));

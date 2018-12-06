@@ -1,6 +1,6 @@
 FEATURES DIFERENCIAIS:
  - Tipos de andar: ANDAR_NORMAL, SEGUIR_PERS, SEGUIR_INIM_MAIS_PROX, DIRECAO_PERS, DIRECAO_INIM_MAIS_PROX, NAO_SAIR_DA_TELA e ATEH_XY_ESPECIFICADO (mudando as duas ou soh uma direcao)
-    -> haverao tiros de todos esses tipos tanto para os inimigos dependendo do nivel, quanto para o personagem principal se ele pegar poderes
+    -> haverao tiros de todos esses tipos tanto para os inimigos dependendo do nivel, quanto para o personagem principal se ele pegar pocoes
     -> obstaculos e inimigos (preferencialmente menores) podem andar em direcao/seguir o personagem
  - pode-se criar um obstaculo ou inimigo ou tiro indo para outra direcao muito facilmente (parametros em adicionarObstaculo)
  - pode-se criar um objetoTela no meio, encostado na parede esquerda, direita, na de baixo ou de cima muito facilmente (soh colocar Posicao... em pontoInicial no new desse obj)
@@ -8,5 +8,5 @@ FEATURES DIFERENCIAIS:
  - obstaculos empurram os personagens e quando nao conseguem empurrar explodem dando certo dano ao personagem
  - obstaculos com vida (barreiras que tambem sofrem dano)
  - tiros da tela
- - PODERES: que se guardam e que usam na hora (ainda nao implementado)
+ - POCOES: que se guardam e que usam na hora (ainda nao implementado)
  - Ao inves de cor, os objetos podem ser imagens (quando um objeto da tela morre/explode/... antes de sair da tela ele eh mostrado mais uma vez com a cor/imagem de morto)

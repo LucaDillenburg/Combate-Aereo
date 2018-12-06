@@ -1,98 +1,65 @@
-- ver como faz quando pega poder instantaneo (colocar nome na tela?, colocar que jah estah usando poder?, soh pegar se nao estah usando outro poder?). OK
+- opcao para mudar tamanho personagem e inimigo. OK
+- fazer esquema para criar timers todo level e coloca-los em um vetor, entao quando for passar de level deletar esses timers. OK
 
-- fazer esquema para criar timers todo level e coloca-los em um vetor, entao quando for passar de level deletar esses timers
-- opcao para mudar tamanho personagem, inimigo e obstaculo (deve ser super parecido com procCriou, talvez possa usar ele mesmo ou fazer um metodo em comum- o que eh diferente eh se quando ele aumentar, ele for ficar com parte do corpo para fora, dessa maneira ele aumenta de tamanho e depois anda)
-- soh tirar inimigos e obstaculos da lista depois que eles forem mostrados mortos
-
-- pensar se isso funcionaria suav:
+- arrumar setTipoAndar para SeguirInimMaisProx (nao ve soh o primeiro controladorInimigos). OK
+- arrumar Lista.inserirNoFinal(...). OK
+- arrumar: tiros tela nao estao se movimentando. OK
+- soh tirar inimigos e obstaculos da lista depois que eles forem mostrados mortos. OK
+- colocar o index dos controladoresObjetos como atributo do controladorObjetos. OK
+- tirar variaveis publicas (soh tinha atehQualXYPodeAndar). OK
+- tirar static gets que definem qual ObjetoTela que eh e criar um const enum que define isso (trocar todos os usos desses static gets e quando passar o ObjetoTela nao precisa passa o tipo pois pode-se usar metodo do TipoObjetos para conseguir o tipo dele). OK
+- ver se objeto tela tem ou nao vida pelo atributo vida. OK
+- mudar em todos os arquivos (por causa de novos conhecimentos):
+  .colocar CONST ao inves de LET onde nao for mudar a variavel (nao soh quando nao faz atribuicao). OK
+  .colocar valores padroes nos parametros ao inves de ver se eh null e depois atribuir. OK
+  .quando for pra deletar a variavel da memoria usar ao inves de "= null;". OK
+  .undefined eh diferente de null => mudar isso. OK
+  .pesquisar se fazer "===" ao inves de "==" eh boa pratica. OK
+  .mudar null por undefined quando precisar (em parametros principalmente). OK
+  .ver se tem outra maneira de fazer para diferenciar nulo de undefined e tirar class Nulo. OK
+- poder -> pocao (poder, poderes, Poderes, Poder, POCAO). OK
+- pensar se isso funcionaria suav: OK
   .inimigos essenciais nao precisam ser apenas os do primeiro controlador (o controladorInimigos eh essencial entao todos os inimigos que vem dele tambem serao). pesquisar "== 0", "==0", "essencial", mudar o "ganhar" do ControladorJogo e deixa-lo como default e criar um case 2 que retorna false
   .obstaculos sem vida podem morrer por tiro se for poder 1TiroMata
-- FALTA DEIXAR TEMPO MAIS DEVAGAR
 
+- POCAO: FALTA DEIXAR TEMPO MAIS DEVAGAR (metodo para todos os objetos e controladores: fazer porcentagem*qtdAndar e (1/porcentagem)*auxAtirar e com frequencia)
+  -> andar dos inimigos
+  -> andar dos obstaculos
+  -> andar dos tiros (dos inimigos e da tela)
+  -> atirar do inimigo
+  -> criar tiros da tela
+  -> Timers (os que jah existem e os que vao ser criados)
+ps: deixar mais rapido de novo depois que acabar o tempo da pocao
+
+- colocar opcao para mudar o qtdAndar depois de cada andada (variavel porcentagem que vai fazer objeto acelerar ou desacelerar /*isto eh, mudar o qtdAndar*/ cada vez que ele anda)
 - Fazer classe: FuncaoEm camadas/niveis. andouCamada(), regrediuCamada() -> retorna se deve fazer a funcao (dar nome para classe de acordo com aquela palavra do livro de Daniel: olhar biblia)
-- ver se tem outra maneira de fazer para diferenciar nulo de undefined e tirar class Nulo
-- colocar parametros com valores padrao nos metodos
-- colocar o index dos controladoresObjetos como atributo do controladorObjetos
-- tirar static gets que definem qual ObjetoTela que eh e criar um const enum que define isso (trocar todos os usos desses static gets)
-
-- mudar class ListaLigada para classe do proprio Javascript (eh possivel remover e adicionar atual??)? (ou passar para Outros.cs)
-- pensar um pouco na colisao de obstaculos (para onde eles vao quando colidem)
-- fazer Interseccao.qntPodeAndarAntesIntersec(...) para Triangulo
-- considerar um quadradao (de onde estava pra onde foi) antes de verificar a colisao certinha fazendo paralelogramos e etc
-
-- o que acontece se o personagem pegar duas pocoes ao mesmo tempo?? (eh possivel?? deixar??)
-- testar colocar valores padroes nos parametros ao inves de ver se eh null e depois atribuir
 
 - tiros e obstaculos aparentemente nao estao sumindo logo que morrem (estah ficando mais doq um draw, ver se estah tirando depois do draw)
-- colocar opcao para mudar o qtdAndar mudar depois de cada andada (variavel porcentagem que vai fazer objeto acelerar ou desacelerar /*isto eh, mudar o qtdAndar*/ cada vez que ele anda)
-- variaveis que sao guardadas separadamente e depois tem que juntar, guardar junto (ex: infoAndar). ps: fazer classe para infoAndar por exemplo
-- variavel = null, mudar para delete variavel (apagar da memoria quando for interessante)
-
-- e colisao de inimigo com inimigo e obstaculo ??
-- soh pode chamar uma pocao por vez?
-
 - ver comentarios //TODO
 
-- fazer opcao para rotacionar FormasGeometricas (quando personagem fica maluco; obstaculos e inimigos: quanto rotacionar no infoAndar)
 - CreateCanvas de um tamanho mínimo: metade de toda tela + quando o canvas perde o foco, pausa-lo
 - CRIAR NIVEIS
 
+- mudar class ListaLigada para classe do proprio Javascript?? Tem todos os metodos mas aparentemente eh mais lento quando fica-se adicionando e removendo coisas (principalmente removendo)... ver se vale a pena
+- otimizar codigo
+- e colisao de inimigo com inimigo e obstaculo ??
+- opcao para mudar tamanho obstaculo??
+
+Geometria:
+- programar centroMassa de quadrilatero (media de todos os vertices)
+- pensar um pouco na colisao de obstaculos (para onde eles vao quando colidem)
+- fazer Interseccao.qntPodeAndarAntesIntersec(...) para Triangulo
+- considerar um quadradao (de onde estava pra onde foi) antes de verificar a colisao certinha fazendo paralelogramos e etc
+- fazer opcao para rotacionar FormasGeometricas (quando personagem fica maluco; obstaculos e inimigos: quanto rotacionar no infoAndar)
 - ORGANIZAR EXPLICACOES: COLOCAR NO GIT EXPLICACOES DO PAPEL (DEIXAR BONITINHA) + MUDAR NOME DOS ARQUIVOS DO PAINT E DEIXAR MAIS BONITINHO TAMBEM
-
-- Layout: parte de baixo da tela como se fosse o painel da espaco-nave
-
-- Sobre LISTA LIGADA: quando mais de um metodo usar a lista ao mesmo tempo ou quando um metodo esta percorrendo a lista e chama outro que tambem vai percorrer a lista o atual vai ficar maluco. PORTANTO, VERIFIQUE QUE NAO EH ISSO QUE ESTAH OCORRENDO
 - fazer Interseccao.vaiTerInterseccao(...) para Paralelogramos e Quadrilateros
 - fazer FormaGeometrica para circulo com interseccao e procedimento em Interseccao.
 - podemos saber se um ponto estah dentro de um quadrilatero (ou soh paralelogramo?) se estiver entre as retas de cima e de baixo e da direita e da esquerda (qual maneira eh mair rapida??)
-- programar centroMassa de quadrilatero (media de todos os vertices)
 
+Outros:
+- variaveis que sao guardadas separadamente e depois tem que juntar, guardar junto (ex: infoAndar). ps: fazer classe para infoAndar por exemplo
 - arrumar andar do personagem (quando jah tem duas teclas pressionadas quando uma terceira eh pressionada, o evento nao eh fired)
 - colocar som
 - quando objetos com vida perderem vida abaixar a vida gradativamente (mudarVida gradativamente)
 - quando um tiro colidir com obstaculos e inimigos guardar todos eles, e soh tirar da lista quando todos os inimigos e
 obstaculos andarem (mudar emQuemBateu, procCriou, _estadoTiroPosAndarEhPers)
-
-------------------------------------------------------------------------------------------------------------------------------
-
- EXPLICACAO: em cada level terá vários
-    .GRUPOS DE OBSTACULOS: todos obstáculos do grupo
-    (vetor de ControladorObstaculos no ControladorJogo)
-      -> será com ou sem vida
-      -> vão ficar parados, andar sempre com o msm qtdAndarX e qtdAndarY, inverter qtdAndarX e qtdAndarY para nao sair da tela ou
-        andam em direcao ao pers
-    .GRUPOS DE INIMIGOS: todos os inimigos do grupo
-    (vetor de ControladorInimigos no ControladorJogo)
-      -> vão ser essenciais ou não (os essenciais são aqueles que quando forem mortos o level acabará)
-      -> vão mostrar a vida sempre ou só quando forem atingidos
-      -> vão andar sempre com o msm qtdAndarX e qtdAndarY, inverter o qtdAndarX e qtdAndarY ao nao deixar sair da vidaNaTela [ou de outra forma]
-    .GRUPOS DE TIROS: todos os tiros do grupo
-    (vetor de ControladorTiros no ControladorJogo e nos Inimigos e Personagem)
-      -> serão do personagem ou nao
-      -> podem andar sempre a mesma coisa ou seguir o personagem
-    .GRUPO DE PODERES (ver IDEIAS.txt)
-    (classe Poder: metodo para colocar o poder na pratica, img,... e ControladorPoder: vai criar um poder "aleatorio" pra por na tela)
-      -> O poder vai ficar guardado ou vai ser usado logo que o usuario o pegar??
-      -> O poder vai ser pra smp ou temporario??
-  ps: Tudo, exceto o personagem, mudará a cada level
-
-
- EXPLICAÇÃO COLISÃO DE OBJETOS:
-    . tiros (se de pers: com obstáculos e inimigos, se não: com personagem). OK
-    . personagem (com tiros dos inimigos e normal, com inimigos e com obstáculos)
-      -> colidir com esses objetos normal (perPrinc.mudarXY(), mudar andar personagem no Script.js e ControladorJogo de acordo
-        com mudanca no PersonagemPrincipal, ControladorTiros.procedimentoPersComVidaAndar(),
-        adicionar em Inimigo: propriedade qtdTiraVidaPersQndIntersec (getter, construtor, mudar criar inimigo em ControladorJogo)
-        e metodo tirarVidaPersIntersec(pers)). OK
-      -> verificar isso no mudarWidth e mudarHeight para maior (quando for intersectar obstaculo, tirar vida de personagem e
-        "explodir" obstaculo; quando for inimigo tirar vida e fazer setTimeout; e quando for tiro bater e faze-los morrer)
-      -> com inimigos: timer que toda vez vê se ele ainda não se mexeu e está dentro do inimigo
-    . inimigos (com personagens, tiros do pers)
-      -> colisao normal
-      -> verificar isso no mudarWidth e mudarHeight tbm para maior (colidir tiro do pers e se intersec tirar vida de pers e fazer setTimeout)
-      -> com personagens: timer que toda vez vê se ele ainda não se mexeu e está dentro do inimigo
-    . obstáculos (com personagens e tiros do pers)
-      -> colisao normal (com tiro do pers faz tiro morrer e com pers faz ele andar: se nao da pra ele andar tudo,
-        ele leva um dano [proporcional?] e obstaculo "explode")
-      -> verificar isso no mudarWidth e mudarHeight tbm para maior (se for colidir com personagem, mudar (x,y) dele, se isso nao for
-        possivel tirar vida e "explodir" obstaculo)

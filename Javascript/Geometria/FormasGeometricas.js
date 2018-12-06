@@ -9,7 +9,7 @@ class FormaGeometrica
   // corImg: imagem ou {stroke: cor, fill: cor}
   {
     //se nao estah querendo soh a parte de backend (sem colocar na tela)
-    if (corImg != null)
+    if (corImg !== undefined)
     {
       this._corImg = {}; //para caso seja cor nao de erro
       this.corImg = corImg;
@@ -21,7 +21,7 @@ class FormaGeometrica
   { return this._corImg; }
   set corImg(corImg)
   {
-    this._ehCor = corImg.stroke != null;
+    this._ehCor = corImg.stroke !== undefined;
     if (this._ehCor)
     {
       //isso impossibilita que se o corImg for mudado aqui ou la fora o outro seja mudado tambem
@@ -45,7 +45,7 @@ class FormaGeometrica
   //arestas
   get arestas()
   {
-    if (this._arestas == null)
+    if (this._arestas === undefined)
     {
       this._arestas = new Array(this.vertices.length);
       //Ex: se tiver quatro lados (0 -> 1), (1 -> 2), (2 -> 3), (3 -> 0)
@@ -59,7 +59,7 @@ class FormaGeometrica
 
   get centroMassa()
   {
-    if (this._centroMassa == null)
+    if (this._centroMassa === undefined)
       this._centroMassa = new Ponto(this.x + this.width/2, this.y + this.height/2);
     return this._centroMassa;
   }
@@ -88,9 +88,9 @@ class FormaGeometrica
   //para clone
   colocarLugarEspecificado(x,y)
   {
-    if (x != null)
+    if (x !== undefined)
       this.x = x;
-    if (y != null)
+    if (y !== undefined)
       this.y = y;
   }
 }
@@ -131,15 +131,14 @@ class FormaGeometricaSimples extends FormaGeometrica
     this._x = x;
     this._y = y;
 
-    this._vertices = null;
-    this._arestas = null;
+    // this._vertices e this._arestas (nao precisa ocupar memoria agora)
   }
 
   get nLados()
   { return 4; }
   get vertices()
   {
-    if (this._vertices == null)
+    if (this._vertices === undefined)
     {
       this._vertices = new Array(4);
       this._vertices[0] = new Ponto(this._x, this._y);
@@ -153,22 +152,19 @@ class FormaGeometricaSimples extends FormaGeometrica
 
   _mudouArestasVerticesCentro()
   {
-    this._vertices = null;
-    this._arestas = null;
-    this._centroMassa = null;
+    delete this._vertices;
+    delete this._arestas;
+    delete this._centroMassa;
   }
   _mudouArestas()
-  { this._arestas = null; }
+  { delete this._arestas; }
   _mudouAngulosDirecoes()
-  {
-    this._ultimoAngDir = null;
-    //os outros gets ou sao fixos ou dependentes desse mais um valor fixo
-  }
+  { delete this._ultimoAngDir; /*os outros gets ou sao fixos ou dependentes desse mais um valor fixo*/ }
 
   //forma
   set x(x)
   {
-    if (this._x == x)
+    if (this._x === x)
       return;
     this._mudouArestasVerticesCentro();
     this._x = x;
@@ -177,15 +173,15 @@ class FormaGeometricaSimples extends FormaGeometrica
   { return this._x; }
   mudarX(qtdMuda) //retorna se aparece um pouco do objeto pelo menos (nos objetos que tem que ficar sempre dentro da tela, verifica-se se vai estar totalmente dentro antes de mudar X)
   {
-    if (qtdMuda != 0)
+    if (qtdMuda !== 0)
     {
       this._mudouArestas();
 
       this._x += qtdMuda;
-      if (this._vertices != null)
+      if (this._vertices !== undefined)
         for (let i = 0; i<this._vertices.length; i++)
           this._vertices[i].x += qtdMuda;
-      if (this._centroMassa != null)
+      if (this._centroMassa !== undefined)
         this._centroMassa.x += qtdMuda;
     }
 
@@ -194,7 +190,7 @@ class FormaGeometricaSimples extends FormaGeometrica
   }
   set y(y)
   {
-    if (this._y == y)
+    if (this._y === y)
       return;
     this._mudouArestasVerticesCentro();
     this._y = y;
@@ -203,15 +199,15 @@ class FormaGeometricaSimples extends FormaGeometrica
   { return this._y; }
   mudarY(qtdMuda) //retorna se aparece um pouco do objeto pelo menos (nos objetos que tem que ficar sempre dentro da tela, verifica-se se vai estar totalmente dentro antes de mudar Y)
   {
-    if (qtdMuda != 0)
+    if (qtdMuda !== 0)
     {
       this._mudouArestas();
 
       this._y += qtdMuda;
-      if (this._vertices != null)
+      if (this._vertices !== undefined)
         for (let i = 0; i<this._vertices.length; i++)
           this._vertices[i].y += qtdMuda;
-      if (this._centroMassa != null)
+      if (this._centroMassa !== undefined)
         this._centroMassa.y += qtdMuda;
     }
 
@@ -234,7 +230,7 @@ class FormaGeometricaSimples extends FormaGeometrica
   { return this.vertices[1]; }
   get ultimoAngDir()
   {
-    if (this._ultimoAngDir == null)
+    if (this._ultimoAngDir === undefined)
       this._ultimoAngDir = new Angulo(this.pontoAngInicial, this.centroMassa, this.vertices[2],
         Angulo.MAIOR_180_CIMA).valorGraus;
     return this._ultimoAngDir;
@@ -281,21 +277,18 @@ class Retangulo extends FormaGeometricaSimples
   //getters basicos
   get codForma()
   { return 2; }
-
-  //getters e setters tamanho
-  set width(width)
-  {
-    if (width != this._width)
-      this.mudarWidth(width - this._width);
-  }
   get width()
   { return this._width; }
+  get height()
+  { return this._height; }
+
+  //setters tamanho
   mudarWidth(qtdMuda)
   {
     if (qtdMuda - this._width < 0)
     //nao deixa width ficar negativo
       qtdMuda = -this._width;
-    if (qtdMuda == 0)
+    if (qtdMuda === 0)
       return this._width > 0;
 
     //aumenta ou diminui igual para os dois lados
@@ -306,19 +299,20 @@ class Retangulo extends FormaGeometricaSimples
     this._mudouAngulosDirecoes();
     return this._width > 0;
   }
-  set height(height)
+  set width(width)
   {
-    if (height != this._height)
-      this.mudarHeight(height - this._height);
+    if (width !== this._width)
+      this.mudarWidth(width - this._width);
   }
-  get height()
-  { return this._height; }
+  setWidthPorcentagem(porcentagem)
+  { this.width = porcentagem*this._width; }
+
   mudarHeight(qtdMuda)
   {
     if (qtdMuda - this._height < 0)
     //nao deixa height ficar negativo
       qtdMuda = -this._height;
-    if (qtdMuda == 0)
+    if (qtdMuda === 0)
       return this._height > 0;
 
     //aumenta ou diminui igual para os dois lados
@@ -329,6 +323,14 @@ class Retangulo extends FormaGeometricaSimples
     this._mudouAngulosDirecoes();
     return this._height > 0;
   }
+  set height(height)
+  {
+    if (height !== this._height)
+      this.mudarHeight(height - this._height);
+  }
+  setHeightPorcentagem(porcentagem)
+  { this.height = porcentagem*this._height; }
+
 
   //clone
   clone(x,y)
@@ -354,21 +356,20 @@ class Quadrado extends FormaGeometricaSimples
   //getters basicos
   get codForma()
   { return 1; }
-
-  //getters e setters tamanho
-  set tamanhoLado(tamLado)
-  {
-    if (this._tamLado != tamLado)
-      this.mudarTamanhoLado(tamLado - this._tamLado);
-  }
   get tamanhoLado()
   { return this._tamLado; }
+  get width()
+  { return this._tamLado; }
+  get height()
+  { return this._tamLado; }
+
+  //getters e setters tamanho
   mudarTamanhoLado(qtdMuda)
   {
     if (qtdMuda - this._tamLado < 0)
     //nao deixa tamanho lado ficar negativo
       qtdMuda = -this._tamLado;
-    if (qtdMuda == 0)
+    if (qtdMuda === 0)
       return this._tamLado > 0;
 
     //aumenta ou diminui igual para os dois lados
@@ -380,10 +381,13 @@ class Quadrado extends FormaGeometricaSimples
     this._mudouAngulosDirecoes();
     return this._tamLado > 0;
   }
-  get width()
-  { return this._tamLado; }
-  get height()
-  { return this._tamLado; }
+  set tamanhoLado(tamLado)
+  {
+    if (this._tamLado !== tamLado)
+      this.mudarTamanhoLado(tamLado - this._tamLado);
+  }
+  setTamanhoLadoPorcentagem(porcentagem)
+  { this.tamanhoLado = porcentagem*this._tamLado; }
 
   //clone
   clone(x,y)
@@ -406,20 +410,13 @@ class FormaGeometricaComplexa extends FormaGeometrica
     //forma
     this._a = a;
 
-    this._width = null;
-
-    this._maiorX = null;
-    this._menorX = null;
-    this._maiorY = null;
-
-    this._vertices = null;
-    this._arestas = null;
+    //outras variaveis que soh sao criadas se forem chamadas no get: this._width, this._maiorX, this._menorX, this._maiorY, this._vertices, this._arestas
   }
 
   _mudouArestasTriang()
   {
-    this._arestas = null;
-    this.__triangulos = null;
+    delete this._arestas;
+    delete this.__triangulos;
   }
 
   //forma
@@ -427,27 +424,25 @@ class FormaGeometricaComplexa extends FormaGeometrica
   { this.mudarX(novoX - this.x); }
   mudarX(qtdMuda) //muda todos os vertices
   {
-    if (qtdMuda != 0)
+    if (qtdMuda !== 0)
     {
-      let jahTemMaiorMenorXY = this._maiorX != null;
-
-      let maiorX = null;
-      let menorX = null;
-      let maiorY = null;
+      const jahTemMaiorMenorXY = this._maiorX !== undefined;
+      if (!jahTemMaiorMenorXY)
+        var maiorX=null, menorX=null, maiorY=null; //soh cria essas variaveis se for usa-las (tem que ser var para poder ser vista fora desse escopo)
 
       for (let i = 0; i<this.vertices.length; i++)
       {
-        this._mudarXYVertice(i, true, this.vertices[i].x + qtdMuda);
+        this._mudarXYVertice(i, true, this._vertices[i].x + qtdMuda);
         //mudar X do vertice (em {a,b,c,...} e no vetor)
 
         if (!jahTemMaiorMenorXY)
         {
-          if (menorX == null || this.vertices[i].x < menorX)
-            menorX = this.vertices[i].x;
-          if (maiorX == null || this.vertices[i].x > maiorX)
-            maiorX = this.vertices[i].x;
-          if (maiorY == null || this.vertices[i].y > maiorY)
-            maiorY = this.vertices[i].y;
+          if (menorX === null || this._vertices[i].x < menorX)
+            menorX = this._vertices[i].x;
+          if (maiorX === null || this._vertices[i].x > maiorX)
+            maiorX = this._vertices[i].x;
+          if (maiorY === null || this._vertices[i].y > maiorY)
+            maiorY = this._vertices[i].y;
         }
       }
 
@@ -463,7 +458,7 @@ class FormaGeometricaComplexa extends FormaGeometrica
         this._maiorY = maiorY;
       }
 
-      if (this._centroMassa != null)
+      if (this._centroMassa !== undefined)
         this._centroMassa.x += qtdMuda;
 
       this._mudouArestasTriang();
@@ -476,27 +471,25 @@ class FormaGeometricaComplexa extends FormaGeometrica
   { this.mudarY(novoY - this.y); }
   mudarY(qtdMuda) //muda todos os vertices
   {
-    if (qtdMuda != 0)
+    if (qtdMuda !== 0)
     {
-      let jahTemMaiorMenorXY = this._maiorY != null;
-
-      let maiorX = null;
-      let menorX = null;
-      let maiorY = null;
+      const jahTemMaiorMenorXY = this._maiorY !== undefined;
+      if (!jahTemMaiorMenorXY)
+        var maiorX=null, menorX=null, maiorY=null; //soh cria essas variaveis se for usa-las (tem que ser var para poder ser vista fora desse escopo)
 
       for (let i = 0; i<this.vertices.length; i++)
       {
-        this._mudarXYVertice(i, false, this.vertices[i].y + qtdMuda);
+        this._mudarXYVertice(i, false, this._vertices[i].y + qtdMuda);
         //mudar Y do vertice (em {a,b,c,...} e no vetor)
 
         if (!jahTemMaiorMenorXY)
         {
-          if (menorX == null || this.vertices[i].x < menorX)
-            menorX = this.vertices[i].x;
-          if (maiorX == null || this.vertices[i].x > maiorX)
-            maiorX = this.vertices[i].x;
-          if (maiorY == null || this.vertices[i].y > maiorY)
-            maiorY = this.vertices[i].y;
+          if (menorX === null || this._vertices[i].x < menorX)
+            menorX = this._vertices[i].x;
+          if (maiorX === null || this._vertices[i].x > maiorX)
+            maiorX = this._vertices[i].x;
+          if (maiorY === null || this._vertices[i].y > maiorY)
+            maiorY = this._vertices[i].y;
         }
       }
 
@@ -511,7 +504,7 @@ class FormaGeometricaComplexa extends FormaGeometrica
         this._maiorY = maiorY;
       }
 
-      if (this._centroMassa != null)
+      if (this._centroMassa !== undefined)
         this._centroMassa.y += qtdMuda;
 
       this._mudouArestasTriang();
@@ -537,17 +530,17 @@ class FormaGeometricaComplexa extends FormaGeometrica
   _pegarMenorMaiorXY()
   {
     let maiorX = this.vertices[0].x;
-    let menorX = this.vertices[0].x;
-    let maiorY = this.vertices[0].y;
+    let menorX = this._vertices[0].x;
+    let maiorY = this._vertices[0].y;
 
-    for (let i = 1; i<this.vertices.length; i++)
+    for (let i = 1; i<this._vertices.length; i++)
     {
-      if (this.vertices[i].x < menorX)
-        menorX = this.vertices[i].x;
-      if (this.vertices[i].x > maiorX)
-        maiorX = this.vertices[i].x;
-      if (this.vertices[i].y > maiorY)
-        maiorY = this.vertices[i].y;
+      if (this._vertices[i].x < menorX)
+        menorX = this._vertices[i].x;
+      if (this._vertices[i].x > maiorX)
+        maiorX = this._vertices[i].x;
+      if (this._vertices[i].y > maiorY)
+        maiorY = this._vertices[i].y;
     }
 
     this._maiorX = maiorX;
@@ -556,13 +549,13 @@ class FormaGeometricaComplexa extends FormaGeometrica
   }
   get menorX()
   {
-    if (this._menorX == null)
+    if (this._menorX === undefined)
       this._pegarMenorMaiorXY();
     return this._menorX;
   }
   get maiorX()
   {
-    if (this._maiorX == null)
+    if (this._maiorX === undefined)
       this._pegarMenorMaiorXY();
     return this._maiorX;
   }
@@ -570,7 +563,7 @@ class FormaGeometricaComplexa extends FormaGeometrica
   { return this._a.y; }
   get maiorY()
   {
-    if (this._maiorY == null)
+    if (this._maiorY === undefined)
       this._pegarMenorMaiorXY();
     return this._maiorY;
   }
@@ -589,12 +582,12 @@ class FormaGeometricaComplexa extends FormaGeometrica
   get vertices()
   //primeiro vertice mais alto (menor Y) depois em sentido horario
   {
-    if (this._vertices == null)
+    if (this._vertices === undefined)
     {
       this._vertices = new Array(this.nLados);
       for (let i = 0; i<this._vertices.length; i++)
       {
-        let vert = null;
+        let vert;
         switch (i)
         {
           case 0: vert = this._a; break;
@@ -640,7 +633,7 @@ class FormaGeometricaComplexa extends FormaGeometrica
       // Para novas figuras complexas: ...
     }
 
-    if (this._vertices != null)
+    if (this._vertices !== undefined)
     {
       if (ehX)
         this._vertices[i].x = novoValor;
@@ -667,20 +660,20 @@ class FormaGeometricaComplexa extends FormaGeometrica
       // Para novas figuras complexas: ...
     }
 
-    if (this._vertices != null)
+    if (this._vertices !== undefined)
       this._vertices[i] = novoValor;
   }
 
   //triangulos
   get _triangulos()
   {
-    if (this.__triangulos == null)
+    if (this.__triangulos === undefined)
     {
       this.__triangulos = new Array(this.nLados - 2);
       //colocar vertices na ordem certa!!
       for (let i = 0; i<this.__triangulos.length; i++)
       {
-        let triang = null;
+        let triang;
         switch (i)
         {
           case 0: triang = new Triangulo(this._a, this._b, this._c); break;
@@ -732,7 +725,7 @@ class FormaGeometricaComplexa extends FormaGeometrica
   {
     // verificar se a semirreta intersecta com alguma aresta do this
     for (let i = 0; i<this.arestas.length; i++)
-      if (semirreta.interseccao(this.arestas[i]))
+      if (semirreta.interseccao(this._arestas[i]))
         return true;
     return false;
   }
@@ -747,15 +740,12 @@ class FormaGeometricaComplexa extends FormaGeometrica
       this._mudarVertice(i, vertices[i]);
 
     this._mudouArestasTriang();
-    if (this._centroMassa != null)
-      this._centroMassa = null;
+    if (this._centroMassa !== undefined)
+      delete this._centroMassa;
   }
-  _organizarVertices(menorPrimeiro)
+  _organizarVertices(menorPrimeiro = true)
   // se menorPrimeiro, primeiro os mais de cima
   {
-    if (menorPrimeiro == null)
-      menorPrimeiro = true;
-
     // descobrir qual eh o vertice mais alto da esqueda (o menor)
     //e colocar os outros nesse vetor
     let infoOutrosVert = new Array(this.nLados-1); // vetor de {vert: , angulo: "valor"}
@@ -764,34 +754,24 @@ class FormaGeometricaComplexa extends FormaGeometrica
     let qtdNaoNulos = 0;
 
     //vai definir se vai pegar o maior ou o menor
-    let mult;
-    let tipoAngulo;
-    if (menorPrimeiro)
+    let mult = menorPrimeiro?1:-1;
+    let tipoAngulo = menorPrimeiro?Angulo.MAIOR_180_CIMA:Angulo.MAIOR_180_BAIXO;
+    for (let i = 0; i < this.vertices.length; i++) //ao chamar this.vertices.length ele faz o vetor _vertices ser montado
     {
-      mult = 1;
-      tipoAngulo = Angulo.MAIOR_180_CIMA;
-    }else
-    {
-      mult = -1;
-      tipoAngulo = Angulo.MAIOR_180_BAIXO;
-    }
-    for (let i = 0; i < this.vertices.length; i++)
-    {
-      if (primeiroPonto == null)
+      if (primeiroPonto === null)
         primeiroPonto = this._vertices[i];
       else
       {
-        if (this._vertices[i] != null && (primeiroPonto == null
-          || this._vertices[i].compareTo(primeiroPonto)*mult < 0))
-          //ps: pode ter vertices nulos
+        if (this._vertices[i] !== undefined && this._vertices[i].compareTo(primeiroPonto)*mult < 0)
+        //ps: pode ter vertices "nulos"
         {
-          infoOutrosVert[i-1] = {vert: primeiroPonto, angulo: null};
+          infoOutrosVert[i-1] = {vert: primeiroPonto}; //vai ter .angulo tambem
           primeiroPonto = this._vertices[i];
         }else
-          infoOutrosVert[i-1] = {vert: this._vertices[i], angulo: null};
+          infoOutrosVert[i-1] = {vert: this._vertices[i]}; //vai ter .angulo tambem
       }
 
-      if (this._vertices[i] != null)
+      if (this._vertices[i] !== undefined)
       {
         soma = soma.mais(this._vertices[i]);
         qtdNaoNulos++;
@@ -811,7 +791,7 @@ class FormaGeometricaComplexa extends FormaGeometrica
 
     //colocar os angulos no vetor
     for (let i = 0; i<infoOutrosVert.length; i++)
-      if (infoOutrosVert[i].vert != null)
+      if (infoOutrosVert[i].vert !== undefined)
         infoOutrosVert[i].angulo = new Angulo(primeiroPonto, pontoCentral,
           infoOutrosVert[i].vert, tipoAngulo).valorRad;
 
@@ -819,11 +799,9 @@ class FormaGeometricaComplexa extends FormaGeometrica
     this._ordenarOutrosVert(infoOutrosVert);
 
     let ret = new Array(infoOutrosVert.length+1);
-    for (let i = 0; i<ret.length; i++)
-      if (i == 0)
-        ret[i] = primeiroPonto;
-      else
-        ret[i] = infoOutrosVert[i-1].vert;
+    ret[0] = primeiroPonto;
+    for (let i = 1; i<ret.length; i++)
+      ret[i] = infoOutrosVert[i-1].vert;
     return ret;
   }
   _ordenarOutrosVert(infoOutrosVert)
@@ -833,15 +811,15 @@ class FormaGeometricaComplexa extends FormaGeometrica
     {
       let oMenor = lento;
       for (let rapido = lento+1; rapido < infoOutrosVert.length; rapido++)
-        if (infoOutrosVert[rapido].angulo != null && (infoOutrosVert[oMenor].angulo == null
+        if (infoOutrosVert[rapido].angulo !== undefined && (infoOutrosVert[oMenor].angulo === undefined
           || infoOutrosVert[rapido].angulo < infoOutrosVert[oMenor].angulo))
         //os nulos por ultimo
            oMenor = rapido;
 
-      if (oMenor != lento)
+      if (oMenor !== lento)
       {
         //trocar lento com oMenor
-        let aux = infoOutrosVert[lento];
+        const aux = infoOutrosVert[lento];
         infoOutrosVert[lento] = infoOutrosVert[oMenor];
         infoOutrosVert[oMenor] = aux;
       }
@@ -899,25 +877,23 @@ class Quadrilatero extends FormaGeometricaComplexa
 class Paralelogramo extends Quadrilatero
 {
   //PRIMEIRO VERTICE SENDO O MAIS ALTO (COM MENOS Y) E O RESTO EM SENTIDO HORARIO
-  constructor(a, b, c, d, corImg, colocarVerticesOrdemCorreta)
+  constructor(a, b, c, d, corImg, colocarVerticesOrdemCorreta = false)
   {
     super(a, b, c, d, corImg);
-    if (colocarVerticesOrdemCorreta == null)
-      colocarVerticesOrdemCorreta = false;
     if (colocarVerticesOrdemCorreta)
       this.colocarVerticesOrdemCorreta();
       //os nulos serao os ultimos
 
     //verificar se sao pontos de um quadrilatero
-    let pontoDCerto = this._a.mais(this._c.menos(this._b));
-    if (this._d == null)
+    const pontoDCerto = this._a.mais(this._c.menos(this._b));
+    if (this._d === undefined)
     {
       this._d = pontoDCerto;
 
       //se o novo D estah mais pra cima e esquerda que A, D deve se tornar A, A -> B,...
-      if (this._d.y < this._a.y || (this._d.y == this._a.y && this._d.x < this._a.x))
+      if (this._d.y < this._a.y || (this._d.y === this._a.y && this._d.x < this._a.x))
       {
-        let auxD = this._d;
+        const auxD = this._d;
         this._d = this._c;
         this._c = this._b;
         this._b = this._a;
@@ -927,7 +903,7 @@ class Paralelogramo extends Quadrilatero
     else
     if (!pontoDCerto.equals(this._d, false)) //quase exato (em javascript ha um problema de exatidao nas contas)
     {
-      console.log(this._d.toString() + " != " + pontoDCerto.toString());
+      console.log(this._d.toString() + " !== " + pontoDCerto.toString());
       throw "Esses pontos não formam um paralelogramo!";
     }
   }
@@ -955,7 +931,7 @@ class Triangulo extends FormaGeometricaComplexa
     this._b = b;
     this._c = c;
 
-    this._area = null;
+    //this._area
   }
 
   //getters basicos
@@ -967,26 +943,26 @@ class Triangulo extends FormaGeometricaComplexa
   //contrVertices: [0]: o mais baixo, [1] e [2] os proximos em sentido horario
   get contrVertices()
   {
-    if (this._contrVertices == null)
+    if (this._contrVertices === undefined)
       this._contrVertices = this._organizarVertices(false);
     return this._contrVertices;
   }
 
 	pontoEstahDentro(p)
 	{
-		let areaTriangulo = this.area;
+		const areaTriangulo = this.area;
 
-		let triang1 = new Triangulo(p, this._a, this._b);
-		let triang2 = new Triangulo(p, this._b, this._c);
-		let triang3 = new Triangulo(p, this._a, this._c);
+		const triang1 = new Triangulo(p, this._a, this._b);
+		const triang2 = new Triangulo(p, this._b, this._c);
+		const triang3 = new Triangulo(p, this._a, this._c);
 
-    return triang1.area + triang2.area + triang3.area == areaTriangulo;
+    return triang1.area + triang2.area + triang3.area === areaTriangulo;
 	}
 
 	get area()
   //para este metodo nao interessa a ordem de {a,b,c}
 	{
-		if (this._area == null)
+		if (this._area === undefined)
 			this._area = Math.abs((this._a.x*(this._b.y - this._c.y) + this._b.x*(this._c.y - this._a.y)
 			+ this._c.x*(this._a.y - this._b.y))/2);
 		return this._area;
@@ -994,7 +970,7 @@ class Triangulo extends FormaGeometricaComplexa
 
   get centroMassa()
   {
-    if (this._centroMassa == null)
+    if (this._centroMassa === undefined)
       //formula baricentro triangulo a partir dos vertices:
       this._centroMassa = new Ponto((this._a.x + this._b.x + this._c.x)/3, (this._a.y + this._b.y + this._c.y)/3);
     return this._centroMassa;

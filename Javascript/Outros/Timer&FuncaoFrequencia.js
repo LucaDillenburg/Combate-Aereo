@@ -17,24 +17,33 @@ class Timer
     this._count = -1;
     this.procDraw();
 
-    this._infoMudarTempo = infoMudarTempo;
-    if (this._infoMudarTempo != null)
-    //seta valor inicial do tempo (tempo total)
-      this._infoMudarTempo[this._infoMudarTempo.atr] = tempoOuFreq / (ehFreq?frameRatePadrao:1);
+    if (infoMudarTempo !== undefined)
+    {
+      this._infoMudarTempo = infoMudarTempo;
+      //seta valor inicial do tempo (tempo total)
+      this._infoMudarTempo.obj[this._infoMudarTempo.atr] = tempoOuFreq / (ehFreq?frameRatePadrao:1);
+    }
 
     //jah adiciona o timer
     ConjuntoTimers.adicionarTimer(this);
 
     this._codTimer = ConjuntoTimers.proximoCodTimer;
+
+    //variavel de controle para quando parar:
+    this._continuar = true;
   }
 
   get codTimer() { return this._codTimer; }
 
+  parar() { this._continuar = false; }
+
   procDraw() //retorna se vai continuar na lista
   {
+    if (!this._continuar) return false;
+
     this._count++;
 
-    if (this._infoMudarTempo != null)
+    if (this._infoMudarTempo !== undefined)
     //atualiza a variavel de tempo do objeto
       this._infoMudarTempo.obj[this._infoMudarTempo.atr] -= frameRatePadrao / (this._infoMudarTempo.estahEmMiliseg?1:1000);
                             //isso acessa a variavel de nome this._infoMudarTempo.atr
@@ -70,8 +79,11 @@ class ConjuntoTimers
   static removeTimer(codTimerRemover)
   {
     for (ConjuntoTimers._timers.colocarAtualComeco(); !ConjuntoTimers._timers.atualEhNulo; ConjuntoTimers._timers.andarAtual())
-      if (ConjuntoTimers._timers.atual.codTimer == codTimerRemover) //se o no atual eh oq se quer remover
+      if (ConjuntoTimers._timers.atual.codTimer === codTimerRemover) //se o no atual eh oq se quer remover
+      {
         ConjuntoTimers._timers.removerAtual();
+        break;
+      }
   }
 
   //metodos
@@ -80,11 +92,14 @@ class ConjuntoTimers
   static procDraws()
   {
     for (ConjuntoTimers._timers.colocarAtualComeco(); !ConjuntoTimers._timers.atualEhNulo; ConjuntoTimers._timers.andarAtual())
-      if (!ConjuntoTimers._timers.atual.procDraw())
+    {
+      const continuaNaLista = ConjuntoTimers._timers.atual.procDraw();
+      if (!continuaNaLista)
         ConjuntoTimers._timers.removerAtual();
+    }
   }
 
-  static personagemMorreu()
+  static esvaziarTimers()
   { ConjuntoTimers._timers.esvaziar(); }
 }
 ConjuntoTimers.inicializar();
@@ -93,14 +108,11 @@ ConjuntoTimers.inicializar();
 //FUNCAO DEPOIS DE DETERMINADA CONTAGEM
 class FreqFunction //se for soh uma vez ou varias (se for soh uma vez, deixar classe como null depois que ele fizer a funcao)
 {
-  constructor(funcao, freq, indexAtual) //se indexAtual for null, serah zero; e se for true, sera o ultimo
+  constructor(funcao, freq, indexAtual = 0) //se indexAtual for null, serah zero; e se for true, sera o ultimo
   {
     this._funcao = funcao;
     this._freq = freq;
 
-    if (indexAtual == null)
-      this._count = -1;
-    else
     if (indexAtual === true)
       this._count = freq-1;
     else
@@ -121,9 +133,3 @@ class FreqFunction //se for soh uma vez ou varias (se for soh uma vez, deixar cl
       return false;
   }
 }
-
-
-//NULO
-// nulo proposital
-class Nulo
-{ constructor() {} }

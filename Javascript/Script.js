@@ -31,18 +31,18 @@ function draw()
 //ANDAR
   //direcao X
   let direcaoX = null;
-  if (keys["ArrowRight"] == on)
+  if (keys["ArrowRight"] === on)
     direcaoX = Direcao.Direita;
   else
-  if(keys["ArrowLeft"] == on)
+  if(keys["ArrowLeft"] === on)
     direcaoX = Direcao.Esquerda;
 
   //direcao Y
   let direcaoY = null;
-  if (keys["ArrowUp"] == on)
+  if (keys["ArrowUp"] === on)
     direcaoY = Direcao.Cima;
   else
-  if(keys["ArrowDown"] == on)
+  if(keys["ArrowDown"] === on)
     direcaoY = Direcao.Baixo;
 
   controladorJogo.andarPers(direcaoX, direcaoY);
@@ -66,33 +66,33 @@ function keyDown(event)
 {
   if (event.repeat) return;
 
-  if (controladorJogo.estadoJogo == EstadoJogo.NaoComecou)
+  if (controladorJogo.estadoJogo === EstadoJogo.NaoComecou)
   {
-    if (event.key == "Escape")
+    if (event.key === "Escape")
     {
       alert("Começar o Jogo!");
       controladorJogo.comecarJogo();
     }
   }else
   {
-    if (event.key == "Enter") //pausar
+    if (event.key === "Enter") //pausar
       controladorJogo.mudarPausado();
     else
-    if (event.key == "q" || event.key == "Q") //poder
-      controladorJogo.ativarPoderPers();
+    if (event.key === "q" || event.key === "Q") //pocao
+      controladorJogo.ativarPocaoPers();
     else
 
     //direcao tiro pers (verifica se personagem jah estah com nave especial)
-    if (event.key == "w" || event.key == "W") //para cima
+    if (event.key === "w" || event.key === "W") //para cima
       controladorJogo.mudarDirecaoTiroSaiPers(Direcao.Cima);
     else
-    if (event.key == "d" || event.key == "D") //para direita
+    if (event.key === "d" || event.key === "D") //para direita
       controladorJogo.mudarDirecaoTiroSaiPers(Direcao.Direita);
     else
-    if (event.key == "s" || event.key == "S") //para baixo
+    if (event.key === "s" || event.key === "S") //para baixo
       controladorJogo.mudarDirecaoTiroSaiPers(Direcao.Baixo);
     else
-    if (event.key == "a" || event.key == "A") //para esquerda
+    if (event.key === "a" || event.key === "A") //para esquerda
       controladorJogo.mudarDirecaoTiroSaiPers(Direcao.Esquerda);
 
     else
@@ -102,11 +102,11 @@ function keyDown(event)
 }
 function acionarKey(key)
 {
-  if (!ehKeyValida(key) || keys[key] == on)// || (key==" " && keys[" "])) atirar automatico
+  if (!ehKeyValida(key) || keys[key] === on)// || (ke ===  " && keys[" "])) atirar automatico
     return;
 
   /*atirar automatico
-  if (key == " ") //espaco
+  if (key === " ") //espaco
     keys[" "] = true;
   else */
   {
@@ -119,19 +119,19 @@ function acionarKey(key)
         case "ArrowRight":
         //Explicacao: se clicou na setinha da direita, o da esquerda eh desativado
         // (porem deixa-se o em OPTION se o da direita for desapertado, o da esquerda fica ON de novo)
-          if (keys["ArrowLeft"] == on)
+          if (keys["ArrowLeft"] === on)
             keys["ArrowLeft"] = option;
           break;
         case "ArrowLeft":
-          if (keys["ArrowRight"] == on)
+          if (keys["ArrowRight"] === on)
             keys["ArrowRight"] = option;
           break;
         case "ArrowUp":
-          if (keys["ArrowDown"] == on)
+          if (keys["ArrowDown"] === on)
             keys["ArrowDown"] = option;
           break;
         case "ArrowDown":
-          if (keys["ArrowUp"] == on)
+          if (keys["ArrowUp"] === on)
             keys["ArrowUp"] = option;
           break;
     }
@@ -140,7 +140,7 @@ function acionarKey(key)
 function ehKeyValida(key)
 {
   //keys validas: setinhas e espaco (Enter eh tratado em outro lugar)
-  return key == "ArrowLeft" || key == "ArrowUp" || key == "ArrowRight" || key == "ArrowDown";// || key == " "; atirar automatico
+  return key === "ArrowLeft" || key === "ArrowUp" || key === "ArrowRight" || key === "ArrowDown";// || key === " "; atirar automatico
 }
 function keyUp(event)
 {
@@ -152,7 +152,7 @@ function keyUp(event)
 }
 function desacionarKey(key)
 {
-  if (key == " ")
+  if (key === " ")
     keys[" "] = false;
   else
   {
@@ -164,19 +164,19 @@ function desacionarKey(key)
         case "ArrowRight":
         //Explicacao: se desapertou clicou na setinha da direita, o da esquerda eh desativado
         // (porem deixa-se o em OPTION se o da direita for desapertado, o da esquerda fica ON de novo)
-          if (keys["ArrowLeft"] == option)
+          if (keys["ArrowLeft"] === option)
             keys["ArrowLeft"] = on;
           break;
         case "ArrowLeft":
-          if (keys["ArrowRight"] == option)
+          if (keys["ArrowRight"] === option)
             keys["ArrowRight"] = on;
           break;
         case "ArrowUp":
-          if (keys["ArrowDown"] == option)
+          if (keys["ArrowDown"] === option)
             keys["ArrowDown"] = on;
           break;
         case "ArrowDown":
-          if (keys["ArrowUp"] == option)
+          if (keys["ArrowUp"] === option)
             keys["ArrowUp"] = on;
           break;
     }

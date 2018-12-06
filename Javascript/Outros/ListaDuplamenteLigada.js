@@ -13,18 +13,18 @@ class ListaDuplamenteLigada
   //getters
   get primeiroElemento()
   {
-    if (this._prim == null)
+    if (this._prim === null)
       throw "Nao ha elementos! - em get primeiroElemento";
     return this._prim.info;
   }
   get ultimoElemento()
   {
-    if (this._ultimo == null)
+    if (this._ultimo === null)
       throw "Nao ha elementos! - em get ultimoElemento";
     return this._ultimo.info;
   }
   get vazia()
-  { return this._prim == null; }
+  { return this._prim === null; }
   get qtdElem()
   { return this._qtdElem; }
 
@@ -33,7 +33,7 @@ class ListaDuplamenteLigada
   {
     this._prim = new _No(null, info, this._prim);
 
-    if (this._ultimo == null)
+    if (this._ultimo === null)
       this._ultimo = this._prim;
 
     this._qtdElem++;
@@ -42,7 +42,7 @@ class ListaDuplamenteLigada
   {
     this._ultimo = new _No(this._ultimo, info, null);
 
-    if (this._prim == null)
+    if (this._prim === null)
       this._prim = this._ultimo;
 
     this._qtdElem++;
@@ -51,23 +51,23 @@ class ListaDuplamenteLigada
   //tirar do final
   removerDoComeco()
   {
-    if (this._prim == null)
+    if (this._prim === null)
       throw "Nao ha elementos!";
 
     this._prim = this._prim.prox;
 
-    if (this._prim == null)
+    if (this._prim === null)
       this._ultimo = null;
     else
       this._prim.ant = null;
   }
   removerDoFinal()
   {
-    if (this._ultimo == null)
+    if (this._ultimo === null)
       throw "Nao ha elementos!";
 
     this._ultimo = this._ultimo.ant;
-    if (this._ultimo == null)
+    if (this._ultimo === null)
       this._prim = null;
     else
       this._ultimo.prox = null;
@@ -93,20 +93,20 @@ class ListaDuplamenteLigada
   }
   andarAtual()
   {
-    if (this._atual == null)
+    if (this._atual === null)
       throw "Atual eh nulo!";
     this._atual = this._atual.prox;
   }
   atualEstahNoFinal()
-  { return this._atual == this._ultimo; }
+  { return this._atual === this._ultimo; }
   get atual()
   {
-    if (this._atual == null)
+    if (this._atual === null)
       throw "Atual eh nulo!";
     return this._atual.info;
   }
   get atualEhNulo()
-  { return this._atual == null; }
+  { return this._atual === null; }
 
   guardarAtual()
   { this._atualGuardado = this._atual; }
@@ -116,13 +116,13 @@ class ListaDuplamenteLigada
   //metodos com atual (remover)
   removerAtual()
   {
-    if (this._atual == null)
+    if (this._atual === null)
       throw "Atual eh nulo!";
 
-    if (this._atual.ant == null)
+    if (this._atual.ant === null)
     {
         this._prim = this._atual.prox;
-        if (this._prim == null)
+        if (this._prim === null)
           this._ultimo = null;
     }else
       this._atual.ant.prox = this._atual.prox;
@@ -134,7 +134,7 @@ class ListaDuplamenteLigada
   //outros
   concatenar(outraLista)
   {
-    if (this.prim == null)
+    if (this._prim === null)
     //se this eh uma lista vazia, a primeira e ultima posicao dessa lista vai ser a do outro
     //(sendo a outra vazia ou nao)
     {
@@ -142,7 +142,7 @@ class ListaDuplamenteLigada
       this._ultimo = outraLista._ultimo;
     }
     else
-    if (outraLista._ultimo != null)
+    if (outraLista._ultimo !== null)
     //se this nao for vazia e nem a outra lista
     {
       outraLista._prim.ant = this._ultimo;
@@ -160,7 +160,7 @@ class ListaDuplamenteLigada
   {
     let atual = this._prim;
     let string = "";
-    while(atual != null)
+    while(atual !== null)
     {
       string += atual.info + " -> ";
       atual = atual.prox;
@@ -174,7 +174,7 @@ class _No
 {
   constructor(ant, info, prox)
   {
-    this._ant = ant;
+    this.ant = ant;
     this._info = info;
     this.prox = prox;
   }
@@ -182,7 +182,13 @@ class _No
   get ant()
   { return this._ant; }
   set ant(ant)
-  { this._ant = ant; }
+  {
+    this._ant = ant;
+
+    //jah coloca o anterior apontando para o proximo
+    if (ant !== null)
+      ant._prox = this;
+  }
 
   get info()
   { return this._info; }
@@ -196,7 +202,7 @@ class _No
     this._prox = prox;
 
     //jah coloca o proximo apontando para o anterior
-    if (prox != null)
+    if (prox !== null)
       prox._ant = this;
   }
 }

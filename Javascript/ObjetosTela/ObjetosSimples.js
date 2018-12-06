@@ -99,28 +99,28 @@ class Tiro extends ObjetoTela
     {
       //colidir
       this.tirarVidaObjCmVida(ConjuntoObjetosTela.pers);
-      this.morreu(Tiro.COLIDIU_COM_PERSONAGEM);
+      this.morreu(TipoObjetos.Personagem);
     }
 
     let quemBateu = null;
     //verificar colisao com obstaculos
     for (let i = 0; i<ConjuntoObjetosTela.controladoresObstaculos.length; i++)
     {
-      let colidiu = ConjuntoObjetosTela.controladoresObstaculos[i].procColidirTiroCriadoTodosObst(this);
-      if (colidiu && quemBateu == null)
-        quemBateu = {quemAndou: Tiro.COLIDIU_COM_OBSTACULO, indexAndou: i};
+      const colidiu = ConjuntoObjetosTela.controladoresObstaculos[i].procColidirTiroCriadoTodosObst(this);
+      if (colidiu && quemBateu === null)
+        quemBateu = {quemAndou: TipoObjetos.Obstaculo, indexAndou: i};
     }
 
     if (this._ehDoPers)
     // soh os tiros do personagem verificam colisao com inimigos
       for (let i = 0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
       {
-        let colidiu = ConjuntoObjetosTela.controladoresInimigos[i].procColidirTiroCriadoTodosInim(this, i);
-        if (colidiu && quemBateu == null)
-          quemBateu = {quemAndou: Tiro.COLIDIU_COM_INIMIGO, indexAndou: i};
+        const colidiu = ConjuntoObjetosTela.controladoresInimigos[i].procColidirTiroCriadoTodosInim(this, i);
+        if (colidiu && quemBateu === null)
+          quemBateu = {quemAndou: TipoObjetos.Inimigo, indexAndou: i};
       }
 
-    if (quemBateu != null)
+    if (quemBateu !== null)
       this.morreu(quemBateu.quemAndou, quemBateu.indexAndou);
   }
 
@@ -128,8 +128,8 @@ class Tiro extends ObjetoTela
   _seEhImpossivelExcep(tipo)
   {
     //se eh para andar atras do personagem e o tiro eh do proprio personagem, da erro
-    if ((this._ehDoPers && (tipo == TipoAndar.SeguirPers || tipo == TipoAndar.DirecaoPers)) ||
-      (!this._ehDoPers && (tipo == TipoAndar.SeguirInimMaisProx || tipo == TipoAndar.DirecaoInimMaisProx)))
+    if ((this._ehDoPers && (tipo === TipoAndar.SeguirPers || tipo === TipoAndar.DirecaoPers)) ||
+      (!this._ehDoPers && (tipo === TipoAndar.SeguirInimMaisProx || tipo === TipoAndar.DirecaoInimMaisProx)))
         throw "Tipo andar ou ehDoPers nao combinam!";
   }
   setTipoAndar(tipo)
@@ -139,7 +139,7 @@ class Tiro extends ObjetoTela
   }
 
   inverterDono()
-  //inverte dono (soh para poder)
+  //inverte dono (soh para pocao)
   { this._ehDoPers = !this._ehDoPers; }
 
   get mortalidade()
@@ -156,16 +156,10 @@ class Tiro extends ObjetoTela
 
   get vivo()
   { return this._vivo; }
-  static get COLIDIU_COM_PERSONAGEM()
-  { return 1; }
-  static get COLIDIU_COM_INIMIGO()
-  { return 2; }
-  static get COLIDIU_COM_OBSTACULO()
-  { return 3; }
   morreu(quem, index)
   {
-    if ((this._ehDoPers && quem == Tiro.COLIDIU_COM_PERSONAGEM) ||
-        (!this.ehDoPers && quem == Tiro.COLIDIU_COM_INIMIGO))
+    if ((this._ehDoPers && quem === TipoObjetos.Personagem) ||
+        (!this._ehDoPers && quem === TipoObjetos.Inimigo))
         throw "ehDoPers e com quem colidiu nao coincidem!";
 
     this._emQuemBateu = {index: index, quem: quem};
@@ -176,10 +170,9 @@ class Tiro extends ObjetoTela
   }
   ehQuemBateu(quemAndou, indexAndou)
   {
-    //if (this._emQuemBateu == null) return false; acho que nao precisa
-    if (this._emQuemBateu.quem == Tiro.COLIDIU_COM_PERSONAGEM)
-      return this._emQuemBateu.quem == quemAndou;
-    return this._emQuemBateu.quem == quemAndou && this._emQuemBateu.index == indexAndou;
+    if (this._emQuemBateu.quem === TipoObjetos.Personagem)
+      return this._emQuemBateu.quem === quemAndou;
+    return this._emQuemBateu.quem === quemAndou && this._emQuemBateu.index === indexAndou;
   }
 
   //andar
@@ -187,7 +180,7 @@ class Tiro extends ObjetoTela
   //retorna se continua na lista ou nao
   {
     //se tiro estah seguindo um ObjTela que jah morreu, continuar andando normal
-    let qtdAndar = this._classeAndar.procAndar(this._formaGeometrica);
+    const qtdAndar = this._classeAndar.procAndar(this._formaGeometrica);
 
     //info: menorHipotenusa, listaBateu, menorWidth, menorHeight, qtdPodeAndarX, qtdPodeAndarY, qtdAndarXPadrao, qtdAndarYPadrao
     let info = {
@@ -201,38 +194,36 @@ class Tiro extends ObjetoTela
       qtdAndarYPadrao: qtdAndar.y //nunca vai ser mudado
     };
 
-    let emQuemBateu = {quem: null, index: -1};
-    let qtd = ConjuntoObjetosTela.controladoresObstaculos.length + ((this._ehDoPers)?ConjuntoObjetosTela.controladoresInimigos.length:0);
-    let tiroPersAndou = this._ehDoPers;
+    let emQuemBateu = {}; //quem e index
+    const qtd = ConjuntoObjetosTela.controladoresObstaculos.length + ((this._ehDoPers)?ConjuntoObjetosTela.controladoresInimigos.length:0);
+    const tiroPersAndou = this._ehDoPers;
     //passa por todos obstaculos (e inimigos se for tiro do personagem)
     for(let i = 0; i < qtd; i++)
     {
       let inseriu;
       if (i < ConjuntoObjetosTela.controladoresObstaculos.length)
       //primeiro controlador de obstaculos
-        inseriu = ConjuntoObjetosTela.controladoresObstaculos[i].verificarColidirComTiro(info, this, tiroPersAndou);
+        inseriu = ConjuntoObjetosTela.controladoresObstaculos[i].verifColidirTiroPersTodosObst(info, this, tiroPersAndou);
       else
       //depois de inimigos (soh tiros do pesonagem)
         inseriu = ConjuntoObjetosTela.controladoresInimigos[i-ConjuntoObjetosTela.controladoresObstaculos.length].
-          verificarColidirComTiro(info, this, true);
+          verifColidirTiroPersTodosInim(info, this, true);
       //ateh aqui ele vai passar por todos os controladores
 
       if (inseriu)
       {
         if (i < ConjuntoObjetosTela.controladoresObstaculos.length)
         {
-          emQuemBateu.quem = Tiro.COLIDIU_COM_OBSTACULO;
+          emQuemBateu.quem = TipoObjetos.Obstaculo;
           emQuemBateu.index = i;
         }
         else
         {
-          emQuemBateu.quem = Tiro.COLIDIU_COM_INIMIGO;
+          emQuemBateu.quem = TipoObjetos.Inimigo;
           emQuemBateu.index = i - ConjuntoObjetosTela.controladoresObstaculos.length;
         }
       }
     }
-
-    //colidiu = emQuemBateu == null;
 
     if (this._ehDoPers)
       return this._andarEhPers(info, emQuemBateu, qtdAndar.x, qtdAndar.y);
@@ -241,10 +232,10 @@ class Tiro extends ObjetoTela
   }
   _andarEhPers(info, emQuemBateu, qtdAndarX, qtdAndarY)
   {
-    if (emQuemBateu.quem != null) //se colidiu
+    if (emQuemBateu.quem !== undefined) //se colidiu
     {
       //andar propriamente dito (se colidiu)
-      let qntEntra = this._qntEntra(qtdAndarX, qtdAndarY, info.menorWidth, info.menorHeight);
+      const qntEntra = this._qntEntra(qtdAndarX, qtdAndarY, info.menorWidth, info.menorHeight);
       this._formaGeometrica.x += info.qtdPodeAndarX + qntEntra.x;
       this._formaGeometrica.y += info.qtdPodeAndarY + qntEntra.y;
 
@@ -255,7 +246,7 @@ class Tiro extends ObjetoTela
         else
         if (info.listaBateu.atual instanceof Obstaculo)
           info.listaBateu.atual.procColidiuTiro(this);
-          //se tiver com poder TipoPoder.MatarObjetos1Tiro mata, else se tem vida, tira
+          //se tiver com pocao TipoPocao.MatarObjetos1Tiro mata, else se tem vida, tira
     }else
     {
       //andar propriamente dito se nao colidiu
@@ -267,7 +258,7 @@ class Tiro extends ObjetoTela
     if (Tela.objSaiuTotalmente(this._formaGeometrica))
       return false;
 
-    if (emQuemBateu.quem != null) //se colidiu
+    if (emQuemBateu.quem !== undefined) //se colidiu
       this.morreu(emQuemBateu.quem, emQuemBateu.index);
 
     return true;
@@ -278,24 +269,24 @@ class Tiro extends ObjetoTela
      //entao tira vida do pers e morre para ele
     //else, se bateu em obstaculo morre para ele, caso contrario soh anda
 
-    let qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(ConjuntoObjetosTela.pers.formaGeometrica, this._formaGeometrica, qtdAndarX, qtdAndarY);
-    let hipotenusa = Operacoes.hipotenusa(qtdPodeAndar.x, qtdPodeAndar.y);
+    const qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(ConjuntoObjetosTela.pers.formaGeometrica, this._formaGeometrica, qtdAndarX, qtdAndarY);
+    const hipotenusa = Operacoes.hipotenusa(qtdPodeAndar.x, qtdPodeAndar.y);
     if (hipotenusa < info.menorHipotenusa)
     //se bateu no pers antes de qntPodeAndarAntesIntersec com o obstaculo
     {
       //andar propriamente dito (se colidiu com pers)
-      let qntEntra = this._qntEntra(qtdAndarX, qtdAndarY, ConjuntoObjetosTela.pers.formaGeometrica.width, ConjuntoObjetosTela.pers.formaGeometrica.height);
+      const qntEntra = this._qntEntra(qtdAndarX, qtdAndarY, ConjuntoObjetosTela.pers.formaGeometrica.width, ConjuntoObjetosTela.pers.formaGeometrica.height);
       this._formaGeometrica.x += qtdPodeAndar.x + qntEntra.x;
       this._formaGeometrica.y += qtdPodeAndar.y + qntEntra.y;
 
       //colidir
       this.tirarVidaObjCmVida(ConjuntoObjetosTela.pers);
-      this.morreu(Tiro.COLIDIU_COM_PERSONAGEM);
+      this.morreu(TipoObjetos.Personagem);
     }else
-    if (emQuemBateu.quem != null) //se colidiu com obstaculo antes de com o pers
+    if (emQuemBateu.quem !== undefined) //se colidiu com obstaculo antes de com o pers
     {
       //andar propriamente dito (se colidiu com obstaculo)
-      let qntEntra = this._qntEntra(qtdAndarX, qtdAndarY, info.menorWidth, info.menorHeight);
+      const qntEntra = this._qntEntra(qtdAndarX, qtdAndarY, info.menorWidth, info.menorHeight);
       this._formaGeometrica.x += info.qtdPodeAndarX + qntEntra.x;
       this._formaGeometrica.y += info.qtdPodeAndarY + qntEntra.y;
 
@@ -314,15 +305,14 @@ class Tiro extends ObjetoTela
   _qntEntra(qtdAndarX, qtdAndarY, menorWidth, menorHeight)
   {
     //ver quanto o tiro deve entrar no obstaculo ou inimigo
-    let mult = 0.2; //multiplicador do qtdAndarX e qtdAndarY
+    const mult = 0.2; //multiplicador do qtdAndarX e qtdAndarY
     let mudarQntEntra = 0;
     if (Math.abs(mult*qtdAndarX) > menorWidth/2)
       mudarQntEntra++;
     if (Math.abs(mult*qtdAndarY) > menorHeight/2)
       mudarQntEntra += 2;
 
-    let qntEntraX;
-    let qntEntraY;
+    let qntEntraX, qntEntraY;
     if (mudarQntEntra)
     {
       switch (mudarQntEntra)
@@ -339,10 +329,10 @@ class Tiro extends ObjetoTela
           break;
         case 3:
           //regra de tres: qtdAndarX/qtdAndarY = (menorWidth/2)/qntEntraY
-          let qntEntraX1 = menorWidth/2 * (qtdAndarX>0?1:-1);
-          let qntEntraY1 = (qntEntraX1*qtdAndarY)/qtdAndarX;
+          const qntEntraX1 = menorWidth/2 * (qtdAndarX>0?1:-1);
+          const qntEntraY1 = (qntEntraX1*qtdAndarY)/qtdAndarX;
 
-          let qntEntraY2 = menorHeight/2 * (qtdAndarY>0?1:-1);
+          const qntEntraY2 = menorHeight/2 * (qtdAndarY>0?1:-1);
 
           if (Math.abs(qntEntraY1) <= Math.abs(qntEntraY2))
           {
@@ -411,16 +401,35 @@ class Obstaculo extends ObjetoTela
   {
     //se o lugar destino jah estiver ocupado, retornar false
     for (let i = 0; i < ConjuntoObjetosTela.controladoresObstaculos.length; i++)
-      if (ConjuntoObjetosTela.controladoresObstaculos[i].obstVaiColidir(this) != null)
+      if (ConjuntoObjetosTela.controladoresObstaculos[i].obstVaiColidir(this) !== null)
       //se iria colidir com algum obstaculo de outro controlador, retorna falso
         return false;
 
     //colisao com personagem
+    this.verificarColisaoPersEstatico();
+
+    //colisao com tiros do pers
+    ConjuntoObjetosTela.pers.controladorTiros.procedimentoObjTelaColideCriar(this, indexContrObst);
+
+    //colisao com tiros dos inimigos (nao tira vida do obstaculo)
+    for (let i = 0; i < ConjuntoObjetosTela.controladoresInimigos.length; i++)
+      ConjuntoObjetosTela.controladoresInimigos[i].procObjCriadoColidirTirosInim(this, indexContrObst);
+    //colisao com tiros da tela (nao tira vida do obstaculo)
+    for (let i = 0; i < ConjuntoObjetosTela.controladoresTirosJogo.length; i++)
+      ConjuntoObjetosTela.controladoresTirosJogo[i].procedimentoObjTelaColideCriar(this, indexContrObst, false);
+
+    return true;
+  }
+
+  //para procCriou obstaculo e aumentar tamanho personagem (eh estatico pois nao nao qtdAndar envolvido)
+  verificarColisaoPersEstatico()
+  {
     if (Interseccao.interseccao(this._formaGeometrica, ConjuntoObjetosTela.pers.formaGeometrica))
     {
       //verifica qual direcao eh mais facil para o personagem sair de cima do obstaculo
-      let qtdAndar = Interseccao.menorQtdObjColidePararColidir(this._formaGeometrica, ConjuntoObjetosTela.pers.formaGeometrica);
-      let conseguiuAndarTudo = ConjuntoObjetosTela.pers.mudarXY(qtdAndar.x, qtdAndar.y);
+      const qtdAndar = Interseccao.menorQtdObjColidePararColidir(this._formaGeometrica, ConjuntoObjetosTela.pers.formaGeometrica);
+      //tenta empurrar personagem para parar de colidir
+      const conseguiuAndarTudo = ConjuntoObjetosTela.pers.mudarXY(qtdAndar.x, qtdAndar.y);
       if (!conseguiuAndarTudo)
       {
         //obstaculo explode
@@ -428,18 +437,6 @@ class Obstaculo extends ObjetoTela
         this.tirarVidaPersNaoConsegueEmpurrar();
       }
     }
-
-    //colisao com tiros do pers
-    ConjuntoObjetosTela.pers.controladorTiros.procedimentoObjTelaColideCriar(this, ControladorTiros.OBSTACULOS_CRIADO, indexContrObst);
-
-    //colisao com tiros dos inimigos (nao tira vida do obstaculo)
-    for (let i = 0; i < ConjuntoObjetosTela.controladoresInimigos.length; i++)
-      ConjuntoObjetosTela.controladoresInimigos[i].procObstCriadoColidirTirosInim(this, indexContrObst);
-    //colisao com tiros da tela (nao tira vida do obstaculo)
-    for (let i = 0; i < ConjuntoObjetosTela.controladoresTirosJogo.length; i++)
-      ConjuntoObjetosTela.controladoresTirosJogo[i].procedimentoObjTelaColideCriar(this, ControladorTiros.OBSTACULOS_CRIADO, indexContrObst, false);
-
-    return true;
   }
 
   //vida
@@ -472,7 +469,7 @@ class Obstaculo extends ObjetoTela
   { return this._classeAndar; }
   _seEhImpossivelExcep(tipo)
   {
-    if (tipo == TipoAndar.SeguirInimMaisProx || tipo == TipoAndar.DirecaoInimMaisProx)
+    if (tipo === TipoAndar.SeguirInimMaisProx || tipo === TipoAndar.DirecaoInimMaisProx)
       throw "Obstaculo nao pode seguir inimigos";
   }
   setTipoAndar(tipo)
@@ -489,7 +486,7 @@ class Obstaculo extends ObjetoTela
     let qtdAndar = this._classeAndar.procAndar(this._formaGeometrica);
 
     //info: menorHipotenusa, listaBateu, qtdPodeAndarX, qtdPodeAndarY, qtdAndarXPadrao, qtdAndarYPadrao
-    let hipotenusaPadrao = Operacoes.hipotenusa(qtdAndar.x, qtdAndar.y);
+    const hipotenusaPadrao = Operacoes.hipotenusa(qtdAndar.x, qtdAndar.y);
     let info =
     {
       menorHipotenusa: hipotenusaPadrao,
@@ -503,18 +500,18 @@ class Obstaculo extends ObjetoTela
       ConjuntoObjetosTela.controladoresObstaculos[i].qtdAndarSemColidirOutrosObst(info, this);
     //colidiu = !info.listaBateu.vazia
 
-    let qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(ConjuntoObjetosTela.pers.formaGeometrica, this._formaGeometrica,
+    const qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(ConjuntoObjetosTela.pers.formaGeometrica, this._formaGeometrica,
       qtdAndar.x, qtdAndar.y, false);
-    let hipotenusaPers = Operacoes.hipotenusa(qtdPodeAndar.x, qtdPodeAndar.y);
+    const hipotenusaPers = Operacoes.hipotenusa(qtdPodeAndar.x, qtdPodeAndar.y);
 
     // comparar hipotenusa dos obstaculos com a do personagem
     //opcoes: nao colidiu com ninguem, colidiu com obstaculo antes, colidiu com personagem antes
     if (hipotenusaPers < info.menorHipotenusa) //colidiu com pers
     {
-      let xPersAntes = ConjuntoObjetosTela.pers.formaGeometrica.x;
-      let yPersAntes = ConjuntoObjetosTela.pers.formaGeometrica.y;
+      const xPersAntes = ConjuntoObjetosTela.pers.formaGeometrica.x;
+      const yPersAntes = ConjuntoObjetosTela.pers.formaGeometrica.y;
 
-      let conseguiuAndarTudo = ConjuntoObjetosTela.pers.mudarXY(qtdAndar.x - qtdPodeAndar.x, qtdAndar.y - qtdPodeAndar.y);
+      const conseguiuAndarTudo = ConjuntoObjetosTela.pers.mudarXY(qtdAndar.x - qtdPodeAndar.x, qtdAndar.y - qtdPodeAndar.y);
       if (!conseguiuAndarTudo)
       {
         qtdAndar.x = qtdPodeAndar.x + ConjuntoObjetosTela.pers.formaGeometrica.x - xPersAntes;
@@ -525,7 +522,7 @@ class Obstaculo extends ObjetoTela
         this.tirarVidaPersNaoConsegueEmpurrar();
       }
     }else
-    if (info.menorHipotenusa <= hipotenusaPers || info.meonrHipotenusa != hipotenusaPadrao)
+    if (info.menorHipotenusa <= hipotenusaPers || info.meonrHipotenusa !== hipotenusaPadrao)
     //colidiu com outros obstaculos
     {
       // TODO: ta muito porco...
@@ -547,7 +544,7 @@ class Obstaculo extends ObjetoTela
         //se um ficara completamente dentro do outro em Y, muda-se apenas em X
         {
           info.listaBateu.atual.classeAndar.inverterDirecoesQtdAndar(true, false);
-          if (qualInverter == 0 || qualInverter == 2)
+          if (qualInverter === 0 || qualInverter === 2)
             qualInverter++; //1: X
         }else
         if (Interseccao.inteiroDentroDeDirecao(this._formaGeometrica.x + qtdAndar.x, this._formaGeometrica.width,
@@ -555,7 +552,7 @@ class Obstaculo extends ObjetoTela
         //se um ficara completamente dentro do outro em X, muda-se apenas em Y
         {
           info.listaBateu.atual.classeAndar.inverterDirecoesQtdAndar(false, true);
-          if (qualInverter < 2) // mesma coisa que: (qualInverter == 0 || qualInverter == 1)
+          if (qualInverter < 2) // mesma coisa que: (qualInverter === 0 || qualInverter === 1)
             qualInverter += 2; //2: Y
         }else
         //muda as duas direcoes
@@ -581,18 +578,15 @@ class Obstaculo extends ObjetoTela
     { }
 
     //verificar se vai bater em tiros do personagem e se tiro tem que sair da lista porque esse obstaculo andou, ele sai
-    ConjuntoObjetosTela.pers.controladorTiros.procedimentoObjTelaColideAndar(this, qtdAndar.x, qtdAndar.y,
-      ControladorTiros.OBSTACULOS_ANDOU, indexContrObst, true);
+    ConjuntoObjetosTela.pers.controladorTiros.procedimentoObjTelaColideAndar(this, qtdAndar.x, qtdAndar.y, indexContrObst, true);
     // dentro desse metodo vai tirar da lista os tiros que jah tinham sido mortos por esse obstaculo
     // e colidir com outros tiros (mata o tiro e se eh obstaculo com vida, tira vida dele)
 
     //colide com tiros dos inimigos e tiros da tela
     for (let i = 0; i<ConjuntoObjetosTela.controladoresTirosJogo.length; i++)
-      ConjuntoObjetosTela.controladoresTirosJogo[i].procedimentoObjTelaColideAndar(this, qtdAndar.x, qtdAndar.y,
-        ControladorTiros.OBSTACULOS_ANDOU, indexContrObst, false);
+      ConjuntoObjetosTela.controladoresTirosJogo[i].procedimentoObjTelaColideAndar(this, qtdAndar.x, qtdAndar.y, indexContrObst, false);
     for (let i = 0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
-      ConjuntoObjetosTela.controladoresInimigos[i].procObjTelaAndarColidirTirosTodosInim(this, qtdAndar.x, qtdAndar.y,
-        ControladorTiros.OBSTACULOS_ANDOU, indexContrObst, false);
+      ConjuntoObjetosTela.controladoresInimigos[i].procObjTelaAndarColidirTirosTodosInim(this, qtdAndar.x, qtdAndar.y, indexContrObst, false);
 
     // andar propriamente dito
     this._formaGeometrica.x += qtdAndar.x;
@@ -608,7 +602,7 @@ class Obstaculo extends ObjetoTela
   set especial(esp)
   {
     // se nao vai mudar nada (morreu ou queria mudar para a mesma coisa)
-    if (!this._vivo || this._especial == esp)
+    if (!this._vivo || this._especial === esp)
       return;
 
     //mudar cor
@@ -646,7 +640,7 @@ class Obstaculo extends ObjetoTela
     //se tiro nao for do personagem (for do inimigo ou da tela, nao tira vida)
     if (!tiro.ehDoPers) return;
 
-    if (ConjuntoObjetosTela.pers.controladorPoderesPegou.codPoderSendoUsado == TipoPoder.MatarObjetos1Tiro)
+    if (ConjuntoObjetosTela.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.MatarObjetos1Tiro)
       this._seMatar();
     else
     if (this instanceof ObstaculoComVida)
@@ -693,7 +687,7 @@ class ObstaculoComVida extends Obstaculo
       this.morreu(false);
       this._vida = 0;
     }
-    return this._vida != 0;
+    return this._vida !== 0;
   }
 
   // TODO: draw (vai desenhar a vida? se sim, como?)
@@ -712,7 +706,7 @@ class AuxInfo
 {
   static cloneImgCor(imgCor)
   {
-    if (imgCor.stroke==null)
+    if (imgCor.stroke === undefined)
       return imgCor; //nao precisa de clone
     else
       return {stroke: imgCor.stroke, fill: imgCor.fill}; //clone
