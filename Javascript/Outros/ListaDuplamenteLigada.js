@@ -119,13 +119,19 @@ class ListaDuplamenteLigada
     if (this._atual === null)
       throw "Atual eh nulo!";
 
-    if (this._atual.ant === null)
+    if (this._atual.ant === null) //quando ta no primeiro
     {
         this._prim = this._atual.prox;
         if (this._prim === null)
           this._ultimo = null;
+        else
+          this._prim.ant = null;
     }else
+    {
       this._atual.ant.prox = this._atual.prox;
+      if (this._atual === this._ultimo) //se removeu o ultimo
+        this._ultimo = this._ultimo.ant;
+    }
 
     this._qtdElem--;
   }
@@ -166,6 +172,8 @@ class ListaDuplamenteLigada
       atual = atual.prox;
     }
     console.log(string + "null");
+
+    console.table({prim: this._prim, ult: this._ultimo});
   }
 }
 

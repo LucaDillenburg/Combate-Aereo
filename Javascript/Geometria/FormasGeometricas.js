@@ -1,5 +1,3 @@
-//import "GeometriaBasica.js";
-
 //FORMAS: quadrado, retangulo, triangulo, paralelogramo, quadrilatero
 
 // BASICO
@@ -258,6 +256,16 @@ class FormaGeometricaSimples extends FormaGeometrica
   {
     return Interseccao.intersecDirecao(this._x, this.width, obj._x, obj.width)
       && Interseccao.intersecDirecao(this._y, this.height, obj._y, obj.height);
+  }
+  contem(obj)
+  {
+    //todos os pontos tem que estar dentro
+    for (let i=0; i<obj.vertices.length; i++)
+      if(!(obj._vertices[i].x >= this._x && obj._vertices[i].x <= this._x + this.width //estah dentro em X
+        && obj._vertices[i].y >= this._y && obj._vertices[i].y <= this._y + this.height)) //estah dentro em Y
+      //se algum vertice esta fora
+        return false;
+    return true;
   }
 }
 
@@ -728,6 +736,15 @@ class FormaGeometricaComplexa extends FormaGeometrica
       if (semirreta.interseccao(this._arestas[i]))
         return true;
     return false;
+  }
+
+  contem(obj)
+  {
+    //todos os pontos tem que estar dentro
+    for (let i=0; i<obj.vertices.length; i++)
+      if (!this.pontoEstahDentroAlgumTriang(this._vertices[i]))
+        return false;
+    return true;
   }
 
   //colocar pontos na ordem certa (primeiro o menor y e mais da esquerda, depois em sentido horario)

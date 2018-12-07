@@ -1,6 +1,7 @@
 //constantes executarPocao
 const porcentagemSetTam = 0.5;
 const porcentagemSetVelRuim = 0.7;
+const porcentagemDeixarTempoLento = 0.5;
 
 const qtdAndarMaisRapido = 7;
 const porcentagemSetVel = 1.4;
@@ -80,7 +81,7 @@ class Pocao
   }
 
   getFormaGeometrica(sohWidthHeight = false)
-  //tomar em consideracao se this._personagemJahPegou
+  //toma em consideracao se this._personagemJahPegou
   {
     let width, height;
     if (this._personagemJahPegou)
@@ -124,7 +125,6 @@ class Pocao
 
 
   //QUANDO USUARIO JAH PEGOU (se for imediatamente) ou quando ele usar (nao imediatamente)
-  // TODO: colocar pocoes
   executarPocao()
   //usar apenas ConjuntoObjetosTela
   {
@@ -182,9 +182,31 @@ class Pocao
         break;
 
       case TipoPocao.DeixarTempoMaisLento:
-        // TODO: pocao deixar tempo mais lento
-        tempoPocaoResta = 10000;
-        //...
+        tempoPocaoResta = 5000;
+        /* para deixar tempo mais lento
+        aqui:
+          -> tiros tela. OK
+          -> inimigos (incluindo tiros deles e atirar). OK
+          -> obstaculos. OK
+          -> Timers (aqui soh os que jah existem). OK
+          ps1: verificar se nao existem Timers no PersonagemPrincipal
+          ps2: verificar se nao podem ser criados freqFuncs sem ser do pers durante esse tempo
+
+        resto:
+          -> quando Timers forem criados. OK
+          -> quando tiros(sem ser do personagem), obstaculos ou inimigos(freqFuncAtirar tambem) forem criados. OK
+        */
+        //tiros tela
+        for (let i = 0; i<ConjuntoObjetosTela.controladoresTirosJogo.length; i++)
+          ConjuntoObjetosTela.controladoresTirosJogo[i].mudarTempo(porcentagemDeixarTempoLento);
+        //inimigos (incluindo tiros deles e freqFuncAtirar)
+        for (let i = 0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
+          ConjuntoObjetosTela.controladoresInimigos[i].mudarTempo(porcentagemDeixarTempoLento);
+        //obstaculos
+        for (let i = 0; i<ConjuntoObjetosTela.controladoresObstaculos.length; i++)
+          ConjuntoObjetosTela.controladoresObstaculos[i].mudarTempo(porcentagemDeixarTempoLento);
+        //Timers
+        ConjuntoTimers.mudarTempo(porcentagemDeixarTempoLento);
         break;
 
       case Tipo.RUIMTirosPersDirEle:
@@ -277,8 +299,19 @@ class Pocao
         break;
 
       case TipoPocao.DeixarTempoMaisLento:
-        // TODO: fazer isso aqui
-        //...
+      //voltar tempo ao normal
+        const porcVoltarTempoNormal = Probabilidade.porcentagemVoltarNormal(porcentagemDeixarTempoLento);
+        //tiros tela
+        for (let i = 0; i<ConjuntoObjetosTela.controladoresTirosJogo.length; i++)
+          ConjuntoObjetosTela.controladoresTirosJogo[i].mudarTempo(porcVoltarTempoNormal);
+        //inimigos (incluindo tiros deles e freqFuncAtirar)
+        for (let i = 0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
+          ConjuntoObjetosTela.controladoresInimigos[i].mudarTempo(porcVoltarTempoNormal);
+        //obstaculos
+        for (let i = 0; i<ConjuntoObjetosTela.controladoresObstaculos.length; i++)
+          ConjuntoObjetosTela.controladoresObstaculos[i].mudarTempo(porcVoltarTempoNormal);
+        //Timers
+        ConjuntoTimers.mudarTempo(porcVoltarTempoNormal);
         break;
 
       default:
@@ -303,6 +336,7 @@ class Pocao
   get tempoTotal() { return this._tempoTotal; }
   get tempoRestante() { return this._tempoRestante.toFixed(1); }
 }
+//ps: tudo que eh execucao da pocao feito fora dessa classe estah escrito: "PARTE DA EXECUCAO DA POCAO"...
 
 const TipoPocao = {
   "DiminuirTamanhoPers": 1,
@@ -410,7 +444,7 @@ class ObjetoTelaPocao
 
 const distanciaMinPersPocao = 350; //calculado a distancia entre os centro-de-massas
 const tempoVaiFicarTela = 7000;
-const primeiroLvComPocao = 3;
+const primeiroLvComPocao = 3; //se for mudar, mudar ControladorPocaoTela.pocoesPossiveisFromLevel(...)
 const qtdPocoesUltimosLvs = 5; //se certa probabilidade vai escolher uma pocao dentro os 5 ultimos
 class ControladorPocaoTela
 {
@@ -502,33 +536,34 @@ class ControladorPocaoTela
     let pocoesPossiveis = [];
     let qtd = 0;
 
+    if (level > 12) level = 12;
+
     switch(level)
     {
-      // TODO: Se houver mais levels colocar mais cases aqui... (mudar levelTemPocaoExclus se colocar pocoes em outros levels)
-      case primeiroLvComPocao + 9: //12
+      case 12:
         pocoesPossiveis[qtd++] = TipoPocao.CongelarInimigos;
-      case primeiroLvComPocao + 8: //11
+      case 11:
         pocoesPossiveis[qtd++] = TipoPocao.ReverterTirosJogoInimSeguirInim;
-      case primeiroLvComPocao + 7: //10
+      case 10:
         pocoesPossiveis[qtd++] = TipoPocao.DeixarTempoMaisLento;
-      case primeiroLvComPocao + 6: //9
+      case 9:
         pocoesPossiveis[qtd++] = TipoPocao.RUIMTirosPersDirEle;
         pocoesPossiveis[qtd++] = TipoPocao.ReverterTirosJogoInimDirInim;
-      case primeiroLvComPocao + 5: //8
+      case 8:
         pocoesPossiveis[qtd++] = TipoPocao.TirarVidaTodosInim;
         pocoesPossiveis[qtd++] = TipoPocao.GanharMuitaVida;
-      case primeiroLvComPocao + 4: //7
+      case 7:
         pocoesPossiveis[qtd++] = TipoPocao.MatarInimigosNaoEssenc;
-      case primeiroLvComPocao + 3: //6
+      case 6:
         pocoesPossiveis[qtd++] = TipoPocao.RUIMPersPerdeVida;
         pocoesPossiveis[qtd++] = TipoPocao.MatarObjetos1Tiro;
-      case primeiroLvComPocao + 2: //5
+      case 5:
         pocoesPossiveis[qtd++] = TipoPocao.PersComMissil;
         pocoesPossiveis[qtd++] = TipoPocao.GanharPoucaVida;
-      case primeiroLvComPocao + 1: //4
+      case 4:
         pocoesPossiveis[qtd++] = TipoPocao.RUIMPersPerdeVel;
         pocoesPossiveis[qtd++] = TipoPocao.PersMaisRapido;
-      case primeiroLvComPocao: //3
+      case primeiroLvComPocao:
         pocoesPossiveis[qtd++] = TipoPocao.DiminuirTamanhoPers;
         pocoesPossiveis[qtd++] = TipoPocao.TiroPersMaisRapidoMortal;
         break;
@@ -545,21 +580,21 @@ class ControladorPocaoTela
     {
       case 13:
         return true; //100%
-
       case 12:
       case 11:
+        return Probabilidade.chance(9,10); //90%
       case 10:
-        return Probabilidade.chance(4,5); //80%
       case 9:
+        return Probabilidade.chance(4,5); //80%
       case 8:
       case 7:
-        return Probabilidade.chance(2,3); //66%
+        return Probabilidade.chance(7,10); //70%
       case 6:
       case 5:
       case 4:
-        return Probabilidade.chance(1,2); //50%
+        return Probabilidade.chance(3,5); //60%
       case 3:
-        return Probabilidade.chance(1,3); //33%
+        return Probabilidade.chance(2,5); //40%
     }
   }
 
@@ -681,12 +716,12 @@ class ObjPocaoPers
       }
 
       noStroke(); fill(255);
-      // TODO: colocar font tops
+      // TODO: design
       text(this._pocao.tempoRestante + "s", x + 2*raio - 4, y + 2*raio + 2); //quanto tempo falta
 
       if (this._escreverNomePocao)
       {
-        // TODO: mudar font
+        // TODO: design
         text(this._pocao.nome, x + 2*raio + 5, y + 2*raio + 2); //escrever nome da pocao
       }
     }

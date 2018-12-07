@@ -9,6 +9,29 @@
   <body>
     <script type="text/javascript" onload="setup()">
 
+    function printar()
+    {
+      lista.printar();
+      console.log(lista._prim);
+      console.log(lista._ultimo);
+    }
+
+    var lista = new ListaDuplamenteLigada();
+    lista.inserirNoFinal(9);
+    printar();
+
+    console.log("");
+
+    lista.inserirNoFinal(2);
+    lista.inserirNoComeco(1);
+    printar();
+
+    lista.colocarAtualComeco();
+    lista.andarAtual();
+    lista.removerAtual();
+    printar();
+
+/*
 const LIMIT = 10000;
 let arr = new Array(LIMIT);
 console.time("ArrayBuffer");

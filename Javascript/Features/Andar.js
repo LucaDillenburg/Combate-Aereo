@@ -12,6 +12,8 @@ class ClasseAndar
 
     this.setTipoAndar(infoAndar.tipoAndar, formaGeom);
 
+    if (infoAndar.aceleracao !== undefined)
+      this._aceleracao = {valor: infoAndar.aceleracao.valor, ehPorcentagem: infoAndar.aceleracao.ehPorcentagem}; //nunca vai ser null pois o valor padrao dele la no InfoAndar eh 1
     if (infoAndar.atehQualXYPodeAndar !== undefined)
     //soh precisa se for INVERTER_..._NAO_PASSAR_XY
       this._atehQualXYPodeAndar = infoAndar.atehQualXYPodeAndar;
@@ -117,7 +119,7 @@ class ClasseAndar
     this.setTipoAndar(TipoAndar.Normal, formaGeomVaiAndar); //tira hipotenusaPadrao
   }
 
-  procAndar(formaGeom)
+  procAndar(formaGeom, vaiAndar=true)
   {
     if ((this._tipoAndar === TipoAndar.SeguirInimMaisProx && !this._inimSeguir.vivo) ||
       (this._tipoAndar === TipoAndar.SeguirPers && !ConjuntoObjetosTela.pers.vivo))
@@ -135,12 +137,29 @@ class ClasseAndar
       objSeguir = this._inimSeguir;
 
     //jah faz procedimentos de inverter qtdAndar(se precisar) e adicionar qtdAndar no ultimoQtdAndar
-    return this._qtdAndarFromTipo(formaGeom, objSeguir);
+    const qtdAndar = this._qtdAndarFromTipo(formaGeom, objSeguir);
+
+    if (vaiAndar && this._aceleracao !== undefined)
+    // se for andar deixa acelerado para a proxima vez
+    {
+      if (this._aceleracao.ehPorcentagem)
+      {
+        this._qtdAndarX *= this._aceleracao.valor;
+        this._qtdAndarY *= this._aceleracao.valor;
+      }else
+      {
+        this._qtdAndarX += this._aceleracao.valor * (this._qtdAndarX<0?-1:1);
+        this._qtdAndarY += this._aceleracao.valor * (this._qtdAndarY<0?-1:1);
+      }
+      this._colocarHipotenusaSePrecisa();
+    }
+
+    return qtdAndar;
   }
   mudarQtdAndarParaUltimoAndar()
   {
-    this.qtdAndarX = this._ultimoQtdAndar.x;
-    this.qtdAndarY = this._ultimoQtdAndar.y;
+    this._qtdAndarX = this._ultimoQtdAndar.x;
+    this._qtdAndarY = this._ultimoQtdAndar.y;
   }
 
   _colocarHipotenusaSePrecisa()
@@ -325,6 +344,14 @@ class ClasseAndar
     //return formaGeomPerseguido.centroMassa.menos(formaGeomVaiAndar.centroMassa); //assim fica muito efetivo
     return {x: x - formaGeomVaiAndar.x, y: y - formaGeomVaiAndar.y};
   }
+
+  //POCAO
+  mudarTempo(porcentagem)
+  {
+    this._qtdAndarX *= porcentagem;
+    this._qtdAndarY *= porcentagem;
+    this._colocarHipotenusaSePrecisa();
+  }
 }
 
 const TipoAndar = {
@@ -352,15 +379,17 @@ const TipoAndar = {
 class InfoAndar
 //qtdAndarX, qtdAndarY, tipoAndar, [atehQualXYPodeAndar]
 {
-  constructor(qtdAndarX, qtdAndarY, tipoAndar, atehQualXYPodeAndar)
+  constructor(qtdAndarX, qtdAndarY, tipoAndar, aceleracao, atehQualXYPodeAndar)
   //eh public mesmo porque tem get e set em todos sem verificacao
+  //aceleracao: valor, ehPorc
   {
     this.qtdAndarX = qtdAndarX;
     this.qtdAndarY = qtdAndarY;
     this.tipoAndar = tipoAndar;
+    this.aceleracao = aceleracao;
     this.atehQualXYPodeAndar = atehQualXYPodeAndar;
   }
 
   clone()
-  { return new InfoAndar(this.qtdAndarX, this.qtdAndarY, this.tipoAndar, this.atehQualXYPodeAndar); }
+  { return new InfoAndar(this.qtdAndarX, this.qtdAndarY, this.tipoAndar, (this.aceleracao===undefined?undefined:{valor: this.aceleracao.valor, ehPorcentagem: this.aceleracao.ehPorcentagem}), this.atehQualXYPodeAndar); }
 }

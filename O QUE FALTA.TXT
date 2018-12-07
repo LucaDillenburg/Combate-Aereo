@@ -1,45 +1,28 @@
-- opcao para mudar tamanho personagem e inimigo. OK
-- fazer esquema para criar timers todo level e coloca-los em um vetor, entao quando for passar de level deletar esses timers. OK
+- POCAO: FALTA DEIXAR TEMPO MAIS DEVAGAR. OK
+(metodo para todos os objetos e controladores: fazer porcentagem*qtdAndar e (1/porcentagem)*auxAtirar e com frequencia)
+  -> tiros (andar) - soh os que nao forem do pers
+  -> obstaculos (andar)
+  -> inimigos (andar, freqAtirar, andar tiros)
+  -> Timers
+ps: os que jah existem disso e os que vao ser criados
+- colocar opcao para mudar o qtdAndar depois de cada andada (variavel porcentagem que vai fazer objeto acelerar ou desacelerar /*isto eh, mudar o qtdAndar*/ cada vez que ele anda). OK
+- oficina quando estiver passando de level (tem que estar inteiramente dentro para ganhar vida: ganha pouca e o sistema eh igual ao da interseccao do personagem com inimigo). OK
 
-- arrumar setTipoAndar para SeguirInimMaisProx (nao ve soh o primeiro controladorInimigos). OK
-- arrumar Lista.inserirNoFinal(...). OK
-- arrumar: tiros tela nao estao se movimentando. OK
-- soh tirar inimigos e obstaculos da lista depois que eles forem mostrados mortos. OK
-- colocar o index dos controladoresObjetos como atributo do controladorObjetos. OK
-- tirar variaveis publicas (soh tinha atehQualXYPodeAndar). OK
-- tirar static gets que definem qual ObjetoTela que eh e criar um const enum que define isso (trocar todos os usos desses static gets e quando passar o ObjetoTela nao precisa passa o tipo pois pode-se usar metodo do TipoObjetos para conseguir o tipo dele). OK
-- ver se objeto tela tem ou nao vida pelo atributo vida. OK
-- mudar em todos os arquivos (por causa de novos conhecimentos):
-  .colocar CONST ao inves de LET onde nao for mudar a variavel (nao soh quando nao faz atribuicao). OK
-  .colocar valores padroes nos parametros ao inves de ver se eh null e depois atribuir. OK
-  .quando for pra deletar a variavel da memoria usar ao inves de "= null;". OK
-  .undefined eh diferente de null => mudar isso. OK
-  .pesquisar se fazer "===" ao inves de "==" eh boa pratica. OK
-  .mudar null por undefined quando precisar (em parametros principalmente). OK
-  .ver se tem outra maneira de fazer para diferenciar nulo de undefined e tirar class Nulo. OK
-- poder -> pocao (poder, poderes, Poderes, Poder, POCAO). OK
-- pensar se isso funcionaria suav: OK
-  .inimigos essenciais nao precisam ser apenas os do primeiro controlador (o controladorInimigos eh essencial entao todos os inimigos que vem dele tambem serao). pesquisar "== 0", "==0", "essencial", mudar o "ganhar" do ControladorJogo e deixa-lo como default e criar um case 2 que retorna false
-  .obstaculos sem vida podem morrer por tiro se for poder 1TiroMata
+- arrumar erros em ListaDuplamenteLigada. OK
 
-- POCAO: FALTA DEIXAR TEMPO MAIS DEVAGAR (metodo para todos os objetos e controladores: fazer porcentagem*qtdAndar e (1/porcentagem)*auxAtirar e com frequencia)
-  -> andar dos inimigos
-  -> andar dos obstaculos
-  -> andar dos tiros (dos inimigos e da tela)
-  -> atirar do inimigo
-  -> criar tiros da tela
-  -> Timers (os que jah existem e os que vao ser criados)
-ps: deixar mais rapido de novo depois que acabar o tempo da pocao
-
-- colocar opcao para mudar o qtdAndar depois de cada andada (variavel porcentagem que vai fazer objeto acelerar ou desacelerar /*isto eh, mudar o qtdAndar*/ cada vez que ele anda)
+- Fazer opcao para tiro duplo em ObjTelaComTiro
 - Fazer classe: FuncaoEm camadas/niveis. andouCamada(), regrediuCamada() -> retorna se deve fazer a funcao (dar nome para classe de acordo com aquela palavra do livro de Daniel: olhar biblia)
+- Mover e fazer tais procedimentos antes de printa-los na tela? tiros nao estao sendo printados mortos
 
+//resto:
 - tiros e obstaculos aparentemente nao estao sumindo logo que morrem (estah ficando mais doq um draw, ver se estah tirando depois do draw)
+- ver se tem que ou nao os Info
 - ver comentarios //TODO
 
 - CreateCanvas de um tamanho mínimo: metade de toda tela + quando o canvas perde o foco, pausa-lo
 - CRIAR NIVEIS
 
+- mudar nome dos metodos "privados" para ter '_' na frente, transformar ControladorJogo e PersonagemPrincipal em SingleTone? (eh boa pratica)
 - mudar class ListaLigada para classe do proprio Javascript?? Tem todos os metodos mas aparentemente eh mais lento quando fica-se adicionando e removendo coisas (principalmente removendo)... ver se vale a pena
 - otimizar codigo
 - e colisao de inimigo com inimigo e obstaculo ??

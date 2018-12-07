@@ -684,11 +684,11 @@ class Interseccao
         }
 				break;
 			case Geometria.COD_PARALELOGRAMO:
-        // TODO :
+        // TODO: vaiIntersectar Paralelogramo
         throw "FUNCIONALIDADE AINDA NAO EXISTE!!";
 				break;
 			case Geometria.COD_QUADRILATERO:
-        // TODO:
+        // TODO: vaiIntersectar Quadrilatero
         throw "FUNCIONALIDADE AINDA NAO EXISTE!!";
 				break;
 		}
@@ -778,6 +778,11 @@ class Operacoes
 
   static diagonalQuad(lado)
   { return lado*Math.sqrt(2)/2; }
+
+  static ultimoAlgarismo(num)
+  { return Math.floor(num%10); }
+  static primAlgoritDpVirgulaEhZero(num)
+  { return Operacoes.ultimoAlgarismo(num.toFixed(1)*10)===0; }
 }
 
 class Geometria

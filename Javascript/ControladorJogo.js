@@ -1,9 +1,3 @@
-//import "ObjetosComplexos.js";
-//import "Outros.js"
-// import "OutrosControladores.js"; jah foi importado por ObjetosComplexos.js
-// import "ListaDuplamenteLigada.js"; jah foi importado
-// import "ObjetosSimples.js"; jah foi importado por OutrosControladores.js e ObjetosComplexos.js
-
 const EstadoJogo = {"NaoComecou":0, "Jogando":1, "Pausado":2, "Morto":3, "Ganhou": 4};
 
 //const heightVidaUsuario estah em geometria basica
@@ -17,9 +11,11 @@ class ControladorJogo
     //outro futuro atributo: this._estadoJogoAnterior
   }
 
-  //get EstadoJogo
+  //getters
   get estadoJogo()
   { return this._estadoJogo; }
+  get level()
+  { return this._level; }
 
   static infoPersonagemPrincPadrao()
   {
@@ -192,11 +188,13 @@ class ControladorJogo
         this._personagemPrincipal.colocarNaveEspecial(new Quadrado(null,null, 30, {stroke: color("white"), fill: color("white")}));
         break;
 
+      //se tiver mais levels colocar aqui, mudar em: ControladorJogo.tempoEstimadoLevel(), this._acabouLevel(), ControladorPocaoTela.pocoesPossiveisFromLevel(...), ControladorPocaoTela.probabilidadeFromLevel(...)
+
       default:
         this._controladoresInimigos = new Array(0);
         this._controladoresObstaculos = new Array(0);
         this._controladoresTiros = new Array(0);
-        console.log("Acabaram as fases... vishh Luca tá fraco!!")
+        console.log("Acabaram as fases... vishh Luca tá fraco!!");
     }
     //colocar tudo na tela depois que jah criou tudo
     this._atualizarConjuntoObjetosTela();
@@ -220,28 +218,47 @@ class ControladorJogo
   {
     this._level++; //passa de level
     this._controladorTimers.excluirTimers(); //finaliza timers antigos e os exclui
-    this._personagemPrincipal.mudarVida(ControladorJogo.qtdGanhaVidaLevel(this._level)); //personagem ganha vida
+    console.log(this._controladorTimers._timers);
+    ConjuntoTimers._timers.printar();
+
+    //cria oficina
+    this._oficina = new Oficina(this._level);
+    ConjuntoObjetosTela.adicionarOficina(this._oficina);
+
     this._iniciarLevel(); //proximo level
+
+    //programar para tirar oficina
+    const _this = this;
+    new Timer(function(){
+      delete _this._oficina;
+      ConjuntoObjetosTela.removerOficina();
+    }, 5000, false, false);
+
+    console.log("%cAQUI!!", 'color: green');
+    ConjuntoTimers._timers.printar();
   }
 
-  static qtdGanhaVidaLevel(level)
-  {
-    return Math.floor((level-1)/5)*2 + 3;
-    // de  1 -  5: 3
-    // de  6 - 10: 5
-    // de 10 - 15: 7
-  }
   static tempoEstimadoLevel(level)
   //retornar tempo em segundos
   {
+    // TODO: ajeitar tempo cada level
     switch (level)
     {
-      case 1: return ;
-      case 2: return ;
-      case 3: return ;
-      case 4: return ;
-      //...
-      // TODO: se tiver mais levels colocar aqui
+      case 1: return 25;
+      case 2: return 40;
+      case 3: return 60;
+      case 4: return 65;
+      case 5: return 70;
+      case 6: return 75;
+      case 7: return 80;
+      case 8: return 85;
+      case 9: return 90;
+      case 10: return 95;
+      case 11: return 100;
+      case 12: return 105;
+      case 13: return 110;
+      case 14: return 115;
+      case 15: return 120;
     }
   }
 
@@ -364,9 +381,9 @@ class ControladorJogo
 
     //daqui pra baixo this._estadoJogo === EstadoJogo.Jogando
 
-    background(100);
+    background(55);
 
-    if (this._criandoLevel)
+    if (this._criandoLevel) //soh enquanto estiver no processo de criar os inimigos, tiros e obstaculos
     {
       //desenha o personagem, os tiros dele e a vida
       this._personagemPrincipal.draw();
@@ -381,6 +398,12 @@ class ControladorJogo
     //nessa ordem especificamente
     this._andarInimObst();
     this._personagemPrincipal.procTirarVidaIntersecInim();
+
+    if (this._oficina !== undefined)
+    {
+      this._oficina.draw();
+      this._oficina.ganharVidaSeConsertando(this._level);
+    }
 
     // desenha os inimigos (do ultimo para o primeiro pois o primeiro eh mais importante)
     for (let i = this._controladoresInimigos.length-1; i >= 0; i--)
@@ -414,21 +437,9 @@ class ControladorJogo
 
     if (this._acabouLevel())
       this._passarLevel();
-    else
-      this._fazerProcLevel();
 
     if (!this._personagemPrincipal.vivo)
       this._estadoJogo = EstadoJogo.Morto;
-  }
-
-  _fazerProcLevel()
-  {
-    //fazer alguma coisa dependendo do level
-    switch (this._level)
-    {
-      case 1:
-        break;
-    }
   }
 
   _acabouLevel()
@@ -469,6 +480,13 @@ class ConjuntoObjetosTela
     ConjuntoObjetosTela._controladoresTirosJogo = controladoresTirosJogo;
   }
 
+  static adicionarOficina(oficina)
+  {
+    ConjuntoObjetosTela._oficina = oficina;
+  }
+  static removerOficina()
+  { delete ConjuntoObjetosTela._oficina; }
+
   //getters
   static get pers()
   { return ConjuntoObjetosTela._pers; }
@@ -480,8 +498,11 @@ class ConjuntoObjetosTela
   { return ConjuntoObjetosTela._controladoresTirosJogo; }
   static get controladorPocaoTela()
   { return ConjuntoObjetosTela._controladorPocaoTela; }
+  static get oficina()
+  { return ConjuntoObjetosTela._oficina; }
 }
 
+//TIPOS DE OBJETOS TELA
 class TipoObjetos
 {
   //retorna o numero que representa o tipo do objeto
