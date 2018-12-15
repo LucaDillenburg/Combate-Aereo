@@ -1,26 +1,16 @@
-- POCAO: FALTA DEIXAR TEMPO MAIS DEVAGAR. OK
-(metodo para todos os objetos e controladores: fazer porcentagem*qtdAndar e (1/porcentagem)*auxAtirar e com frequencia)
-  -> tiros (andar) - soh os que nao forem do pers
-  -> obstaculos (andar)
-  -> inimigos (andar, freqAtirar, andar tiros)
-  -> Timers
-ps: os que jah existem disso e os que vao ser criados
-- colocar opcao para mudar o qtdAndar depois de cada andada (variavel porcentagem que vai fazer objeto acelerar ou desacelerar /*isto eh, mudar o qtdAndar*/ cada vez que ele anda). OK
-- oficina quando estiver passando de level (tem que estar inteiramente dentro para ganhar vida: ganha pouca e o sistema eh igual ao da interseccao do personagem com inimigo). OK
-
-- arrumar erros em ListaDuplamenteLigada. OK
-
-- Fazer opcao para tiro duplo em ObjTelaComTiro
-- Fazer classe: FuncaoEm camadas/niveis. andouCamada(), regrediuCamada() -> retorna se deve fazer a funcao (dar nome para classe de acordo com aquela palavra do livro de Daniel: olhar biblia)
-- Mover e fazer tais procedimentos antes de printa-los na tela? tiros nao estao sendo printados mortos
+- Fazer opcao para tiro duplo em ObjTelaComTiro. OK
+- Fazer opcao para escolher a direcao que o inimigo atira (InfoInimigo, Inimigo e ControladorInimigos). OK
 
 //resto:
-- tiros e obstaculos aparentemente nao estao sumindo logo que morrem (estah ficando mais doq um draw, ver se estah tirando depois do draw)
-- ver se tem que ou nao os Info
-- ver comentarios //TODO
-
+- Fazer Obstaculos e Inimigos irem aparecendo (crescendo e mudando opacidade) em algum tempo e soh entao comeca o Level propriamente dito (durante o tempo que eles estao aparecendo o personagem pode se mover, atirar e ir na Oficina)
 - CreateCanvas de um tamanho mínimo: metade de toda tela + quando o canvas perde o foco, pausa-lo
-- CRIAR NIVEIS
+- CRIAR NIVEIS + PEGAR IMAGENS PARA PERSONAGEM, INIMIGOS, OBSTACULOS, POCOES (tematico!)
+
+- Fazer classe: FuncaoEm camadas/niveis. andouCamada(), regrediuCamada() -> retorna se deve fazer a funcao (dar nome para classe de acordo com aquela palavra do livro de Daniel: olhar biblia)
+- Mover e fazer tais procedimentos antes de printa-los na tela? tiros nao estao sendo printados mortos
+- tiros e obstaculos aparentemente nao estao sumindo logo que morrem (estah ficando mais doq um draw, ver se estah tirando depois do draw)
+- ver se tem que clonar Info ou nao
+- ver comentarios //TODO
 
 - mudar nome dos metodos "privados" para ter '_' na frente, transformar ControladorJogo e PersonagemPrincipal em SingleTone? (eh boa pratica)
 - mudar class ListaLigada para classe do proprio Javascript?? Tem todos os metodos mas aparentemente eh mais lento quando fica-se adicionando e removendo coisas (principalmente removendo)... ver se vale a pena

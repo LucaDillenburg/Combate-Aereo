@@ -56,6 +56,12 @@ class ControladorInimigos
         infoInimigo.podeAtirarQualquerLado = this._infoInimigoPadrao.podeAtirarQualquerLado;
       if (infoInimigo.qtdTiraVidaPersQndIntersec === undefined)
         infoInimigo.qtdTiraVidaPersQndIntersec = this._infoInimigoPadrao.qtdTiraVidaPersQndIntersec;
+      if (infoInimigo.direcaoTiroSai === undefined)
+        infoInimigo.direcaoTiroSai = this._infoInimigoPadrao.direcaoTiroSai;
+      if (infoInimigo.tiroDuplo === undefined)
+        infoInimigo.tiroDuplo = this._infoInimigoPadrao.tiroDuplo;
+      if (infoInimigo.tiroDuplo && infoInimigo.distanciaTiroVert === undefined)
+        infoInimigo.distanciaTiroVert = this._infoInimigoPadrao.distanciaTiroVert;
 
       //porcentagemTempoVida (pode ser nulo)
       if (infoInimigo.porcentagemTempoVida === undefined)
@@ -279,9 +285,10 @@ class ControladorInimigos
 //INIMIGO
 class InfoInimigo extends InfoObjComTiros
 {
-  constructor(formaGeometrica, corImgMorto, vida, corVida, mostrarVidaSempre, porcentagemTempoVida, infoTiroPadrao, freqTiro, podeAtirarQualquerLado, qtdTiraVidaPersQndIntersec, infoAndar, ehInimEssencial)
+  constructor(formaGeometrica, corImgMorto, vida, corVida, mostrarVidaSempre, porcentagemTempoVida, infoTiroPadrao, freqTiro, podeAtirarQualquerLado, qtdTiraVidaPersQndIntersec, infoAndar, direcaoTiroSai=Direcao.Baixo, ehInimEssencial=false, tiroDuplo, distanciaTiroVert)
+  //podeAtirarQualquerLado: se tiro for seguir personagem, pode colocar tiro do lado mais proximo do pers
   {
-    super(formaGeometrica, corImgMorto, vida, infoTiroPadrao);
+    super(formaGeometrica, corImgMorto, vida, infoTiroPadrao, tiroDuplo, distanciaTiroVert);
     this.corVida = corVida;
     this.mostrarVidaSempre = mostrarVidaSempre;
     if (porcentagemTempoVida !== undefined)
@@ -290,12 +297,12 @@ class InfoInimigo extends InfoObjComTiros
     this.podeAtirarQualquerLado = podeAtirarQualquerLado;
     this.qtdTiraVidaPersQndIntersec = qtdTiraVidaPersQndIntersec;
     this.infoAndar = infoAndar;
-
     this.ehInimEssencial = ehInimEssencial; //soh o controladorInimigos que coloca
+    this.direcaoTiroSai = direcaoTiroSai;
   }
 
   clone()
-  { return new InfoInimigo(this.formaGeometrica, AuxInfo.cloneImgCor(this.corImgMorto), this.vida, this.corVida, this.mostrarVidaSempre, this.porcentagemTempoVida, this.infoTiroPadrao.clone(), this.freqTiro, this.podeAtirarQualquerLado, this.qtdTiraVidaPersQndIntersec, this.infoAndar.clone(), this.ehInimEssencial); }
+  { return new InfoInimigo(this.formaGeometrica, AuxInfo.cloneImgCor(this.corImgMorto), this.vida, this.corVida, this.mostrarVidaSempre, this.porcentagemTempoVida, this.infoTiroPadrao.clone(), this.freqTiro, this.podeAtirarQualquerLado, this.qtdTiraVidaPersQndIntersec, this.infoAndar.clone(), this.ehInimEssencial, this.direcaoTiroSai, this.tiroDuplo, this.distanciaTiroVert); }
 }
 const tempoMostrarVidaPadrao = 675;
 class Inimigo extends ObjComTiros
@@ -310,7 +317,7 @@ class Inimigo extends ObjComTiros
     this._podeAtirarQualquerLado = infoInimigo.podeAtirarQualquerLado;
     const _this = this;
     this._funcFreqAtirar = new FreqFunction(function() { _this._procedimentoAtirar(); }, this._freqTiro, true);
-    this.procPosMudarTiro();
+    this._direcaoTiroSai = infoInimigo.direcaoTiroSai;
 
     //andar
     this._seEhImpossivelExcep(infoInimigo.infoAndar.tipoAndar);
@@ -349,8 +356,8 @@ class Inimigo extends ObjComTiros
   procCriou(indexContrInim)
   { ConjuntoObjetosTela.pers.controladorTiros.procedimentoObjTelaColideCriar(this, indexContrInim); }
 
-  procPosMudarTiro()
-  { this._decidirDirecaoTiro = this._podeAtirarQualquerLado && this._controladorTiros.infoTiroPadraoAtual.infoAndar.tipoAndar === Andar.SEGUIR_PERS; }
+  get _decidirDirecaoTiro() //private porque soh pode ser usado dentro da classe e nao eh metodo porque fica mais facil e simples assim
+  { return this._podeAtirarQualquerLado && this._controladorTiros.infoTiroPadraoAtual.infoAndar.tipoAndar === Andar.SEGUIR_PERS; }
 
   //getters e setters andar
   get classeAndar()
@@ -418,7 +425,7 @@ class Inimigo extends ObjComTiros
     if (this._decidirDirecaoTiro)
       super.atirar(Direcao.emQualDirecaoObjEsta(this._formaGeometrica, ConjuntoObjetosTela.pers.formaGeometrica));
     else
-      super.atirar();
+      super.atirar(this._direcaoTiroSai);
   }
 
   get freqTiro()

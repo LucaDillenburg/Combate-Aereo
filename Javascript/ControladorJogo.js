@@ -68,7 +68,7 @@ class ControladorJogo
     let infoTiroInim = new InfoTiro();
     infoTiroInim.formaGeometrica = new Retangulo(null,null, 2.7, 5, {fill: corTiro, stroke: corTiro});
     infoTiroInim.corImgMorto = {fill: color("black"), stroke: color("black")};
-    infoTiroInim.infoAndar = new InfoAndar(0, 13, TipoAndar.DirecaoPers);
+    infoTiroInim.infoAndar = new InfoAndar(0, 13, TipoAndar.Normal);
     infoTiroInim.ehDoPers = false;
     infoTiroInim.mortalidade = 3;
 
@@ -147,6 +147,9 @@ class ControladorJogo
         infoInim1.podeAtirarQualquerLado = false;
         infoInim1.qtdTiraVidaPersQndIntersec = 2;
         infoInim1.infoAndar = new InfoAndar(0, 0, TipoAndar.NaoSairTelaInvTudo);
+        infoInim1.tiroDuplo = true;
+        infoInim1.distanciaTiroVert = 12;
+        infoInim1.direcaoTiroSai = Direcao.Baixo;
         this._controladoresInimigos[0] = new ControladorInimigos(infoInim1, 0, true); //sao inimigos essenciais
         this._controladoresInimigos[0].adicionarInimigo({posicaoX: PosicaoX.Meio, y: 20});
 

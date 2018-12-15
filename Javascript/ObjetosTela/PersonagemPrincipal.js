@@ -1,14 +1,14 @@
 //PERSONAGEM PRINCIPAL
 class InfoPersonagemPrincipal extends InfoObjComTiros
 {
-  constructor(formaGeometrica, corImgMorto, vida, infoTiroPadrao, qtdAndar)
+  constructor(formaGeometrica, corImgMorto, vida, infoTiroPadrao, qtdAndar, tiroDuplo, distanciaTiroVert)
   {
-    super(formaGeometrica, corImgMorto, vida, infoTiroPadrao);
+    super(formaGeometrica, corImgMorto, vida, infoTiroPadrao, tiroDuplo, distanciaTiroVert);
     this.qtdAndar = qtdAndar;
   }
 
   clone()
-  { return new InfoPersonagemPrincipal(this.formaGeometrica, AuxInfo.cloneImgCor(this.corImgMorto), this.vida, this.infoTiroPadrao.clone(), this.qtdAndar); }
+  { return new InfoPersonagemPrincipal(this.formaGeometrica, AuxInfo.cloneImgCor(this.corImgMorto), this.vida, this.infoTiroPadrao.clone(), this.qtdAndar, this.tiroDuplo, this.distanciaTiroVert); }
 }
 const freqMissilPers = 28;
 class PersonagemPrincipal extends ObjComTiros
