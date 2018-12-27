@@ -60,6 +60,7 @@ class ListaDuplamenteLigada
       this._ultimo = null;
     else
       this._prim.ant = null;
+    this._qtdElem--;
   }
   removerDoFinal()
   {
@@ -172,8 +173,6 @@ class ListaDuplamenteLigada
       atual = atual.prox;
     }
     console.log(string + "null");
-
-    console.table({prim: this._prim, ult: this._ultimo});
   }
 }
 

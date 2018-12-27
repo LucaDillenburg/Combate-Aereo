@@ -1,3 +1,5 @@
+const PI = 3.141592653589793238462643383279;
+
 const qtdConsideradoQuaseExato = 0.005;
 class Exatidao
 {
@@ -265,15 +267,19 @@ const qntNaoColidir = 0.2;
 class Interseccao
 {
 	//ESTAH INTERSECTANDO
-	static intersecDirecao(inicio1, distancia1, inicio2, distancia2)
+	static intersecDirecao(inicio1, distancia1, inicio2, distancia2, help)
   // retorna se estah intersectando
 	{
-		if (distancia1 <= distancia2)
+		if (distancia1 <= distancia2) { if (help) console.log("1");
+
 			return (inicio1 >= inicio2 && inicio1 <= inicio2 + distancia2)
-				|| (inicio1 + distancia1 >= inicio2 && inicio1 + distancia1 <= inicio2 + distancia2);
-		else
+				|| (inicio1 + distancia1 >= inicio2 && inicio1 + distancia1 <= inicio2 + distancia2); }
+
+		else { if (help) console.log("2");
+
 			return (inicio2 >= inicio1 && inicio2 <= inicio1 + distancia1)
-				|| (inicio2 + distancia2 >= inicio1 && inicio2 + distancia2 <= inicio1 + distancia1);
+				|| (inicio2 + distancia2 >= inicio1 && inicio2 + distancia2 <= inicio1 + distancia1); }
+
 	}
 
   static inteiroDentroDeDirecao(inicio1, distancia1, inicio2, distancia2)
@@ -505,44 +511,70 @@ class Interseccao
     }else
     //se nao precisa andar proporcional (anda o maximo que pode nas duas direcoes)
     {
+      // verifica se nao estah intersectando nas duas direcoes
+      const estahIntersectandoX = Interseccao.intersecDirecao(obj2.x, obj2.width, obj1.x, obj1.width);
+      const estahIntersectandoY = Interseccao.intersecDirecao(obj2.y, obj2.height, obj1.y, obj1.height);
+
+      // se nao estiver intersectando em nenhuma das direcoes, tambem tem que calcular quanto tem que andar...
+      const naoEstahIntersectandoNenhum = !estahIntersectandoX && !estahIntersectandoY;
+
       let qtdPodeAndarY;
-      if (Interseccao.intersecDirecao(obj2.x, obj2.width, obj1.x, obj1.width))
+      if (estahIntersectandoX || naoEstahIntersectandoNenhum)
       //se estah intersectando em X (eh trocado mesmo)
         qtdPodeAndarY = Interseccao._qtdPodeAndarEmY(obj1, obj2, qtdAndarY);
       else
         qtdPodeAndarY = qtdAndarY;
-
       let qtdPodeAndarX;
-      if (Interseccao.intersecDirecao(obj2.y, obj2.height, obj1.y, obj1.height))
+      if (estahIntersectandoY || naoEstahIntersectandoNenhum)
       //se estah intersectando em Y (eh trocado mesmo)
         qtdPodeAndarX = Interseccao._qtdPodeAndarEmX(obj1, obj2, qtdAndarX);
       else
         qtdPodeAndarX = qtdAndarX;
 
+      if (Math.abs(qtdPodeAndarY) > Math.abs(qtdAndarY) || Math.abs(qtdPodeAndarX) > Math.abs(qtdAndarX))
+        console.log({pode: {x: qtdPodeAndarX, y: qtdPodeAndarY}, queria: {x: qtdAndarX, y: qtdAndarY}});
+
       return {x: qtdPodeAndarX, y: qtdPodeAndarY};
     }
 	}
   static _qtdPodeAndarEmX(obj1, obj2, qtdAndarX)
-  // se jah sabe que vai colidir em X
+  // considera que vai colidir em X
   {
     if (qtdAndarX < 0)
-      return obj1.x + obj1.width - obj2.x +qntNaoColidir;
+      return Interseccao._qtdPodeAndarNaoColidir(obj1.x + obj1.width - obj2.x);
     else
     if (qtdAndarX > 0)
-      return obj1.x - (obj2.x + obj2.width) -qntNaoColidir;
+      return Interseccao._qtdPodeAndarNaoColidir(obj1.x - (obj2.x + obj2.width));
     else
       return 0;
   }
   static _qtdPodeAndarEmY(obj1, obj2, qtdAndarY)
-  // se jah sabe que vai colidir em Y
+  // considera que vai colidir em Y
   {
     if (qtdAndarY < 0)
-      return obj1.y + obj1.height - obj2.y +qntNaoColidir;
+      return Interseccao._qtdPodeAndarNaoColidir(obj1.y + obj1.height - obj2.y);
     else
     if (qtdAndarY > 0)
-      return obj1.y - (obj2.y + obj2.height) -qntNaoColidir;
+      return Interseccao._qtdPodeAndarNaoColidir(obj1.y - (obj2.y + obj2.height));
     else
       return 0;
+  }
+  static _qtdPodeAndarNaoColidir(qtdAndar)
+  {
+    if (qtdAndar < 0)
+    {
+      if (qtdAndar + qntNaoColidir >= 0)
+        return 0;
+      else
+        return qtdAndar + qntNaoColidir;
+    }else
+    //if (qtdAndar >= 0)
+    {
+      if (qtdAndar - qntNaoColidir <= 0)
+        return 0;
+      else
+        return qtdAndar - qntNaoColidir;
+    }
   }
   static _montarParalelogramosAndar(obj, qtdAndarX, qtdAndarY)
   //esse metodo vai retornar o(s) paralelogramo(s) que o andar de obj formaria (1 ou 2)
@@ -697,7 +729,6 @@ class Interseccao
   }
 }
 
-const espacoLadosTela = 4;
 class Tela
 {
 	//JAH SAIU
@@ -716,10 +747,10 @@ class Tela
 	static objVaiSairEmX(obj, qtdMuda) //obj = formageometrica
 	{
     //saiu p/ direita
-		if (obj.maiorX + qtdMuda > width - espacoLadosTela)
+		if (obj.maiorX + qtdMuda > width)
 			return Direcao.Direita;
     //saiu p/ esquerda
-    if (obj.menorX + qtdMuda < espacoLadosTela)
+    if (obj.menorX + qtdMuda < 0)
       return Direcao.Esquerda;
     return 0; //nao saiu
 	}
@@ -731,19 +762,19 @@ class Tela
     if (!direcaoSair)
       return qtdMuda;
     if (direcaoSair === Direcao.Direita)
-      return (width - espacoLadosTela) - (obj.x + obj.width);
+      return width - (obj.x + obj.width);
     else
     //if (direcaoSair === Direcao.Esquerda)
-      return -obj.x + espacoLadosTela;
+      return -obj.x;
   }
 
 	static objVaiSairEmY(obj, qtdMuda) //obj = formageometrica
 	{
     //saiu p/ baixo
-		if (obj.maiorY + qtdMuda > height - heightVidaUsuario - espacoLadosTela)
+		if (obj.maiorY + qtdMuda > height - heightVidaUsuario)
 			return Direcao.Baixo;
     //saiu p/ cima
-    if (obj.menorY + qtdMuda < espacoLadosTela)
+    if (obj.menorY + qtdMuda < 0)
       return Direcao.Cima;
     return 0; //nao saiu
 	}
@@ -755,10 +786,10 @@ class Tela
     if (!direcaoSair)
       return qtdMuda;
     if (direcaoSair === Direcao.Baixo)
-      return (height - heightVidaUsuario - espacoLadosTela) - (obj.y + obj.height);
+      return (height - heightVidaUsuario) - (obj.y + obj.height);
     else
     //if (direcaoSair === Direcao.Baixo)
-      return -obj.y + espacoLadosTela;
+      return -obj.y;
   }
 
   static objVaiSair(obj, qtdMudaX, qtdMudaY)

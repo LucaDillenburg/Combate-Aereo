@@ -30,12 +30,17 @@ class ClasseAndar
   set qtdAndarX(qtdAndarX)
   {
     this._qtdAndarX = qtdAndarX;
-    this._colocarHipotenusaSePrecisa();
+    this._mudarHipotenusaSePrecisa();
   }
   set qtdAndarY(qtdAndarY)
   {
     this._qtdAndarY = qtdAndarY;
-    this._colocarHipotenusaSePrecisa();
+    this._mudarHipotenusaSePrecisa();
+  }
+  mudarQtdAndar(porcentagem)
+  {
+    this.qtdAndarX = this._qtdAndarX*porcentagem;
+    this.qtdAndarY = this._qtdAndarY*porcentagem;
   }
   setTipoAndar(tipo, formaGeom)
   //formaGeom eh de quem vai andar
@@ -77,7 +82,10 @@ class ClasseAndar
     }
 
     if (this._tipoAndar === null) this._tipoAndar = tipo;
-    this._colocarHipotenusaSePrecisa();
+
+    // se o tipo precisa de hipotenusa padrao vai colocar
+    if (this._tipoTemHipotenusaPadrao())
+      this._colocarHipotenusaPadrao();
   }
   _getInfoInimigoMaisProximo(formaGeom, sohEssenciais = false)
   {
@@ -151,7 +159,7 @@ class ClasseAndar
         this._qtdAndarX += this._aceleracao.valor * (this._qtdAndarX<0?-1:1);
         this._qtdAndarY += this._aceleracao.valor * (this._qtdAndarY<0?-1:1);
       }
-      this._colocarHipotenusaSePrecisa();
+      this._mudarHipotenusaSePrecisa();
     }
 
     return qtdAndar;
@@ -162,9 +170,9 @@ class ClasseAndar
     this._qtdAndarY = this._ultimoQtdAndar.y;
   }
 
-  _colocarHipotenusaSePrecisa()
+  _mudarHipotenusaSePrecisa()
   {
-    if (this._tipoTemHipotenusaPadrao())
+    if (this._hipotenusaPadrao !== undefined) //se estah com hipotenusa eh pra continuar colocando (atualizando essa variavel)
       this._colocarHipotenusaPadrao();
   }
   _tipoTemHipotenusaPadrao()
@@ -350,7 +358,7 @@ class ClasseAndar
   {
     this._qtdAndarX *= porcentagem;
     this._qtdAndarY *= porcentagem;
-    this._colocarHipotenusaSePrecisa();
+    this._mudarHipotenusaSePrecisa();
   }
 }
 
@@ -392,4 +400,18 @@ class InfoAndar
 
   clone()
   { return new InfoAndar(this.qtdAndarX, this.qtdAndarY, this.tipoAndar, (this.aceleracao===undefined?undefined:{valor: this.aceleracao.valor, ehPorcentagem: this.aceleracao.ehPorcentagem}), this.atehQualXYPodeAndar); }
+
+  // metodos diferentes de soh armazenar informacoes
+  mudarAnguloQtdAndar(angulo)
+  // angulo em radianos segundo o Ciclo Trigonometrico
+  {
+    //Explicacao:
+      //- O qtdAndarX e qtdAndarY vao mudar, porem a hipotenusa que esses dois qtdAndar formam deve continuar a mesma.
+      //- Portanto, odemos construir um triangulo no Ciclo Trigonometrico com esse angulo, hipotenusaPadrao como hipotenusa e raio do circulo e qtdAndarX e qtdAndarY como respectivos cateto adjacente (sobre o eixo X) e cateto oposto (sobre o eixo Y).
+      //- Entao basta resolver os valores de qtdAndarX e qtdAndarY usando Seno e Cosseno...
+
+    const hipotenusaPadrao = Operacoes.hipotenusa(this.qtdAndarX, this.qtdAndarY);
+    this.qtdAndarX = Math.cos(angulo)*hipotenusaPadrao;
+    this.qtdAndarY = Math.sin(angulo)*hipotenusaPadrao;
+  }
 }

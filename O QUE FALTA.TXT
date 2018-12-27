@@ -1,24 +1,63 @@
-- Fazer opcao para tiro duplo em ObjTelaComTiro. OK
-- Fazer opcao para escolher a direcao que o inimigo atira (InfoInimigo, Inimigo e ControladorInimigos). OK
+Novo:
+ - Melhora em atirar: poder atirar de infinitos infoTiros, frequencias, lugares, direcao sair,... OK
+ - Acessorios Giratorios (arma giratoria e helice):
+   .opcao para colocar imagens em cima da original (helice, fogo, arma giratoria,...) com chave (dicionario) e atributos: {angulo de rotacao, pontoCentral, width, height}. OK
+   .fazer algoritmo para girar as helices dos helicopteros automaticamente antes de cada draw. OK
+   .fazer algoritmo para girar a arma quando algum ObjetoComTiro tiver arma giratoria (a direcao da arma do personagem gira de acordo com a seta do mouse e a do inimigo de acordo com o personagem)
+   ps: nao gira instantaneo (tem velocidade maxima), o tiro eh criado no lugar certo e anda nesse angulo
+ - Fazer Obstaculos, Inimigos e Pocoes irem aparecendo (crescendo e mudando opacidade) em algum tempo e soh entao comeca o Level propriamente dito (durante o tempo que eles estao aparecendo o personagem pode se mover, atirar e ir na Oficina). OK
+ - Arrumar todas as Pocoes. OK
 
-//resto:
-- Fazer Obstaculos e Inimigos irem aparecendo (crescendo e mudando opacidade) em algum tempo e soh entao comeca o Level propriamente dito (durante o tempo que eles estao aparecendo o personagem pode se mover, atirar e ir na Oficina)
-- CreateCanvas de um tamanho mínimo: metade de toda tela + quando o canvas perde o foco, pausa-lo
-- CRIAR NIVEIS + PEGAR IMAGENS PARA PERSONAGEM, INIMIGOS, OBSTACULOS, POCOES (tematico!)
+ - tirar vida do personagem quando ele bater em obstaculo (novo atributo de obstaculo). OK
+ - CreateCanvas de um tamanho mínimo: metade de toda tela. OK
+ - opcao pra escolher a cor do stroke da vida dos inimigos. OK
+ - Fazer classe: FuncaoEm camadas/niveis. andouCamada(), regrediuCamada() -> retorna se deve fazer a funcao. OK
+ - adicionar teclas AWDS para poder mover o personagem tambem. OK
+ - Arrumei: OBSTACULOS ESTAO SENDO MORTOS PELO PERSONAGEM "DO NADA" (soh nos vertices). OK
+ - arrumar opacidade das FormasGeometricas: estah sempre com 100% opacidade em ObjetoTelaAparecendo. OK
+ - deixar pocoes a partir do primeiro level. OK
+ - arrumar erro basico em Timer (agora estah ficando o tempo certo). OK
 
-- Fazer classe: FuncaoEm camadas/niveis. andouCamada(), regrediuCamada() -> retorna se deve fazer a funcao (dar nome para classe de acordo com aquela palavra do livro de Daniel: olhar biblia)
-- Mover e fazer tais procedimentos antes de printa-los na tela? tiros nao estao sendo printados mortos
-- tiros e obstaculos aparentemente nao estao sumindo logo que morrem (estah ficando mais doq um draw, ver se estah tirando depois do draw)
-- ver se tem que clonar Info ou nao
-- ver comentarios //TODO
+---------------------------------------------------------------------------------------------
 
-- mudar nome dos metodos "privados" para ter '_' na frente, transformar ControladorJogo e PersonagemPrincipal em SingleTone? (eh boa pratica)
-- mudar class ListaLigada para classe do proprio Javascript?? Tem todos os metodos mas aparentemente eh mais lento quando fica-se adicionando e removendo coisas (principalmente removendo)... ver se vale a pena
-- otimizar codigo
-- e colisao de inimigo com inimigo e obstaculo ??
-- opcao para mudar tamanho obstaculo??
+FAZER AGORA:
+ - opcao em ObjetoTelaAparecendo para ir aparecendo de certo lugar (ir andando e aparecendo).
+ps: Colocar opcao em ControladorInimigos e ControladorObstaculo para os objetos que forem adicionados poderem aparecer andando
+
+ - no aviao com arma giratoria deixar os tiros do lado para ele lancar misseis: deixar ele ter frequencia, porem quando a frequencia for completada, ao inves do aviao atirar, ele libera o tiro do personagem ateh ele atirar de novo
+ps: ControladorJogo.atirarEspecial() /* se houver e puder */
+
+melhorar e otimizar codigo:
+ - tiros aparentemente nao estao sumindo logo que morrem (quando morrem no procCriou)
+ - transformar ControladorJogo em SingleTone e acabar com ConjuntoObjetosTela? (eh boa pratica? e PersonagemPrincipal?? acho que nao tem necessidade...)
+ - mudar class ListaLigada para classe do proprio Javascript?? Tem todos os metodos mas aparentemente eh mais lento quando fica-se adicionando e removendo coisas (principalmente removendo)... ver se vale a pena. GUARDAR ATUAL EH MUITA PORQUISSE
+ - otimizar codigo (ex: tirar fors e colocar .forEach ou for...in)
+ - ver se tem que clonar Info ou nao (acho que nao precisa clonar quando for passar InfoX por parametro porque no proprio construtor ele clona o que precisa (tem coisas que nao precisam ser clonadas))
+
+//resto
+- mudar alguns procedimentos que nao sao propriamente dos Controladores ou que usam "_configContrTiros" para semelhante a "objComTiro.procComTodosContrTiros(funcao)"
+- mudar nome dos metodos "privados" para ter '_' na frente (dar uma olhada nas classes porque tem alguns metodos private sem '_')
+
+- Mover e fazer tais procedimentos antes de printa-los na tela? printar todos os tiros uma vez depois de mortos?
+- mudar nome de PersonagemPrincipal (nao eh um personagem e tem soh 1 dele) e "pers"
+- mudar "nave" para outra coisa
+- mudar corImg para img em ObjetoTela
+
+- ver comentarios //TODO (nao design)
+
+- CRIAR NIVEIS:
+ -> PEGAR IMAGENS PARA PERSONAGEM, INIMIGOS, OBSTACULOS, POCOES. ps: ver imagens do safari, computador e outras
+ -> tratar essas imagens (deixar como .PNG e sem fundo)
+ -> pensar nas caracteristicas de cada
+ -> pensar em como vai ser os levels
+ -> implementar no ControladorJogo propriamente dito
+
+- ver comentarios //TODO (design)
+- esquema pra desenhar caminho de inimigos/obstaculos?? (outro .html?) ps: pensar em diferenca do width e height de cada execucao. Ver outros jogos do tipo...
+- Quando o canvas perde o foco, pausa-lo (teoricamente ta certo mas evento nao fire)
 
 Geometria:
+- set width e height de FormaGeometricaComplexa ??
 - programar centroMassa de quadrilatero (media de todos os vertices)
 - pensar um pouco na colisao de obstaculos (para onde eles vao quando colidem)
 - fazer Interseccao.qntPodeAndarAntesIntersec(...) para Triangulo
@@ -30,9 +69,11 @@ Geometria:
 - podemos saber se um ponto estah dentro de um quadrilatero (ou soh paralelogramo?) se estiver entre as retas de cima e de baixo e da direita e da esquerda (qual maneira eh mair rapida??)
 
 Outros:
-- variaveis que sao guardadas separadamente e depois tem que juntar, guardar junto (ex: infoAndar). ps: fazer classe para infoAndar por exemplo
-- arrumar andar do personagem (quando jah tem duas teclas pressionadas quando uma terceira eh pressionada, o evento nao eh fired)
-- colocar som
 - quando objetos com vida perderem vida abaixar a vida gradativamente (mudarVida gradativamente)
 - quando um tiro colidir com obstaculos e inimigos guardar todos eles, e soh tirar da lista quando todos os inimigos e
 obstaculos andarem (mudar emQuemBateu, procCriou, _estadoTiroPosAndarEhPers)
+- variaveis que sao guardadas separadamente e depois tem que juntar, guardar junto
+- arrumar andar do personagem (quando jah tem duas teclas pressionadas quando uma terceira eh pressionada, o evento nao eh fired)
+- e colisao de inimigo com inimigo e obstaculo ??
+- opcao para mudar tamanho obstaculo??
+- colocar som??

@@ -4,14 +4,16 @@ class ControladorTiros
   constructor(infoTiroPadrao, ehPersPrinc)
   {
     //padrao
-    this._infoTiroPadrao = infoTiroPadrao;
+    if (infoTiroPadrao !== undefined)
+    // pode nao ser definido, se no level nao houver controladores de tiros do jogo (porem tem que criar um pelo menos para colocar quando inimigos morrerem)
+      this._infoTiroPadrao = infoTiroPadrao.clone();
     this._ehPersPrinc = ehPersPrinc;
 
     //LISTA DUPLAMENTE LIGADA (COM PONTEIRO NO ULTIMO)
     // ir adicionando os tiros no comeco e quando eles sairem da tela ou baterem tirar da lista
     this._tiros = new ListaDuplamenteLigada();
 
-    this._auxColTirarTirosEsp = 0;
+    this._funcCamadasColTirarTirosEsp = new FuncEmCamadas();
   }
 
   //infoTiroPadrao
@@ -23,13 +25,11 @@ class ControladorTiros
   colocarInfoTiroEspecial(novoInfoTiro)
   {
     this._infoTiroEspecial = novoInfoTiro;
-    this._auxColTirarTirosEsp++;
+    this._funcCamadasColTirarTirosEsp.subirCamada();
   }
   voltarInfoTiroPadrao()
   {
-    this._auxColTirarTirosEsp--;
-
-    if (this._auxColTirarTirosEsp === 0)
+    if (this._funcCamadasColTirarTirosEsp.descerCamada())
       delete this._infoTiroEspecial;
   }
 
@@ -147,7 +147,7 @@ class ControladorTiros
       if (this._tiros.atual.vivo && Interseccao.interseccao(this._tiros.atual.formaGeometrica, objTelaColide.formaGeometrica))
       {
         //se objeto tela tem vida e eh para tirar vida
-        if (podeTirarVidaObjTela && temVida)
+        if (podeTirarVidaObjTela && objTemVida)
           this._tiros.atual.tirarVidaObjCmVida(objTelaColide);
         this._tiros.atual.morreu(tipoObjCriado, indexCriou);
       }
@@ -170,7 +170,7 @@ class ControladorTiros
       {
         this._tiros.atual.inverterDono(); //se era do pers fica sendo da tela, e se nao era do pers fica sendo dele
 
-        if (this.ehPersPrinc)
+        if (this._ehPersPrinc)
           this._tiros.atual.setTipoAndar(seguir?TipoAndar.SeguirPers:TipoAndar.DirecaoPers);
         else
           this._tiros.atual.setTipoAndar(seguir?TipoAndar.SeguirInimMaisProx:TipoAndar.DirecaoInimMaisProx);
@@ -180,13 +180,28 @@ class ControladorTiros
     if (this._ehPersPrinc)
       ConjuntoObjetosTela.controladoresTirosJogo[0].concatenarTiros(this);
     else
-      ConjuntoObjetosTela.pers.controladorTiros.concatenarTiros(this);
+      ConjuntoObjetosTela.pers.getControladorTiros(0).concatenarTiros(this);
+
+    //jah passou os tiros pra outro controladorTiro, entao apaga desse pra nao ficar duplicado
+    this._tiros.esvaziar();
   }
   mudarTempo(porcentagem)
   {
     for (this._tiros.colocarAtualComeco(); !this._tiros.atualEhNulo; this._tiros.andarAtual())
       if (this._tiros.atual.vivo)
-        this._tiros.classeAndar.mudarTempo(porcentagem);
+        this._tiros.atual.classeAndar.mudarTempo(porcentagem);
+  }
+  mudarQtdAndarTiros(porcentagem)
+  {
+    for (this._tiros.colocarAtualComeco(); !this._tiros.atualEhNulo; this._tiros.andarAtual())
+      if (this._tiros.atual.vivo)
+        this._tiros.classeAndar.mudarQtdAndar(porcentagem);
+  }
+  mudarMortalidadeTiros(qtdMudar, ehPorcentagem)
+  {
+    for (this._tiros.colocarAtualComeco(); !this._tiros.atualEhNulo; this._tiros.andarAtual())
+      if (this._tiros.atual.vivo)
+        this._tiros.classeAndar.mudarMortalidade(qtdMudar, ehPorcentagem);
   }
 
 	//draw
@@ -290,8 +305,13 @@ class Tiro extends ObjetoTela
   { return this._mortalidade; }
   set mortalidade(qtd)
   { this._mortalidade = qtd; }
-  mudarMortalidade(qtdMudar)
-  { this._mortalidade += qtdMudar; }
+  mudarMortalidade(qtdMudar, ehPorcentagem)
+  {
+    if (ehPorcentagem)
+      this._mortalidade *= qtdMudar;
+    else
+      this._mortalidade += qtdMudar;
+  }
 
   get ehDoPers()
   { return this._ehDoPers; }

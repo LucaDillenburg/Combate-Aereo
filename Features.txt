@@ -10,3 +10,7 @@ FEATURES DIFERENCIAIS:
  - tiros da tela
  - POCOES: que se guardam e que usam na hora (ainda nao implementado)
  - Ao inves de cor, os objetos podem ser imagens (quando um objeto da tela morre/explode/... antes de sair da tela ele eh mostrado mais uma vez com a cor/imagem de morto)
+
+ - pode atirar pra qualquer lado, da onde quiser, cada ObjComTiro pode ter mais de um tiro de tipos, frequencias,... diferenciados
+ - arma giratoria
+ - helices

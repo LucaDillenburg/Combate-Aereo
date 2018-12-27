@@ -2,7 +2,7 @@
 Math.myrandom = function (min, max)
 //inclusive min e exclusive max
 {
-  return Math.random() * (max - min) + min;
+  return Math.floor(Math.random() * (max - min) + min);
 };
 //PS: Math isn't a constructor, so it doesn't have prototype property. Instead, just add your method to Math itself as an own property.
 

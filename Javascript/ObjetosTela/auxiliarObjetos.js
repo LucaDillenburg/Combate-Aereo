@@ -16,6 +16,23 @@ class AuxInfo
     else
       return {stroke: imgCor.stroke, fill: imgCor.fill}; //clone
   }
+
+  static cloneConfiguracoesAtirar(configuracoesAtirar)
+  {
+    let cloneConfigs = new Array(configuracoesAtirar.length);
+    for (let i = 0; i<cloneConfigs.length; i++)
+      cloneConfigs[i] = configuracoesAtirar[i].clone();
+    return cloneConfigs;
+  }
+
+  static cloneQtdsRotateDifHelice(qtdsRotateDifHelice)
+  {
+    if (qtdsRotateDifHelice === undefined) return undefined;
+
+    let ret = [];
+    qtdsRotateDifHelice.forEach(function(valor, index) { ret[index] = valor; }); //copiar
+    return ret;
+  }
 }
 
 //CONTROLADORES OBJETOS

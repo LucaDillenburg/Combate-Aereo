@@ -2,31 +2,35 @@
 //quando eu uso um setTimeout ou setInterval, ele nao leva em consideracao se estah pausado (parando de contar o tempo) ou nao, entao isso eh uma solucao para isso
 class Timer
 {
-  constructor(funcao, tempoOuFreq, ehFreq, ehInterval, infoMudarTempo)
+  constructor(funcao, tempo, ehInterval, infoMudarTempo)
   //tempo em milisegundo
   //infoMudarTempo: obj, atr (que a variavel onde tempo restante estah), estahEmMiliseg (se variavel estah em milisegundos)
   {
     this._funcao = funcao;
-
-    if (ehFreq)
-      this._freq = tempoOuFreq;
-    else
-      this._freq = tempoOuFreq*(frameRatePadrao/1000); //porque tempo esta em milisegundo
-    this._ehInterval = ehInterval;
+    this._freq = tempo/frameRatePadrao;
+    this._ehInterval = ehInterval===true || ehInterval===Timer.ehIntervalFazerAoCriar || ehInterval===Timer.ehIntervalNaoFazerAoCriar;
 
     //variavel de controle para quando parar: (tem que ser antes do primeiro procDraw)
     this._continuar = true;
 
-    // pra ver se count eh zero
-    this._count = -1;
-    const vaiEntrarLista = this.procDraw();
-    if (!vaiEntrarLista) return;
+    if (ehInterval===Timer.ehIntervalFazerAoCriar)
+    {
+      this._funcao();
+      this._count = 0;
+    }
+    else
+    {
+      // pra ver se tempo eh zero
+      this._count = -1;
+      const vaiEntrarLista = this.procDraw();
+      if (!vaiEntrarLista) return;
+    }
 
     if (infoMudarTempo !== undefined)
     {
       this._infoMudarTempo = infoMudarTempo;
       //seta valor inicial do tempo (tempo total)
-      this._infoMudarTempo.obj[this._infoMudarTempo.atr] = tempoOuFreq / (ehFreq?frameRatePadrao:1);
+      this._infoMudarTempo.obj[this._infoMudarTempo.atr] = tempo;
     }
 
     if (ConjuntoObjetosTela.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.DeixarTempoMaisLento)
@@ -38,6 +42,10 @@ class Timer
 
     this._codTimer = ConjuntoTimers.proximoCodTimer;
   }
+
+  // "constantes" para interval (se for true nao faz agora)
+  static get ehIntervalFazerAoCriar() { return 1; }
+  static get ehIntervalNaoFazerAoCriar() { return 2; }
 
   get codTimer() { return this._codTimer; }
 
@@ -103,12 +111,14 @@ class ConjuntoTimers
 
   //metodos
   static adicionarTimer(novoTimer)
-  { console.log("%c adicionou", 'font-weight: bold; color: red'); ConjuntoTimers._timers.inserirNoFinal(novoTimer); ConjuntoTimers._timers.printar(); }
+  { ConjuntoTimers._timers.inserirNoFinal(novoTimer); }
   static procDraws()
   {
     for (ConjuntoTimers._timers.colocarAtualComeco(); !ConjuntoTimers._timers.atualEhNulo; ConjuntoTimers._timers.andarAtual())
     {
+      ConjuntoTimers._timers.guardarAtual();
       const continuaNaLista = ConjuntoTimers._timers.atual.procDraw();
+      ConjuntoTimers._timers.colocarGuardadoNoAtual();
       if (!continuaNaLista)
         ConjuntoTimers._timers.removerAtual();
     }
@@ -153,30 +163,41 @@ class ControladorTimersLevel
 //FUNCAO DEPOIS DE DETERMINADA CONTAGEM
 class FreqFunction //se for soh uma vez ou varias (se for soh uma vez, deixar classe como null depois que ele fizer a funcao)
 {
-  constructor(funcao, freq, indexAtual = 0) //se indexAtual for null, serah zero; e se for true, sera o ultimo
+  constructor(freq, indexAtual = 0, funcao)
+  // se freq for 1 vai fazer todas as vezes
+  //se indexAtual for undefined, serah zero; e se for true, sera o ultimo
   {
     this._funcao = funcao;
     this._freq = freq;
 
+    //soh pra ver se nao eh zero...
     if (indexAtual === true)
       this._count = freq-1;
     else
       this._count = indexAtual-1;
-
     this.contar();
   }
+
+  get freq() { return this._freq; }
+  set freq(novaFreq)
+  { this._freq = novaFreq; }
 
   contar()
   {
     this._count++;
     if (this._count >= this._freq)
     {
-      this._funcao();
+      if (this._funcao !== undefined)
+        this._funcao();
       this._count = 0;
-      return true;
+      return true; // iria chamar funcao
     }else
-      return false;
+      return false; // nao iria chamar funcao
   }
+
+  vaiExecutarFuncaoProximaVez()
+  // retorna se da proxima vez que contar vai executar a funcao
+  { return this._count + 1 >= this._freq; }
 
   //POCAO
   mudarTempo(porcentagem)
@@ -184,5 +205,27 @@ class FreqFunction //se for soh uma vez ou varias (se for soh uma vez, deixar cl
     const k = 1/porcentagem; //inversamente proporcional ao tempo
     this._freq *= k;
     this._count *= k;
+  }
+}
+
+
+//FUNCAO EM CAMADAS (lembra Quiasmo)
+class FuncEmCamadas
+{
+  constructor(funcao)
+  {
+    this._funcao = funcao;
+    this._count = 0;
+  }
+
+  subirCamada()
+  { this._count++; }
+
+  descerCamada()
+  {
+    this._count--;
+    if (this._count === 0 && this._funcao !== undefined)
+      this._funcao();
+    return this._count===0;
   }
 }

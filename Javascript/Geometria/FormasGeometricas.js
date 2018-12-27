@@ -8,10 +8,7 @@ class FormaGeometrica
   {
     //se nao estah querendo soh a parte de backend (sem colocar na tela)
     if (corImg !== undefined)
-    {
-      this._corImg = {}; //para caso seja cor nao de erro
       this.corImg = corImg;
-    }
   }
 
   //imagem/cor
@@ -19,25 +16,51 @@ class FormaGeometrica
   { return this._corImg; }
   set corImg(corImg)
   {
-    this._ehCor = corImg.stroke !== undefined;
+    this._ehCor = corImg.fill !== undefined;
     if (this._ehCor)
     {
+      if (this._corImg === undefined)
+        this._corImg = {};
+
       //isso impossibilita que se o corImg for mudado aqui ou la fora o outro seja mudado tambem
       this._corImg.stroke = corImg.stroke;
       this._corImg.fill = corImg.fill;
     }else
-      this._corImg = corImg;
+      this._corImg = loadImage(corImg); //se for imagem, passa soh o caminho dela como parametro
   }
   get ehCor()
   { return this._ehCor; }
 
   //desenhar imagem
-  _desenharImagem()
-  { image(this._img, this.x, this.y, this.width, this.height); }
-  _colocarCores()
+  _desenharImagem(opacidade)
   {
-    stroke(this._corImg.stroke);
-    fill(this._corImg.fill);
+    //opacidade
+    if (opacidade!==undefined)
+      tint(255, opacidade*255/*base 1 para base 255*/);
+    else
+      noTint();
+
+    image(this._img, this.x, this.y, this.width, this.height);
+  }
+  _colocarCores(opacidade)
+  {
+    let strokeAtual;
+    if (opacidade===undefined)
+    {
+      strokeAtual = this._corImg.stroke;
+      fill(this._corImg.fill);
+    }else
+    {
+      //deixar cores com opacidade
+      if (this._corImg.stroke !== undefined)
+        strokeAtual = color(red(this._corImg.stroke), green(this._corImg.stroke), blue(this._corImg.stroke), opacidade*255/*base 1 para base 255*/);
+      fill(color(red(this._corImg.fill), green(this._corImg.fill), blue(this._corImg.fill), opacidade*255/*base 1 para base 255*/));
+    }
+
+    if (strokeAtual === undefined) //se nao tem stroke, eh noStroke()
+      noStroke();
+    else
+      stroke(strokeAtual);
   }
 
   //arestas
@@ -69,27 +92,74 @@ class FormaGeometrica
   get height()
   { return this.maiorY - this.menorY; }
 
-  colocarNoMeioX()
-  { this.x = Tela.xParaEstarNoMeio(this.width); }
-  colocarParedeEsquerda()
-  { this.x = 0; }
-  colocarParedeDireita()
-  { this.x = width - this.width; }
+  // mudar (x,y)
+  get xParaEstarNoMeio() { return Tela.xParaEstarNoMeio(this.width); }
+  get xParaEstarParedeDireita() { return width - this.width; }
+  get yParaEstarNoMeio() { return Tela.yParaEstarNoMeio(this.height); }
+  get yParaEstarParedeBaixo() { return height - heightVidaUsuario - this.height; }
 
-  colocarNoMeioY()
-  { this.y = Tela.yParaEstarNoMeio(this.height); }
-  colocarParedeCima()
-  { this.y = 0; }
-  colocarParedeBaixo()
-  { this.y = height - heightVidaUsuario - this.height; }
+  colocarParedeEsquerda() { this.x = 0; }
+  colocarNoMeioX() { this.x = this.xParaEstarNoMeio; }
+  colocarParedeDireita() { this.x = this.xParaEstarParedeDireita; }
 
-  //para clone
+  colocarParedeCima() { this.y = 0; }
+  colocarNoMeioY() { this.y = this.yParaEstarNoMeio; }
+  colocarParedeBaixo() { this.y = this.yParaEstarParedeBaixo; }
+
   colocarLugarEspecificado(x,y)
   {
-    if (x !== undefined)
-      this.x = x;
-    if (y !== undefined)
-      this.y = y;
+    if (x !== undefined) this.x = x;
+    if (y !== undefined) this.y = y;
+  }
+
+  // toString
+  toString()
+  { return "{x: "+this.x+", y:"+this.y+"}\nwidth: " + this.width + "; height: " + this.height; }
+
+ //imagens por cima da orginal
+  //adicionar e remover
+  adicionarImagemSecundaria(chave, img, width, height, pontoCentral)
+  {
+    if (this._imagensSecundarias === undefined)
+      this._imagensSecundarias = [];
+
+    const infoImgSec = {img: loadImage(img), width: width, height: height, pontoCentral: pontoCentral, rotacao: 0};
+    if (chave === undefined)
+    {
+      this._imagensSecundarias.push(infoImgSec);
+      return this._imagensSecundarias.length;
+    }else
+      this._imagensSecundarias[chave] = infoImgSec;
+  }
+  removerImagemSecundaria(chave)
+  { delete this._imagensSecundarias[chave]; }
+  //rotacao
+  rotacionarImagemSecundaria(chave, qtdMuda)
+  { this._imagensSecundarias[chave].rotacao += qtdMuda; }
+  getRotacaoImgSecundaria(chave) { return this._imagensSecundarias[chave].rotacao; }
+  //pontoCentral
+  getPontoCentralImagemSecundaria(chave) //ponto central relativo (considerando o ponto mais em cima e da direita da forma geometrica (0,0))
+  { return this._imagensSecundarias[chave].pontoCentral; }
+  getPontoCentralAbsolutoImagemSecundaria(chave) //ponto central absoluto (considerando o ponto mais em cima e da direita do canvas (0,0))
+  { return new Ponto(this.x, this.y).mais(this.getPontoCentralImagemSecundaria(chave)); }
+  //medidas (width, height)
+  getMedidaImagemSecundaria(chave, ehWidth)
+  {
+    if (ehWidth)
+      return this._imagensSecundarias[chave].width;
+    else
+      return this._imagensSecundarias[chave].height;
+  }
+  //desenhar
+  _desenharImagensSecundarias()
+  {
+    if (this._imagensSecundarias !== undefined)
+      this._imagensSecundarias.forEach(infoImgSec => {
+        const xRel = infoImgSec.pontoCentral.x - infoImgSec.width/2;
+        const yRel = infoImgSec.pontoCentral.y - infoImgSec.height/2;
+        rotate(infoImgSec.rotacao);
+        image(infoImgSec.img, xRel + this.x, yRel + this.y, infoImgSec.width, infoImgSec.height);
+      });
   }
 }
 /*Quem der extends em FormaGeometricaComplexa tem que ter:
@@ -111,14 +181,14 @@ class FormaGeometrica
 
   -> get centroMassa()
 
-  //forma e cor
-  -> draw()
+  //desenho
+  -> draw(opacidade)
 
+  //clone
   -> clone(x,y)
 
 ps: nao fiz com interface, pois nao faz muito sentido em javascript
 */
-
 
 // FORMAS SIMPLES
 class FormaGeometricaSimples extends FormaGeometrica
@@ -239,16 +309,18 @@ class FormaGeometricaSimples extends FormaGeometrica
   { return this.ultimoAngDir + 180; }
 
   //draw
-  draw()
+  draw(opacidade)
   {
     if (this._ehCor)
     {
-      this._colocarCores();
+      this._colocarCores(opacidade);
       //desenhar retangulo
       rect(this._x, this._y, this.width, this.height);
     }else
     //desenhar a imagem
-      this._desenharImagem();
+      this._desenharImagem(opacidade);
+
+    this._desenharImagensSecundarias();
   }
 
   //interseccao
@@ -293,7 +365,7 @@ class Retangulo extends FormaGeometricaSimples
   //setters tamanho
   mudarWidth(qtdMuda)
   {
-    if (qtdMuda - this._width < 0)
+    if (this._width + qtdMuda < 0)
     //nao deixa width ficar negativo
       qtdMuda = -this._width;
     if (qtdMuda === 0)
@@ -317,7 +389,7 @@ class Retangulo extends FormaGeometricaSimples
 
   mudarHeight(qtdMuda)
   {
-    if (qtdMuda - this._height < 0)
+    if (this._height + qtdMuda < 0)
     //nao deixa height ficar negativo
       qtdMuda = -this._height;
     if (qtdMuda === 0)
@@ -374,19 +446,20 @@ class Quadrado extends FormaGeometricaSimples
   //getters e setters tamanho
   mudarTamanhoLado(qtdMuda)
   {
-    if (qtdMuda - this._tamLado < 0)
+    if (this._tamLado + qtdMuda < 0)
     //nao deixa tamanho lado ficar negativo
       qtdMuda = -this._tamLado;
-    if (qtdMuda === 0)
-      return this._tamLado > 0;
+    if (qtdMuda !== 0)
+    {
+      //aumenta ou diminui igual para os dois lados
+      this._x -= qtdMuda/2;
+      this._y -= qtdMuda/2;
+      this._tamLado += qtdMuda;
 
-    //aumenta ou diminui igual para os dois lados
-    this._x -= qtdMuda/2;
-    this._y -= qtdMuda/2;
-    this._tamLado += qtdMuda;
+      this._mudouArestasVerticesCentro();
+      this._mudouAngulosDirecoes();
+    }
 
-    this._mudouArestasVerticesCentro();
-    this._mudouAngulosDirecoes();
     return this._tamLado > 0;
   }
   set tamanhoLado(tamLado)
@@ -866,12 +939,12 @@ class Quadrilatero extends FormaGeometricaComplexa
   get nLados()
   { return 4; }
 
-  draw()
+  draw(opacidade)
   {
     if (this._ehCor)
     {
       //colocar cores
-      this._colocarCores();
+      this._colocarCores(opacidade);
       //desenhar o quadrilatero
       quad(this._a.x, this._a.y,
            this._b.x, this._b.y,
@@ -879,7 +952,9 @@ class Quadrilatero extends FormaGeometricaComplexa
            this._d.x, this._d.y);
     }else
     //desenhar a imagem
-      this._desenharImagem();
+      this._desenharImagem(opacidade);
+
+    this._desenharImagensSecundarias();
   }
 
   //clone
@@ -993,19 +1068,21 @@ class Triangulo extends FormaGeometricaComplexa
     return this._centroMassa;
   }
 
-  draw()
+  draw(opacidade)
   {
     if (this._ehCor)
     {
       //colocar cores
-      this._colocarCores();
+      this._colocarCores(opacidade);
       //desenhar triangulo
       triangle(this._a.x, this._a.y,
         this._b.x, this._b.y,
         this._c.x, this._c.y);
     }else
     //desenhar a imagem
-      this._desenharImagem();
+      this._desenharImagem(opacidade);
+
+    this._desenharImagensSecundarias();
   }
 
   //clone

@@ -1,4 +1,8 @@
+// tamanho
 const porcentagemTamPersMinimoTamOficina = 125;
+// dinheiro por (1/frameRate)s: cada 0.05 eh um pouco mais que 5
+const qntGanhaMinimoOficina = 0.15;
+const qntSomaACadaLvOficina = 0.05;
 class Oficina
 {
   constructor(level)
@@ -13,7 +17,7 @@ class Oficina
   }
 
   verificarEstahConsertando() { this._persEstahConsertando = this._formaGeometrica.contem(ConjuntoObjetosTela.pers.formaGeometrica); /* se tiver inteiramente dentro */ }
-  ganharVidaSeConsertando(level)
+  procVerificarConsertando(level)
   {
     if (this._persEstahConsertando)
       ConjuntoObjetosTela.pers.mudarVida(Oficina.qtdGanhaVidaEmOficinaLevel(level));
@@ -27,7 +31,7 @@ class Oficina
     return ConjuntoObjetosTela.pers.formaGeometrica.width*porcentagemTamPers/100;
   }
   static qtdGanhaVidaEmOficinaLevel(level)
-  { return level*0.015 + 0.1; }
+  { return qntGanhaMinimoOficina + (level-1)*qntSomaACadaLvOficina; }
 
   draw()
   { this._formaGeometrica.draw(); }

@@ -4,11 +4,64 @@
     <meta charset="utf-8">
     <title></title>
     <script src="../../Javascript/p5/p5.min.js"></script>
-    <script src="../../Javascript/Outros/ListaDuplamenteLigada.js"></script>
   </head>
   <body>
+    <input type="text" id="raio">
+    <input type="text" id="angulo">
+
     <script type="text/javascript" onload="setup()">
 
+    var centro, raio, angulo, ponto, pontoRel;
+
+    function setup()
+    {
+      // createCanvas must be the first statement
+      createCanvas(window.innerWidth-20, window.innerHeight-50);
+      background(0);
+
+      document.getElementById("defaultCanvas0").addEventListener("click", function(){
+        centro = {x: mouseX, y: mouseY};
+        raio = document.getElementById("raio").value;
+
+        let rotation = (PI*document.getElementById("angulo").value)/180; // pra deixar em radiano
+
+        console.log(rotation*180/PI);
+        angulo = PI/2 - rotation;
+        console.log(angulo*180/PI);
+        if (angulo < 0)
+          angulo += 2*PI;
+        console.log(angulo*180/PI);
+
+        const x = Math.cos(angulo) * raio;
+        const y = Math.sin(angulo) * raio;
+        pontoRel = {x: x, y: y};
+        ponto = {x: centro.x + x, y: centro.y + y};
+
+        /*
+          180 -- PI
+          1 -- x
+
+          x = PI*1/180
+        */
+
+        console.table([centro, ponto, raio, angulo, pontoRel]);
+      });
+    }
+    function draw()
+    {
+      background(0);
+      if (centro != null)
+      {
+        fill(255);
+        //ellipse(centro.x, centro.y, raio);
+
+        fill("green");
+        //if (ponto != null)
+        //  rect(ponto.x, ponto.y, 1, 1);
+      }
+    }
+
+/*
     function printar()
     {
       lista.printar();

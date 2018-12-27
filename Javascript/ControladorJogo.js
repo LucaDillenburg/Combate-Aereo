@@ -14,32 +14,41 @@ class ControladorJogo
   //getters
   get estadoJogo()
   { return this._estadoJogo; }
+  get criandoLevel()
+  { return this._criandoLevel; }
   get level()
   { return this._level; }
 
   static infoPersonagemPrincPadrao()
   {
-    const corPers = color(0, 51, 153);
-
-    //InfoPersonagemPrincipal: formaGeometrica, corImgMorto, vida, infoTiroPadrao, qtdAndar
+    //InfoPersonagemPrincipal: formaGeometrica, corImgMorto, vida, qtdAndar, configuracoesAtirar
     let infoPersonagemPrincipal = new InfoPersonagemPrincipal();
-    infoPersonagemPrincipal.formaGeometrica = new Quadrado(null,null, 30, {stroke: corPers, fill: corPers});
-    infoPersonagemPrincipal.corImgMorto = {stroke: color("black"), fill: color("black")};
+    infoPersonagemPrincipal.formaGeometrica = new Quadrado(null,null, 30, {fill: color(0, 51, 153)});
+    infoPersonagemPrincipal.corImgMorto = {fill: "black"};
     infoPersonagemPrincipal.vida = 100;
-    infoPersonagemPrincipal.infoTiroPadrao = ControladorJogo.infoTiroPersPadrao();
     infoPersonagemPrincipal.qtdAndar = 10;
+
+    // atirar do pers
+    // ConfigAtirar: infoTiroPadrao, freqAtirar, direcaoSairTiro, qntPraDentroObj, ehTiroDuplo, distanciaTiroVert, mudarDirAndarTiroDirSai
+    let configuracaoAtirar = new ConfigAtirar();
+    configuracaoAtirar.infoTiroPadrao = ControladorJogo.infoTiroPersPadrao();
+    configuracaoAtirar.freqAtirar = 1;
+    configuracaoAtirar.direcaoSairTiro = Direcao.Cima;
+    configuracaoAtirar.qntPraDentroObj = 5;
+    configuracaoAtirar.ehTiroDuplo = false;
+    configuracaoAtirar.mudarDirAndarTiroDirSai = false;
+
+    infoPersonagemPrincipal.configuracoesAtirar = [configuracaoAtirar];
 
     return infoPersonagemPrincipal;
   }
   static infoTiroPersPadrao()
   {
-    const corTiro = color(0, 0, 102);
-
     //InfoTiro: formaGeometrica, corImgMorto, infoAndar, ehDoPers, mortalidade
     let infoTiroPersPadrao = new InfoTiro();
-    infoTiroPersPadrao.formaGeometrica = new Retangulo(null,null, 5, 8, {fill: corTiro, stroke: corTiro});
-    infoTiroPersPadrao.corImgMorto = {fill: color("black"), stroke: color("black")};
-    infoTiroPersPadrao.infoAndar = new InfoAndar(0, -18, TipoAndar.Normal);
+    infoTiroPersPadrao.formaGeometrica = new Retangulo(null,null, 5, 8, {fill: color(0, 0, 102)});
+    infoTiroPersPadrao.corImgMorto = {fill: "black"};
+    infoTiroPersPadrao.infoAndar = new InfoAndar(0, -22, TipoAndar.Normal);
     infoTiroPersPadrao.ehDoPers = true;
     infoTiroPersPadrao.mortalidade = 5;
 
@@ -47,12 +56,10 @@ class ControladorJogo
   }
   static infoTiroMissilPers()
   {
-    const corTiro = color("white");
-
     //InfoTiro: formaGeometrica, corImgMorto, infoAndar, ehDoPers, mortalidade
     let infoMissil = new InfoTiro();
-    infoMissil.formaGeometrica = new Retangulo(null,null, 6, 10, {fill: corTiro, stroke: corTiro});
-    infoMissil.corImgMorto = {fill: color("black"), stroke: color("black")};
+    infoMissil.formaGeometrica = new Retangulo(null,null, 6, 10, {fill: "white"});
+    infoMissil.corImgMorto = {fill: "black"};
     infoMissil.infoAndar = new InfoAndar(0, -10, TipoAndar.SeguirInimMaisProx);
     infoMissil.ehDoPers = true;
     infoMissil.mortalidade = 20;
@@ -62,12 +69,10 @@ class ControladorJogo
 
   static infoTiroInim()
   {
-    const corTiro = color("red");
-
     //InfoTiro: formaGeometrica, corImgMorto, infoAndar, ehDoPers, mortalidade
     let infoTiroInim = new InfoTiro();
-    infoTiroInim.formaGeometrica = new Retangulo(null,null, 2.7, 5, {fill: corTiro, stroke: corTiro});
-    infoTiroInim.corImgMorto = {fill: color("black"), stroke: color("black")};
+    infoTiroInim.formaGeometrica = new Retangulo(null,null, 2.7, 5, {fill: "red"});
+    infoTiroInim.corImgMorto = {fill: "black"};
     infoTiroInim.infoAndar = new InfoAndar(0, 13, TipoAndar.Normal);
     infoTiroInim.ehDoPers = false;
     infoTiroInim.mortalidade = 3;
@@ -76,12 +81,10 @@ class ControladorJogo
   }
   static infoTiroTela()
   {
-    const corTiro = color("black");
-
     //InfoTiroPadrao: formaGeometrica, corImgMorto, infoAndar, ehDoPers, mortalidade
     let infoTiroTela = new InfoTiro();
-    infoTiroTela.formaGeometrica = new Retangulo(null,null, 25, 25, {fill: corTiro, stroke: corTiro});
-    infoTiroTela.corImgMorto = {fill: color("white"), stroke: color("white")};
+    infoTiroTela.formaGeometrica = new Retangulo(null,null, 25, 25, {fill: "black"});
+    infoTiroTela.corImgMorto = {fill: "white"};
     infoTiroTela.infoAndar = new InfoAndar(6, 0, TipoAndar.Normal);
     infoTiroTela.ehDoPers = false;
     infoTiroTela.mortalidade = 3;
@@ -132,63 +135,63 @@ class ControladorJogo
     switch(this._level)
     {
       case 1:
+      case 2:
       // inimigos
-        //InfoInimigo: formaGeometrica, corImgMorto, vida, corVida, mostrarVidaSempre, [porcentagemTempoVida], infoTiroPadrao, freqTiro, podeAtirarQualquerLado, qtdTiraVidaPersQndIntersec, infoAndar
+        //InfoInimigo: formaGeometrica, corImgMorto, vida, corVida, mostrarVidaSempre, porcentagemTempoVida, podeAtirarQualquerLado=false, qtdTiraVidaPersQndIntersec, infoAndar, configuracoesAtirar
         //Inimigo 1
-        const corInim = color("red");
+        const corInim = "red";
         let infoInim1 = new InfoInimigo();
-        infoInim1.formaGeometrica = new Quadrado(null,null, 50, {stroke: corInim, fill: corInim});
-        infoInim1.corImgMorto = {stroke: color("black"), fill: color("black")};
+        infoInim1.formaGeometrica = new Quadrado(undefined,undefined, 50, {fill: corInim});
+        infoInim1.corImgMorto = {fill: "black"};
         infoInim1.vida = 350;
-        infoInim1.corVida = corInim;
+        infoInim1.corVida = {stroke: color(200, 0, 0), fill: corInim};
         infoInim1.mostrarVidaSempre = true;
-        infoInim1.infoTiroPadrao = ControladorJogo.infoTiroInim();
-        infoInim1.freqTiro = 10;
         infoInim1.podeAtirarQualquerLado = false;
         infoInim1.qtdTiraVidaPersQndIntersec = 2;
         infoInim1.infoAndar = new InfoAndar(0, 0, TipoAndar.NaoSairTelaInvTudo);
-        infoInim1.tiroDuplo = true;
-        infoInim1.distanciaTiroVert = 12;
-        infoInim1.direcaoTiroSai = Direcao.Baixo;
+
+        //Atirar 1 do Inimigo 1
+        let configuracaoAtirar = new ConfigAtirar();
+        configuracaoAtirar.infoTiroPadrao = ControladorJogo.infoTiroInim();
+        configuracaoAtirar.freqAtirar = 10;
+        configuracaoAtirar.direcaoSairTiro = Direcao.Baixo;
+        configuracaoAtirar.qntPraDentroObj = 5;
+        configuracaoAtirar.mudarDirAndarTiroDirSai = false;
+        configuracaoAtirar.ehTiroDuplo = true;
+        configuracaoAtirar.distanciaTiroVert = 12;
+        infoInim1.configuracoesAtirar = [configuracaoAtirar];
+
         this._controladoresInimigos[0] = new ControladorInimigos(infoInim1, 0, true); //sao inimigos essenciais
         this._controladoresInimigos[0].adicionarInimigo({posicaoX: PosicaoX.Meio, y: 20});
+
+        //this._controladoresInimigos[1] = new ControladorInimigos(infoInim1.clone(), 0, false);
+        //this._controladoresInimigos[1].adicionarInimigo({posicaoX: PosicaoX.ParedeEsquerda, y: PosicaoY.Meio});
 
 
       // obstaculos
         //InfoObstaculo: formaGeometrica, corImgMorto, corImgEspecial, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers
-        const corObst = color("black");
         let infoObst1 = new InfoObstaculo();
-        infoObst1.formaGeometrica = new Retangulo(null,null, 25, 200, {stroke: corObst, fill: corObst});
-        infoObst1.corImgMorto = {stroke: color("white"), fill: color("white")};
-        infoObst1.corImgEspecial = {stroke: color("green"), fill: color("green")};
-        infoObst1.infoAndar = new InfoAndar(2, 2, TipoAndar.NaoSairTelaInvDir);
+        infoObst1.formaGeometrica = new Retangulo(null,null, 25, 200, {fill: "black"});
+        infoObst1.corImgMorto = {fill: "white"};
+        infoObst1.corImgEspecial = {fill: "green"};
+        infoObst1.infoAndar = new InfoAndar(0,0, TipoAndar.NaoSairTelaInvDir);
+        infoObst1.qtdTiraVidaBatePers = 1;
         infoObst1.qtdTiraVidaNaoConsegueEmpurrarPers = 10;
         this._controladoresObstaculos[0] = new ControladorObstaculos(infoObst1, 0);
-        this._controladoresObstaculos[0].adicionarObstaculo({posicaoY: PosicaoY.Meio, posicaoX: PosicaoX.Meio});
+        this._controladoresObstaculos[0].adicionarObstaculo({posicaoY: PosicaoY.Meio, posicaoX: PosicaoX.Meio, x: 70, y: 20});
 
 
       // tiros tela (soh pra ter onde colocar os tiros dos inimigos que morrerem)
         //para tiros de inimigos que morrem
-        this._controladoresTiros[0] = new ControladorTiros(null, false);
+        this._controladoresTiros[0] = new ControladorTiros(undefined, false);
         //tiros tela propriamente dito
         this._controladoresTiros[1] = new ControladorTiros(ControladorJogo.infoTiroTela(), false);
-
-
-      // Timers
-        const _this = this;
-        const tmrTiros = new Timer(function()
-        {
-          _this._controladoresTiros[1].adicionarTiroDif({posicaoX: PosicaoX.ParedeDireita, posicaoY: PosicaoY.Meio},
-            undefined, Direcao.Esquerda);
-          _this._controladoresTiros[1].adicionarTiroDif({posicaoX: PosicaoX.ParedeEsquerda, posicaoY: PosicaoY.Meio},
-            undefined, Direcao.Direita);
-        }, 5000, false, true);
-        this._controladorTimers.adicionarTimer(tmrTiros);
         break;
 
       case 10:
         //ganha nave espacial
-        this._personagemPrincipal.colocarNaveEspecial(new Quadrado(null,null, 30, {stroke: color("white"), fill: color("white")}));
+        this._personagemPrincipal.colocarOutraNave(formaGeometrica, corImgMorto, configuracoesAtirar);
+        this._personagemPrincipal.colocouNaveEscolheLadoAtirar();
         break;
 
       //se tiver mais levels colocar aqui, mudar em: ControladorJogo.tempoEstimadoLevel(), this._acabouLevel(), ControladorPocaoTela.pocoesPossiveisFromLevel(...), ControladorPocaoTela.probabilidadeFromLevel(...)
@@ -202,11 +205,33 @@ class ControladorJogo
     //colocar tudo na tela depois que jah criou tudo
     this._atualizarConjuntoObjetosTela();
 
-    // programar para o "Level X" da tela desaparecer
-    const _this = this;
-    new Timer(function(){ _this._colocarLvXTela = false; }, 3000, false, false);
-
     this._criandoLevel = false;
+
+    const _this = this;
+    // programar para o "Level X" da tela desaparecer
+    new Timer(function(){ _this._colocarLvXTela = false; }, 3000, false);
+    //adicionar timers
+    new Timer(function(){ _this._adicionarObjetosTmrLv(); }, tempoObjetoAparecerAntesIniciarLv, false);
+  }
+  _adicionarObjetosTmrLv()
+  {
+    // Timers
+    switch(this._level)
+    {
+      case 1:
+      case 2:
+        //inimigos
+        const _this = this;
+        const tmrTiros = new Timer(function()
+        {
+          _this._controladoresTiros[1].adicionarTiroDif({posicaoX: PosicaoX.ParedeDireita, posicaoY: PosicaoY.Meio},
+            undefined, Direcao.Esquerda);
+          _this._controladoresTiros[1].adicionarTiroDif({posicaoX: PosicaoX.ParedeEsquerda, posicaoY: PosicaoY.Meio},
+            undefined, Direcao.Direita);
+        }, 5000, Timer.ehIntervalFazerAoCriar); //jah chama esse procedimento agora
+        this._controladorTimers.adicionarTimer(tmrTiros);
+        break;
+    }
 
     //POCAO
     //terah no maximo uma pocao por level:
@@ -221,8 +246,6 @@ class ControladorJogo
   {
     this._level++; //passa de level
     this._controladorTimers.excluirTimers(); //finaliza timers antigos e os exclui
-    console.log(this._controladorTimers._timers);
-    ConjuntoTimers._timers.printar();
 
     //cria oficina
     this._oficina = new Oficina(this._level);
@@ -235,10 +258,7 @@ class ControladorJogo
     new Timer(function(){
       delete _this._oficina;
       ConjuntoObjetosTela.removerOficina();
-    }, 5000, false, false);
-
-    console.log("%cAQUI!!", 'color: green');
-    ConjuntoTimers._timers.printar();
+    }, 5000, false);
   }
 
   static tempoEstimadoLevel(level)
@@ -275,7 +295,7 @@ class ControladorJogo
       this._controladoresTiros[i].andarTiros();
 
     //tiros do personagem
-    this._personagemPrincipal.controladorTiros.andarTiros();
+    this._personagemPrincipal.andarTodosContrTiros();
 
     //tiros dos inimigos
     for (let i = 0; i<this._controladoresInimigos.length; i++)
@@ -339,10 +359,18 @@ class ControladorJogo
       this._estadoJogo = this._estadoJogoAnterior;
       delete this._estadoJogoAnterior;
     }else
-    {
-      this._estadoJogoAnterior = this._estadoJogo;
-      this._estadoJogo = EstadoJogo.Pausado;
-    }
+      this._pausarJogo();
+  }
+  pausar() //quando a janela perder o foco
+  {
+    if (this._estadoJogo !== EstadoJogo.NaoComecou || this._estadoJogo !== EstadoJogo.Pausado)
+    // se da pra pausar e nao estah pausado jah
+      this._pausarJogo();
+  }
+  _pausarJogo()
+  {
+    this._estadoJogoAnterior = this._estadoJogo;
+    this._estadoJogo = EstadoJogo.Pausado;
   }
 
 
@@ -384,14 +412,15 @@ class ControladorJogo
 
     //daqui pra baixo this._estadoJogo === EstadoJogo.Jogando
 
+    // TODO: SE ESTAH COM POCAO DE DEIXAR TEMPO MAIS DEVAGAR, COLOCAR PLANO DE FUNDO DIFERENTE OU MEIO OPACO POR CIMA
     background(55);
 
     if (this._criandoLevel) //soh enquanto estiver no processo de criar os inimigos, tiros e obstaculos
     {
       //desenha o personagem, os tiros dele e a vida
       this._personagemPrincipal.draw();
-      //tiros do personagem
-      this._personagemPrincipal.controladorTiros.andarTiros();
+      //andar tiros do personagem
+      this._personagemPrincipal.andarTodosContrTiros();
       return;
     }
 
@@ -405,8 +434,11 @@ class ControladorJogo
     if (this._oficina !== undefined)
     {
       this._oficina.draw();
-      this._oficina.ganharVidaSeConsertando(this._level);
+      this._oficina.procVerificarConsertando(this._level);
     }
+
+    //pocao
+    this._controladorPocaoTela.draw();
 
     // desenha os inimigos (do ultimo para o primeiro pois o primeiro eh mais importante)
     for (let i = this._controladoresInimigos.length-1; i >= 0; i--)
@@ -450,7 +482,7 @@ class ControladorJogo
     //verificar se o level jah acabou
     switch (this._level)
     {
-      case 2: //ultimo level
+      case 3: //ultimo level
         return false;
       default:
         for (let i = 0; i<this._controladoresInimigos.length; i++)
