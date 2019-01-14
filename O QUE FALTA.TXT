@@ -1,72 +1,89 @@
-Novo:
- - Melhora em atirar: poder atirar de infinitos infoTiros, frequencias, lugares, direcao sair,... OK
- - Acessorios Giratorios (arma giratoria e helice):
-   .opcao para colocar imagens em cima da original (helice, fogo, arma giratoria,...) com chave (dicionario) e atributos: {angulo de rotacao, pontoCentral, width, height}. OK
-   .fazer algoritmo para girar as helices dos helicopteros automaticamente antes de cada draw. OK
-   .fazer algoritmo para girar a arma quando algum ObjetoComTiro tiver arma giratoria (a direcao da arma do personagem gira de acordo com a seta do mouse e a do inimigo de acordo com o personagem)
-   ps: nao gira instantaneo (tem velocidade maxima), o tiro eh criado no lugar certo e anda nesse angulo
- - Fazer Obstaculos, Inimigos e Pocoes irem aparecendo (crescendo e mudando opacidade) em algum tempo e soh entao comeca o Level propriamente dito (durante o tempo que eles estao aparecendo o personagem pode se mover, atirar e ir na Oficina). OK
- - Arrumar todas as Pocoes. OK
+﻿Modificacoes estruturais:
+- transformei ControladorJogo em SingleTone e acabei com ConjuntoObjetosTela.
+obs: sempre vai ter soh um ControladorJogo e dessa maneira nao precisa ficar atualizando as coisas em ConjuntoObjetosTela
+PersonagemPrincipal nao vai ser static class pois faco new PersonagemPrincipal quando vou mudar de nave
 
- - tirar vida do personagem quando ele bater em obstaculo (novo atributo de obstaculo). OK
- - CreateCanvas de um tamanho mínimo: metade de toda tela. OK
- - opcao pra escolher a cor do stroke da vida dos inimigos. OK
- - Fazer classe: FuncaoEm camadas/niveis. andouCamada(), regrediuCamada() -> retorna se deve fazer a funcao. OK
- - adicionar teclas AWDS para poder mover o personagem tambem. OK
- - Arrumei: OBSTACULOS ESTAO SENDO MORTOS PELO PERSONAGEM "DO NADA" (soh nos vertices). OK
- - arrumar opacidade das FormasGeometricas: estah sempre com 100% opacidade em ObjetoTelaAparecendo. OK
- - deixar pocoes a partir do primeiro level. OK
- - arrumar erro basico em Timer (agora estah ficando o tempo certo). OK
+Geometria:
+- criei FormaGeometricaComposta (tem vetor de formas geometricas) e fiz devidas alteracoes em GeometriaBasica
+- fiz Interseccao.vaiColidir() para FormasGeometricasComplexas (baseados em seus triangulos) e para FormasGeometricasCompostas (baseado em suas formasGeometricas)
+- para Otimizar: considerei um retangulo antes de verificar se estah intersectando (em FormaGeometrica) e em vaiIntersectar (em GeometriaBasica - de onde estava pra onde foi)
+
+Novas features:
+- opcao para fazer levels com tempestade/escuridao (ir escurecendo e depois volta: opacidade, colocar raios na tela). fazer classe que tenha um método que retorne a porcentagem de opacidade da escuridão (se this.escuridao for indefined eh pq não tem opacidade). Atributos:
+  .tempo que demora de 0 a 100% pra ficar preto
+  .de qnt em qnt tempo começa a ficar preto de novo (desde que acabou de clarear a última vez ateh o próximo)
+  .qnt tempo vai ficar totalmente escuro ateh que começa a clarear de novo
+  .quantas vezes vai fazer 0 a 100% escuro
+- opcao em ObjetoTelaAparecendo para ir aparecendo de certo lugar (ir andando e aparecendo). Pode escolher quais funcionalidades quer usar quando for aparecendo: andar, crescer e mudar opacidade. ps: Funciona no adicionar dos controladores de inimigos e obstaculos
+- no AviaoMaster deixei os tiros do lado para ele lancar misseis: deixar ele ter frequencia, porem quando a frequencia for completada, ao inves do aviao atirar, ele libera o tiro do personagem ateh ele atirar de novo
+
+outros:
+- criei pagina .html para ajudar na criacao da formaGeometrica dos ObjetosTela
+- deletei ControladorTimersLevel e adicionar parametro "apenasEmLevelAtual" em Timer e mudar ConjuntoTimers (para manter as funcionalidades da classe excluida)
+- distância do vértice em % (se mudar o tamanho continua igual)
+- adicionei metodo mudarTamanho em todas as formasGeometricas (aumentar ou reduzir proporcionalmente e fazer devidas alteracoes em ObjetoComArmas.mudarTamanho)
+- nao tem mais a opcao de personagem e inimigos atirarem para qualquer lado (feature substituido pela arma giratoria)
+- arrumei clone de formasGeometricas quando imgCor eh Image (tem que passar o caminho como parametro)
 
 ---------------------------------------------------------------------------------------------
 
 FAZER AGORA:
- - opcao em ObjetoTelaAparecendo para ir aparecendo de certo lugar (ir andando e aparecendo).
-ps: Colocar opcao em ControladorInimigos e ControladorObstaculo para os objetos que forem adicionados poderem aparecer andando
 
- - no aviao com arma giratoria deixar os tiros do lado para ele lancar misseis: deixar ele ter frequencia, porem quando a frequencia for completada, ao inves do aviao atirar, ele libera o tiro do personagem ateh ele atirar de novo
-ps: ControladorJogo.atirarEspecial() /* se houver e puder */
+// CRIAR LEVELS
+- PEGAR IMAGENS PARA PERSONAGEM, INIMIGOS, OBSTACULOS, POCOES. ps: ver imagens do safari, computador e outras
+- tratar essas imagens (deixar como .PNG e sem fundo)
+- pensar nas caracteristicas de cada
+- pensar em como vai ser os levels
+- implementar no ControladorJogo propriamente dito:
+ .fazer um static get para cada avião e helicóptero do personagem e do inimigo (receber todas as informações necessárias para retornar o InfoInim ou InfoPers - ex: qnt pra andar em qual direção, tipo andar,...)
+  ps: para o qtdAndar dos infosObjetoTela passa apenas o angulo do andar e o tipo (se o angulo for nulo, eh pra ele ficar parado)
+ .fazer funções: velocidade(x), vida(x),... sendo “x” o coeficiente da velocidade e retornando (x*umaVida).toFixed(1)
+ .resto
 
-melhorar e otimizar codigo:
- - tiros aparentemente nao estao sumindo logo que morrem (quando morrem no procCriou)
- - transformar ControladorJogo em SingleTone e acabar com ConjuntoObjetosTela? (eh boa pratica? e PersonagemPrincipal?? acho que nao tem necessidade...)
- - mudar class ListaLigada para classe do proprio Javascript?? Tem todos os metodos mas aparentemente eh mais lento quando fica-se adicionando e removendo coisas (principalmente removendo)... ver se vale a pena. GUARDAR ATUAL EH MUITA PORQUISSE
- - otimizar codigo (ex: tirar fors e colocar .forEach ou for...in)
- - ver se tem que clonar Info ou nao (acho que nao precisa clonar quando for passar InfoX por parametro porque no proprio construtor ele clona o que precisa (tem coisas que nao precisam ser clonadas))
+//otimizar codigo
+- mudar class ListaLigada para classe do proprio Javascript?? Tem todos os metodos mas aparentemente eh mais lento quando fica-se adicionando e removendo coisas (principalmente removendo)... ver se vale a pena. GUARDAR ATUAL EH MUITA PORQUISSE
+Ver qual eh a melhor maneira de:
+ .deletar um item
+ .adicionar um item
+ .fazer for (for, .forEach ou for...in)
 
-//resto
+- tentar nao dar delete em vertices e arestas e sim mudar seus valores (ver oq eh mais rapido, mudar cada vertice e aresta ou refazer)
+
+
+//coisas chatas
+- ver se tem que clonar Info ou nao (acho que nao precisa clonar quando for passar InfoX por parametro porque no proprio construtor ele clona o que precisa (tem coisas que nao precisam ser clonadas))
+- ver pra que os indexContr e indexInim estao sendo usados, se realmente precisa e se nao precisa de indexContr pros ControladoresTiros (jah que agora tem mais de um no ObjetoComTiro e no jogo com frequencias diferentes)
+
+- ver comentarios //TODO
+
+// DESIGN:
+- colocar um ponto vermelho (ou setinha mais bonita) no mouseX e mouseY se AviaoMaster
+- colocar retângulos de 2 cores pra mostrar quanto tempo falta pra poder atirar manualmente
+- no pause ter opção para mostrar controles e regras(??)
+
+//nomenclatura
 - mudar alguns procedimentos que nao sao propriamente dos Controladores ou que usam "_configContrTiros" para semelhante a "objComTiro.procComTodosContrTiros(funcao)"
+- mudar nome de PersonagemPrincipal (nao eh um personagem e tem soh 1 dele) e "pers" => NaveUsuario
 - mudar nome dos metodos "privados" para ter '_' na frente (dar uma olhada nas classes porque tem alguns metodos private sem '_')
-
 - Mover e fazer tais procedimentos antes de printa-los na tela? printar todos os tiros uma vez depois de mortos?
-- mudar nome de PersonagemPrincipal (nao eh um personagem e tem soh 1 dele) e "pers"
 - mudar "nave" para outra coisa
 - mudar corImg para img em ObjetoTela
 
-- ver comentarios //TODO (nao design)
-
-- CRIAR NIVEIS:
- -> PEGAR IMAGENS PARA PERSONAGEM, INIMIGOS, OBSTACULOS, POCOES. ps: ver imagens do safari, computador e outras
- -> tratar essas imagens (deixar como .PNG e sem fundo)
- -> pensar nas caracteristicas de cada
- -> pensar em como vai ser os levels
- -> implementar no ControladorJogo propriamente dito
-
 - ver comentarios //TODO (design)
+
 - esquema pra desenhar caminho de inimigos/obstaculos?? (outro .html?) ps: pensar em diferenca do width e height de cada execucao. Ver outros jogos do tipo...
 - Quando o canvas perde o foco, pausa-lo (teoricamente ta certo mas evento nao fire)
 
 Geometria:
-- set width e height de FormaGeometricaComplexa ??
-- programar centroMassa de quadrilatero (media de todos os vertices)
+- programar centroMassa de FormaGeometricaComplexa (media de todos/ os vertices)
 - pensar um pouco na colisao de obstaculos (para onde eles vao quando colidem)
-- fazer Interseccao.qntPodeAndarAntesIntersec(...) para Triangulo
-- considerar um quadradao (de onde estava pra onde foi) antes de verificar a colisao certinha fazendo paralelogramos e etc
-- fazer opcao para rotacionar FormasGeometricas (quando personagem fica maluco; obstaculos e inimigos: quanto rotacionar no infoAndar)
-- ORGANIZAR EXPLICACOES: COLOCAR NO GIT EXPLICACOES DO PAPEL (DEIXAR BONITINHA) + MUDAR NOME DOS ARQUIVOS DO PAINT E DEIXAR MAIS BONITINHO TAMBEM
-- fazer Interseccao.vaiTerInterseccao(...) para Paralelogramos e Quadrilateros
-- fazer FormaGeometrica para circulo com interseccao e procedimento em Interseccao.
 - podemos saber se um ponto estah dentro de um quadrilatero (ou soh paralelogramo?) se estiver entre as retas de cima e de baixo e da direita e da esquerda (qual maneira eh mair rapida??)
+- ORGANIZAR EXPLICACOES: COLOCAR NO GIT EXPLICACOES DO PAPEL (DEIXAR BONITINHA) + MUDAR NOME DOS ARQUIVOS DO PAINT E DEIXAR MAIS BONITINHO TAMBEM
+- fazer Interseccao.qntPodeAndarAntesIntersec(...) para Triangulo
+- fazer opcao para rotacionar FormasGeometricas (quando personagem fica maluco; obstaculos e inimigos: quanto rotacionar no infoAndar)
+- fazer FormaGeometrica para circulo com interseccao e procedimento em Interseccao.
+
+Otimizar codigo
 
 Outros:
 - quando objetos com vida perderem vida abaixar a vida gradativamente (mudarVida gradativamente)

@@ -1,6 +1,6 @@
 //OBJETO TELA COM TIROS
 const qtdRotateHelicePadrao = PI/3;
-class InfoObjComTiros extends InfoObjetoTela
+class InfoObjetoComArmas extends InfoObjetoTela
 {
   constructor(formaGeometrica, corImgMorto, vida, configuracoesAtirar, qtdHelices=0, qtdsRotateDifHelices)
   // se tem helices (jah tem que ter adicionado as imagens secundarias na formaGeometrica)
@@ -18,7 +18,8 @@ class InfoObjComTiros extends InfoObjetoTela
 class ConfigAtirar
 //atributos: normal ou duplo + numero pixels ou centro + numero pixels pra tras + como vai ser o tiro (o objeto pode atirar tiros diferentes)
 {
-  constructor(infoTiroPadrao, freqAtirar, indexArmaGiratoria, direcaoSairTiro, qntPraDentroObj=0, ehTiroDuplo=false, distanciaTiroVert, mudarDirAndarTiroDirSai=false)
+  constructor(infoTiroPadrao, freqAtirar, indexArmaGiratoria=-1, direcaoSairTiro, porcPraDentroObj=0, ehTiroDuplo=false, porcTiroCentro, atirarDireto=true, mudarDirAndarTiroDirSai=false)
+  // porcPraDentroObj e porcTiroCentro devem ser um numero de 0 a 1
   {
     this.infoTiroPadrao = infoTiroPadrao;
     this.freqAtirar = freqAtirar;
@@ -27,50 +28,53 @@ class ConfigAtirar
     if (indexArmaGiratoria < 0)
     {
       this.direcaoSairTiro = direcaoSairTiro;
-      this.qntPraDentroObj = qntPraDentroObj;
+      this.porcPraDentroObj = porcPraDentroObj;
       this.mudarDirAndarTiroDirSai = mudarDirAndarTiroDirSai;
 
       this.ehTiroDuplo = ehTiroDuplo;
       if (this.ehTiroDuplo)
-        this.distanciaTiroVert = distanciaTiroVert;
+        this.porcTiroCentro = porcTiroCentro;
     }
+
+    this.atirarDireto = atirarDireto;
   }
 
   clone()
-  { return new ConfigAtirar(this.infoTiroPadrao, this.freqAtirar, this.indexArmaGiratoria, this.direcaoSairTiro, this.qntPraDentroObj, this.ehTiroDuplo, this.distanciaTiroVert, this.mudarDirAndarTiroDirSai); }
+  { return new ConfigAtirar(this.infoTiroPadrao, this.freqAtirar, this.indexArmaGiratoria, this.direcaoSairTiro, this.porcPraDentroObj, this.ehTiroDuplo, this.porcTiroCentro, this.atirarDireto, this.mudarDirAndarTiroDirSai); }
 
   getTudoMenosInfoTiro()
   {
     if (this.indexArmaGiratoria >= 0) //se eh arma giratoria
-      return { indexArmaGiratoria: this.indexArmaGiratoria };
+      return { atirarDireto: this.atirarDireto, indexArmaGiratoria: this.indexArmaGiratoria };
     else
       return {
+        atirarDireto: this.atirarDireto,
         indexArmaGiratoria: this.indexArmaGiratoria,
         direcaoSairTiro: this.direcaoSairTiro,
-        qntPraDentroObj: this.qntPraDentroObj,
+        porcPraDentroObj: this.porcPraDentroObj,
         ehTiroDuplo: this.ehTiroDuplo,
-        distanciaTiroVert: this.distanciaTiroVert,
+        porcTiroCentro: this.porcTiroCentro,
         mudarDirAndarTiroDirSai: this.mudarDirAndarTiroDirSai
       };
   }
 }
-class ObjComTiros extends ObjetoTela
+class ObjetoComArmas extends ObjetoTela
 {
-  constructor(pontoInicial, infoObjComTiros)
+  constructor(pontoInicial, infoObjetoComArmas)
   {
-    super(pontoInicial, infoObjComTiros);
+    super(pontoInicial, infoObjetoComArmas);
 
     //vida
-    this._vida = infoObjComTiros.vida;
-    this._vidaMAX = infoObjComTiros.vida;
+    this._vida = infoObjetoComArmas.vida;
+    this._vidaMAX = infoObjetoComArmas.vida;
 
     //tiros
-    this._setarConfigContrTiros(infoObjComTiros.configuracoesAtirar);
+    this._setarConfigContrTiros(infoObjetoComArmas.configuracoesAtirar);
 
     //helices
-    this._qtdHelices = infoObjComTiros.qtdHelices;
-    if (infoObjComTiros.qtdHelices > 0)
-      this._qtdsRotateDifHelices = infoObjComTiros.qtdsRotateDifHelices;
+    this._qtdHelices = infoObjetoComArmas.qtdHelices;
+    if (infoObjetoComArmas.qtdHelices > 0)
+      this._qtdsRotateDifHelices = infoObjetoComArmas.qtdsRotateDifHelices;
   }
   _setarConfigContrTiros(configuracoesAtirar)
   {
@@ -79,13 +83,20 @@ class ObjComTiros extends ObjetoTela
     const _this = this;
     for (let i = 0; i<this._configContrTiros.length; i++)
     {
+      let config = configuracoesAtirar[i].getTudoMenosInfoTiro();
+      if (!config.atirarDireto)
+      // se nao eh atirarDireto jah tem que setar o "podeAtirar"
+        config.podeAtirar = true; // jah comeca podendo atirar
+
       const freqAtirar = configuracoesAtirar[i].freqAtirar;
+
       this._configContrTiros[i] = {
         controlador: new ControladorTiros(configuracoesAtirar[i].infoTiroPadrao, this instanceof PersonagemPrincipal),
-        config: configuracoesAtirar[i].getTudoMenosInfoTiro(),
+        config: config,
         freqFunc: new FreqFunction(freqAtirar, freqAtirar-2) // o index comeca no penultimo porque nao pode jah atirar sem que o configContrTiros[i] esteja pronto
       };
       // se eh arma giratoria vai ter um atributo "pontoRelativoSairTiro" no config
+      // se nao eh atirarDireto vai ter atributo "podeAtirar" no config
     }
   }
 
@@ -96,7 +107,8 @@ class ObjComTiros extends ObjetoTela
   { return this._configContrTiros.length; }
   getConfigAtirar(i=0) //pode mudar as configuracoes por aqui
   { return this._configContrTiros[i].controlador; }
-  //ps: se quiser mudar frequencia: "this._configContrTiros[i].freqFunc.freq = X;"
+  getFreqFuncAtirar(i=0) //ps: se quiser mudar frequencia mudar aqui (ou this._configContrTiros[i].freqFunc.freq)
+  { return this._configContrTiros[i].freqFunc; }
 
   //getter vida
   get vida()
@@ -129,6 +141,7 @@ class ObjComTiros extends ObjetoTela
     this._mudarCorImgMorto();
   }
 
+
   //TIROS
   //novo tiro
   atirar()
@@ -139,13 +152,27 @@ class ObjComTiros extends ObjetoTela
 
     // atirar propriamente dito
     for(let i = 0; i<this._configContrTiros.length; i++)
-      if (this._configContrTiros[i].freqFunc.contar()) // se jah estah na hora de chamar o metodo
-        this.atirarEspecifico(i);
+    {
+      // se nao eh atirarDireto e jah pode atirar nao pode contar
+      if (!this._configContrTiros[i].config.atirarDireto && this._configContrTiros[i].config.podeAtirar)
+        continue;
+
+      if (this._configContrTiros[i].freqFunc.contar())
+      // se jah pode atirar nessa arma
+      {
+        if (this._configContrTiros[i].config.atirarDireto)
+        // se atirar direto jah atira
+          this._atirarEspecifico(i);
+        else
+        //se nao eh pra atirar direto, soh seta a variavel podeAtirar do config
+          this._configContrTiros[i].config.podeAtirar = true;
+      }
+    }
   }
   //o procedimento de realmente atirar (onde a magica realmente acontece...)
-  atirarEspecifico(i)
+  _atirarEspecifico(i)
   {
-    const pontosIniciais = this._lugarCertoTiro(i); //vetor com 1 ou 2 posicoes (se ehTiroDuplo). ps: jah conta o qntPraDentroObj
+    const pontosIniciais = this._lugarCertoTiro(i); //vetor com 1 ou 2 posicoes (se ehTiroDuplo). ps: jah conta o porcPraDentroObj
     this._adicionarTirosEmContr(pontosIniciais[0], i); //sempre vai atirar pelo menos um tiro
     if (pontosIniciais.length>1)
       this._adicionarTirosEmContr(pontosIniciais[1], i); //talvez seja tiro duplo
@@ -183,12 +210,12 @@ class ObjComTiros extends ObjetoTela
     //se tiro duplo, retorna vetor com a posicao inicial dos dois tiros
 
     const infoTiroPadrao = this._configContrTiros[i].controlador.infoTiroPadraoAtual;
-    const qntPraDentroObj = this._configContrTiros[i].config.qntPraDentroObj;
     const direcaoSairTiro = this._configContrTiros[i].config.direcaoSairTiro;
 
     //calcular qual o (x,y) em que o tiro vai ser criado
     if (direcaoSairTiro === Direcao.Cima || direcaoSairTiro === Direcao.Baixo)
     {
+      const qntPraDentroObj = this._configContrTiros[i].config.porcPraDentroObj * this._formaGeometrica.height;
       let y;
       if (direcaoSairTiro === Direcao.Cima)
         y = this._formaGeometrica.y - infoTiroPadrao.formaGeometrica.height + qntPraDentroObj;
@@ -197,13 +224,14 @@ class ObjComTiros extends ObjetoTela
 
       if (this._configContrTiros[i].config.ehTiroDuplo) //se eh tiro duplo
       {
-        const distanciaTiroVert = this._configContrTiros[i].config.distanciaTiroVert;
-        vetorPontos[0] = new Ponto(this._formaGeometrica.x + distanciaTiroVert, y);
-        vetorPontos[1] = new Ponto(this._formaGeometrica.x + this._formaGeometrica.width - distanciaTiroVert, y);
+        const distanciaTiroCentro = this._configContrTiros[i].config.porcTiroCentro * this._formaGeometrica.width;
+        vetorPontos[0] = new Ponto(this._formaGeometrica.x + this._formaGeometrica.width/2 - distanciaTiroCentro, y);
+        vetorPontos[1] = new Ponto(this._formaGeometrica.x + this._formaGeometrica.width/2 + distanciaTiroCentro, y);
       }else
         vetorPontos[0] = new Ponto(this._formaGeometrica.x + (this._formaGeometrica.width - infoTiroPadrao.formaGeometrica.width)/2, y);
     }else
     {
+      const qntPraDentroObj = this._configContrTiros[i].config.porcPraDentroObj * this._formaGeometrica.width;
       let x;
       if (direcaoSairTiro === Direcao.Esquerda)
         x = this._formaGeometrica.x - infoTiroPadrao.formaGeometrica.width + qntPraDentroObj;
@@ -212,17 +240,25 @@ class ObjComTiros extends ObjetoTela
 
       if (this._configContrTiros[i].config.ehTiroDuplo) //se eh tiro duplo
       {
-        const distanciaTiroVert = this._configContrTiros[i].config.distanciaTiroVert;
-        vetorPontos[0] = new Ponto(x, this._formaGeometrica.y + distanciaTiroVert); //tiro 1 (mais em cima)
-        vetorPontos[1] = new Ponto(x, this._formaGeometrica.y + this._formaGeometrica.height - distanciaTiroVert); //tiro 2 (mais em baixo)
+        const distanciaTiroCentro = this._configContrTiros[i].config.porcTiroCentro * this._formaGeometrica.height;
+        vetorPontos[0] = new Ponto(x, this._formaGeometrica.y + this._formaGeometrica.height/2 - distanciaTiroCentro);
+        vetorPontos[1] = new Ponto(x, this._formaGeometrica.y + this._formaGeometrica.height/2 + distanciaTiroCentro);
       }else
         vetorPontos[0] = new Ponto(x, this._formaGeometrica.y + (this._formaGeometrica.height - infoTiroPadrao.formaGeometrica.height)/2);
     }
 
     return vetorPontos;
   }
+
   //atirar especificos
-  atirarEspecificos(vetorIndexes, inclusivo)
+  puxarGatilho(i)
+  //atirar nao automatico
+  {
+    // se nao eh atirarDireto e podeAtirar
+    if (!this._configContrTiros[i].config.atirarDireto && this._configContrTiros[i].config.podeAtirar)
+      this._atirarEspecifico(i);
+  }
+  puxarGatilhos(vetorIndexes, inclusivo)
   // se vetorIndexes ou inclusivo for undefined, significa que sao todos os controladores
   // inclusivo: true=inclusivo (soh esses indexes), false=exclusivo (soh esses nao)
   {
@@ -241,7 +277,7 @@ class ObjComTiros extends ObjetoTela
         vaiAtirarNesseContr = vetorIndexes.indexOf(i) < 0; //se nao estah no vetor
 
       if (vaiAtirarNesseContr)
-        this.atirarEspecifico(i);
+        this.puxarGatilho(i);
     }
   }
 
@@ -255,7 +291,7 @@ class ObjComTiros extends ObjetoTela
       {
         //constantes
         const chaveArmaGiratoria = "armaGiratoria" + this._configContrTiros[i].config.indexArmaGiratoria;
-        const pontoDestino = (this instanceof PersonagemPrincipal)?new Ponto(mouseX,mouseY):ConjuntoObjetosTela.pers.formaGeometrica.centroMassa; //aonde quer atirar (mouse ou personagem)
+        const pontoDestino = (this instanceof PersonagemPrincipal)?new Ponto(mouseX,mouseY):ControladorJogo.pers.formaGeometrica.centroMassa; //aonde quer atirar (mouse ou personagem)
         const maxRotacionarArmaGiratoria = (this instanceof PersonagemPrincipal)?maxRotacionarArmaGiratoriaPers:maxRotacionarArmaGiratoriaInim; //maximo angulo pode rotacionar (muda se for personagem ou inimigo)
 
         //o angulo que forma com o mouse (se PersonagemPrincipal) ou personagem (se Inimigo)
@@ -316,7 +352,7 @@ class ObjComTiros extends ObjetoTela
   }
 
   //procedimentos com todos os controladores tiros
-  andarTodosContrTiros()
+  andarTiros()
   {
     for (let i = 0; i<this._configContrTiros.length; i++)
       this._configContrTiros[i].controlador.andarTiros();
@@ -356,23 +392,4 @@ class ObjComTiros extends ObjetoTela
     for (let i = 0; i<this._configContrTiros.length; i++)
       this._configContrTiros[i].controlador.draw();
 	}
-
-
-  //MUDAR TAMANHOS
-  mudarTamLados(porcentagem)
-  //soh tem opcao para mudar o tamanho os lados proporcionalmente ao valor atual deles (mantem a proporcao dos lados)
-  {
-    switch (this._formaGeometrica.codForma)
-    {
-      case Geometria.COD_QUADRADO:
-        this._formaGeometrica.setTamanhoLadoPorcentagem(porcentagem);
-        break;
-      case Geometria.COD_RETANGULO:
-        this._formaGeometrica.setWidthPorcentagem(porcentagem);
-        this._formaGeometrica.setHeightPorcentagem(porcentagem);
-        break;
-      default:
-        throw "Não é possível mudar o width e height de um objeto que não tem!";
-    }
-  }
 }

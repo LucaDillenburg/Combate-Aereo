@@ -1,5 +1,5 @@
 //PERSONAGEM PRINCIPAL
-class InfoPersonagemPrincipal extends InfoObjComTiros
+class InfoPersonagemPrincipal extends InfoObjetoComArmas
 {
   constructor(formaGeometrica, corImgMorto, vida, qtdAndar, configuracoesAtirar, qtdHelices, qtdsRotateDifHelices)
   {
@@ -7,11 +7,13 @@ class InfoPersonagemPrincipal extends InfoObjComTiros
     this.qtdAndar = qtdAndar;
   }
 }
-const freqMissilPers = 22;
 const maxRotacionarArmaGiratoriaPers = PI/24;
-class PersonagemPrincipal extends ObjComTiros
+//para aviao Master: (de acordo com "TER EM MENTE.txt")
+const indexArmaNaoAutomaticaAviaoMasterPers = 0;
+const numeroAviaoMasterPers = 3; //eh o Terceiro aviao
+class PersonagemPrincipal extends ObjetoComArmas
 {
-  constructor(infoPersonagemPrincipal, pontoInicial = {})
+  constructor(infoPersonagemPrincipal, pontoInicial = {}, numeroAviao=1)
   {
     super(pontoInicial, infoPersonagemPrincipal);
 
@@ -24,25 +26,33 @@ class PersonagemPrincipal extends ObjComTiros
 
     //pocoes do pers
     this._controladorPocoesPegou = new ControladorPocoesPers();
+
+    //numero aviao (pra saber qual aviao eh). Comeca em ZERO
+    this._numeroAviao = numeroAviao;
   }
 
+  get numeroAviao() { return this._numeroAviao; }
+  get ehAviaoMaster() { return this._numeroAviao===numeroAviaoMasterPers; }
   //quando for trocar de nave
-  colocarOutraNave(formaGeometrica, corImgMorto, configuracoesAtirar)
-  // soh nao precisa de: vida e qtdAndar (nao mudam)
+  novaNave(infoPersonagemPrincipal)
+  //soh o (x,y) vai ser "igual" (ajeitar por causa do tamanho da nova formaGeometrica)
+  // TODO: o tanto de vida que resta vai fazer alguma diferenca na vida da nova nave
   {
-    // soma em (x,y) para nave crescer o mesmo tanto em todos os lados
-    const somaX = this._formaGeometrica.width - formaGeometrica.width;
-    const somaY = this._formaGeometrica.height - formaGeometrica.height;
-    this._formaGeometrica = formaGeometrica.clone(this._formaGeometrica.x + somaX, this._formaGeometrica.y + somaY);
+    // (x,y) para nave crescer o mesmo tanto em todos os lados
+    const somaX = this._formaGeometrica.width - infoPersonagemPrincipal.formaGeometrica.width;
+    const somaY = this._formaGeometrica.height - infoPersonagemPrincipal.formaGeometrica.height;
+    const pontoInicial = new Ponto(this._formaGeometrica.x + somaX, this._formaGeometrica.y + somaY);
 
-    this._corImgMorto = AuxInfo.cloneImgCor(corImgMorto);
+    // cria proxima nave do personagem
+    const persNovaNave = new PersonagemPrincipal(infoPersonagemPrincipal, pontoInicial, this._numeroAviao+1);
 
-    this._setarConfigContrTiros(configuracoesAtirar);
+    // se aumentou de tamanho, fazer os devidos procedimentos
+    if (infoPersonagemPrincipal.formaGeometrica.width > this._formaGeometrica.width //se cresceu em width
+      || infoPersonagemPrincipal.formaGeometrica.height > this._formaGeometrica.height) // ou se cresceu em height
+      persNovaNave._aumentouTamLados();
 
-    if (formaGeometrica.width > this._formaGeometrica.width //se cresceu em width
-      || formaGeometrica.height > this._formaGeometrica.height) // ou se cresceu em height
-    // se aumentar, fazer os devidos procedimentos
-      this._aumentouTamLados();
+    // retorna nova
+    return persNovaNave;
   }
 
   //mudar qtdAndar e adicionar qtdAndarEspecial
@@ -54,29 +64,6 @@ class PersonagemPrincipal extends ObjComTiros
   }
   mudarVelocidade(porcentagem)
   { this.qtdAndar = porcentagem*this._qtdAndar; }
-
-  // procedimentos com tiros
-  procPosMudarTiroZero() //se for mudar o infoTiroPadrao (ou voltarTiroPadrao ou tipoAndar do tiro) chamar esse metodo
-  // missil do personagem soh fica no index = 0
-  {
-    if (this._configContrTiros[0].controlador.infoTiroPadraoAtual.infoAndar.tipoAndar === TipoAndar.SeguirInimMaisProx)
-    //se for missil
-    {
-      //guardar frequencia antiga
-      this._freqAtirarNaoMissil = this._configContrTiros[0].freqFunc.freq;
-
-      //soh precisa mudar o freqAtirar (infoTiroPadrao jah foi mudado)
-      this._configContrTiros[0].freqFunc.freq = freqMissilPers;
-    }
-    else
-    {
-      //voltar frequencia antiga
-      this._configContrTiros[0].freqFunc.freq = this._freqAtirarNaoMissil;
-
-      //deletar variavel que guardava frequencia antiga
-      delete this._freqAtirarNaoMissil;
-    }
-  }
 
   mudarVida(qtdMuda)
   {
@@ -91,14 +78,14 @@ class PersonagemPrincipal extends ObjComTiros
   morreu()
   {
     super.morreu();
-    ConjuntoTimers.esvaziarTimers();
+    ConjuntoTimers.excluirTimers();
   }
 
   //mudar (x,y)
   colocarLugarInicial()
   //nao verifica se vai bater em alguem
   {
-    this.colocarNoMeioX();
+    this._formaGeometrica.colocarNoMeioX();
     this._formaGeometrica.y = 0.75*height;
   }
   andar(direcaoX, direcaoY)
@@ -166,8 +153,8 @@ class PersonagemPrincipal extends ObjComTiros
 
     //obstaculos
     //colisao com obstaculos, vai definir quanto pode andar em cada direcao
-    for (let i = 0; i<ConjuntoObjetosTela.controladoresObstaculos.length; i++)
-      ConjuntoObjetosTela.controladoresObstaculos[i].qtdPersPodeAndar(infoQtdMudar);
+    for (let i = 0; i<ControladorJogo.controladoresObstaculos.length; i++)
+      ControladorJogo.controladoresObstaculos[i].qtdPersPodeAndar(infoQtdMudar);
     //aqui tudo o que devia ser feito com obstaculos estah OK
 
     // quando personagem eh barrado, ele perde vida
@@ -179,29 +166,29 @@ class PersonagemPrincipal extends ObjComTiros
 
     //nao precisa zerarInimigosColididos aqui porque jah vai zerar depois que tirar a vida do personagem (ateh poderia, porem se andar inimigos antes do personagem nao daria erro)
     //inimigos e tiros deles
-    for (let i = 0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
+    for (let i = 0; i<ControladorJogo.controladoresInimigos.length; i++)
     {
       //ve se vai colidir com inimigos e adiciona na lista de inimigos intersectados
-      ConjuntoObjetosTela.controladoresInimigos[i].procPersAndarTodosInim(infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
+      ControladorJogo.controladoresInimigos[i].procPersAndarTodosInim(infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
       //ve se vai colidir com tiros dos inimigos e tira vida do pers
-      ConjuntoObjetosTela.controladoresInimigos[i].procObjTelaAndarColidirTirosTodosInim(this, infoQtdMudar.qtdPodeMudarX,
+      ControladorJogo.controladoresInimigos[i].procObjTelaAndarColidirTirosTodosInim(this, infoQtdMudar.qtdPodeMudarX,
         infoQtdMudar.qtdPodeMudarY);
     }
 
     //controladoresTiros do jogo
-    for (let i = 0; i<ConjuntoObjetosTela.controladoresTirosJogo.length; i++)
-      ConjuntoObjetosTela.controladoresTirosJogo[i].procedimentoObjTelaColideAndar(this, infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
+    for (let i = 0; i<ControladorJogo.controladoresTirosJogo.length; i++)
+      ControladorJogo.controladoresTirosJogo[i].procedimentoObjTelaColideAndar(this, infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
 
     //verifica se colidiu com pocao
-    ConjuntoObjetosTela.controladorPocaoTela.verificarPersPegouPocao(infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
+    ControladorJogo.controladorPocaoTela.verificarPersPegouPocao(infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
 
     //aqui qtdVaiMudarX e qtdVaiMudarY sao os maiores possiveis (a menor distancia que bateu)
     this._formaGeometrica.x += infoQtdMudar.qtdPodeMudarX;
     this._formaGeometrica.y += infoQtdMudar.qtdPodeMudarY;
 
     // verifica se personagem estah completamente dentro da oficina agora
-    if (ConjuntoObjetosTela.oficina !== undefined)
-      ConjuntoObjetosTela.oficina.verificarEstahConsertando();
+    if (ControladorJogo.oficina !== undefined)
+      ControladorJogo.oficina.verificarEstahConsertando();
 
     //se consegue andar tudo o que deveria
     return infoQtdMudar.qtdPodeMudarX === qtdMudaX && infoQtdMudar.qtdPodeMudarY === qtdMudaY;
@@ -211,7 +198,7 @@ class PersonagemPrincipal extends ObjComTiros
   mudarTamLados(porcentagem)
   {
     //muda o tamanho de formaGeometrica
-    super.mudarTamLados(porcentagem);
+    this._formaGeometrica.mudarTamanho(porcentagem);
 
     if (porcentagem > 1) //se aumentou de tamanho (mais de 100%)
       this._aumentouTamLados();
@@ -221,18 +208,18 @@ class PersonagemPrincipal extends ObjComTiros
     //soh tem que verificar se colidiu com inimigos, obstaculos e tiros se aumentou de tamanho
 
     //ver se colidiu com tiros do inimigo e do jogo
-    for (let i = 0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
-      ConjuntoObjetosTela.controladoresInimigos[i].procObjCriadoColidirTirosInim(this); //tiros inimigos
-    for (let i = 0; i<ConjuntoObjetosTela.controladoresTirosJogo.length; i++)
-      ConjuntoObjetosTela.controladoresTirosJogo[i].procedimentoObjTelaColideCriar(this); //tiros jogo
+    for (let i = 0; i<ControladorJogo.controladoresInimigos.length; i++)
+      ControladorJogo.controladoresInimigos[i].procObjCriadoColidirTirosInim(this); //tiros inimigos
+    for (let i = 0; i<ControladorJogo.controladoresTirosJogo.length; i++)
+      ControladorJogo.controladoresTirosJogo[i].procedimentoObjTelaColideCriar(this); //tiros jogo
 
     //ver se colidiu com inimigo
-    for (let i = 0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
-      ConjuntoObjetosTela.controladoresInimigos[i].procPersCresceuTodosInim();
+    for (let i = 0; i<ControladorJogo.controladoresInimigos.length; i++)
+      ControladorJogo.controladoresInimigos[i].procPersCresceuTodosInim();
 
     //ver se colidiu com obstaculos: se colidiu ver qtdAndar e andar, se nao conseguir explode obstaculo (como procCriou do obstaculo)
-    for (let i = 0; i<ConjuntoObjetosTela.controladoresObstaculos.length; i++)
-      ConjuntoObjetosTela.controladoresObstaculos[i].procPersonagemCresceuTodosObst();
+    for (let i = 0; i<ControladorJogo.controladoresObstaculos.length; i++)
+      ControladorJogo.controladoresObstaculos[i].procPersonagemCresceuTodosObst();
   }
 
   //sobre ter intersectar com inimigos
@@ -277,11 +264,16 @@ class PersonagemPrincipal extends ObjComTiros
   { return this._controladorPocoesPegou; }
 
   //draw
-  draw()
+  draw(desenharPainel)
+  //desenharPainel: se for true, soh desenha vida e pocoes do personagem; se for false, soh desenha o personagem e seus tiros
   {
-    super.draw();
-    this._colocacarVidaTela();
-    this._controladorPocoesPegou.draw(); //desenha as pocoes que o personagem tem guardados
+    if (!desenharPainel)
+      super.draw();
+    else
+    {
+      this._colocacarVidaTela();
+      this._controladorPocoesPegou.draw(); //desenha as pocoes que o personagem tem guardados
+    }
   }
   _colocacarVidaTela()
   {
@@ -290,7 +282,7 @@ class PersonagemPrincipal extends ObjComTiros
     rect(0, height - heightVidaUsuario, width, heightVidaUsuario);
 
     noStroke(0);
-    fill(color("green"));
+    fill("green");
     rect(tamStroke, height - heightVidaUsuario + tamStroke,
       (width - 2*tamStroke)*(this._vida/this._vidaMAX), heightVidaUsuario - 2*tamStroke);
 

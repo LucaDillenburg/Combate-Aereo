@@ -2,7 +2,7 @@
 //quando eu uso um setTimeout ou setInterval, ele nao leva em consideracao se estah pausado (parando de contar o tempo) ou nao, entao isso eh uma solucao para isso
 class Timer
 {
-  constructor(funcao, tempo, ehInterval, infoMudarTempo)
+  constructor(funcao, tempo, ehInterval=false, apenasEmLevelAtual=true, infoMudarTempo)
   //tempo em milisegundo
   //infoMudarTempo: obj, atr (que a variavel onde tempo restante estah), estahEmMiliseg (se variavel estah em milisegundos)
   {
@@ -33,21 +33,21 @@ class Timer
       this._infoMudarTempo.obj[this._infoMudarTempo.atr] = tempo;
     }
 
-    if (ConjuntoObjetosTela.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.DeixarTempoMaisLento)
+    if (ControladorJogo.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.DeixarTempoMaisLento)
     // PARTE DA EXECUCAO DA POCAO (deixar tempo mais lento no Timer)
       this.mudarTempo(porcentagemDeixarTempoLento);
 
     //jah adiciona o timer
     ConjuntoTimers.adicionarTimer(this);
 
-    this._codTimer = ConjuntoTimers.proximoCodTimer;
+    this._apenasEmLevelAtual = apenasEmLevelAtual;
   }
 
   // "constantes" para interval (se for true nao faz agora)
   static get ehIntervalFazerAoCriar() { return 1; }
   static get ehIntervalNaoFazerAoCriar() { return 2; }
 
-  get codTimer() { return this._codTimer; }
+  get apenasEmLevelAtual() { return this._apenasEmLevelAtual; }
 
   parar() { this._continuar = false; }
 
@@ -77,9 +77,9 @@ class Timer
   //POCAO
   mudarTempo(porcentagem)
   {
-    const k = 1/porcentagem; //inversamente proporcional ao tempo
-    this._freq *= k;
-    this._count *= k;
+    //inversamente proporcional
+    this._freq /= porcentagem;
+    this._count /= porcentagem;
   }
 }
 
@@ -87,77 +87,45 @@ class ConjuntoTimers
 {
   //inicializacao
   static inicializar()
-  {
-    ConjuntoTimers._timers = new ListaDuplamenteLigada();
-    ConjuntoTimers._ultimoCodTimer = 0; //ele incrementa antes de passar o codigo
-  }
+  { ConjuntoTimers._timers = []; }
 
-  //para tirar Timers do ConjuntoTimers
-  static get proximoCodTimer()
-  {
-    //o proximo codTimer eh um a mais que o anterior
-    ConjuntoTimers._ultimoCodTimer++;
-    return ConjuntoTimers._ultimoCodTimer;
-  }
-  static removeTimer(codTimerRemover)
-  {
-    for (ConjuntoTimers._timers.colocarAtualComeco(); !ConjuntoTimers._timers.atualEhNulo; ConjuntoTimers._timers.andarAtual())
-      if (ConjuntoTimers._timers.atual.codTimer === codTimerRemover) //se o no atual eh oq se quer remover
-      {
-        ConjuntoTimers._timers.removerAtual();
-        break;
-      }
-  }
+  //para tirar Timers do ConjuntoTimers agora usar: timer.parar()
 
   //metodos
   static adicionarTimer(novoTimer)
-  { ConjuntoTimers._timers.inserirNoFinal(novoTimer); }
+  { ConjuntoTimers._timers.push(novoTimer); }
   static procDraws()
   {
-    for (ConjuntoTimers._timers.colocarAtualComeco(); !ConjuntoTimers._timers.atualEhNulo; ConjuntoTimers._timers.andarAtual())
+    ConjuntoTimers._timers.forEach(function(tmrAtual, key)
     {
-      ConjuntoTimers._timers.guardarAtual();
-      const continuaNaLista = ConjuntoTimers._timers.atual.procDraw();
-      ConjuntoTimers._timers.colocarGuardadoNoAtual();
+      const continuaNaLista = tmrAtual.procDraw();
       if (!continuaNaLista)
-        ConjuntoTimers._timers.removerAtual();
-    }
+        delete ConjuntoTimers._timers[key];
+    });
   }
 
-  static esvaziarTimers()
-  { ConjuntoTimers._timers.esvaziar(); }
+  static excluirTimers()
+  { ConjuntoTimers._timers = []; }
+  static excluirTimersDoLevel()
+  {
+    ConjuntoTimers._timers.forEach(function(tmrAtual, key)
+    {
+      // se Timer eh soh daquele level
+      if (tmrAtual.apenasEmLevelAtual)
+        delete ConjuntoTimers._timers[key];
+    });
+  }
 
   //POCAO
   static mudarTempo(porcentagem)
   {
-    for (ConjuntoTimers._timers.colocarAtualComeco(); !ConjuntoTimers._timers.atualEhNulo; ConjuntoTimers._timers.andarAtual())
-      ConjuntoTimers._timers.atual.mudarTempo(porcentagem);
+    ConjuntoTimers._timers.forEach(function(tmrAtual)
+    {
+      tmrAtual.mudarTempo(porcentagem);
+    });
   }
 }
 ConjuntoTimers.inicializar();
-
-//controlador timers (diferente dos demais)
-class ControladorTimersLevel
-{
-  constructor()
-  { this._timers = []; } //usando vetor do javascript porque eh rapido para adicionar e devagar para remover porem aqui nao vou remover, apenas reinicializar
-
-  adicionarTimer(timer) //ao terem criado os timers, ele jah foi adicionado ao ConjuntoTimers (nao precisa adicionar)
-  { this._timers.push(timer); }
-
-  excluirTimers()
-  {
-    this._timers.forEach(function(value, key)
-    //vai passar por todos os timers
-    {
-      value.parar();
-      //vai tirar o Timer do ConjuntoTimers (nao vai mais fazer o seu procedimento)
-    });
-
-    this._timers = [];
-    //nao tem mais nenhum timer efetivo (nao parado)
-  }
-}
 
 
 //FUNCAO DEPOIS DE DETERMINADA CONTAGEM
@@ -181,6 +149,10 @@ class FreqFunction //se for soh uma vez ou varias (se for soh uma vez, deixar cl
   get freq() { return this._freq; }
   set freq(novaFreq)
   { this._freq = novaFreq; }
+
+  get count() { return this._count; }
+  zerarContador() { this._count = 0; }
+  setContadorUltimaEtapa() { this._count = this._freq - 1; /*a proxima vez que contar, ele vai executar a funcao*/ }
 
   contar()
   {

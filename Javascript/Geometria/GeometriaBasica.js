@@ -41,14 +41,14 @@ class Ponto
     return (p1.x < p2.x ? p1 : p2);
   }
 
-  mais(outro)
+  mais(outro) //ponto
   { return new Ponto(this.x + outro.x, this.y + outro.y); }
-  menos(outro)
+  menos(outro) //ponto
   { return new Ponto(this.x - outro.x, this.y - outro.y); }
 
-  dividido(divisor)
+  dividido(divisor) //numero
   { return new Ponto(this.x/divisor, this.y/divisor); }
-  multiplicado(mult)
+  multiplicado(mult) //numero
   { return new Ponto(this.x*mult, this.y*mult); }
 
   compareTo(outro)
@@ -100,8 +100,8 @@ class Reta
     //  throw "Esses dois pontos não formam uma reta!";
 
     //nao precisa ser necessariamente de cima para baixo
-    this._a = a;
-    this._b = b;
+    this._a = a.clone();
+    this._b = b.clone();
 
     this._height = this._a.y - this._b.y;
     this._width = this._a.x - this._b.x;
@@ -267,19 +267,15 @@ const qntNaoColidir = 0.2;
 class Interseccao
 {
 	//ESTAH INTERSECTANDO
-	static intersecDirecao(inicio1, distancia1, inicio2, distancia2, help)
+	static intersecDirecao(inicio1, distancia1, inicio2, distancia2)
   // retorna se estah intersectando
 	{
-		if (distancia1 <= distancia2) { if (help) console.log("1");
-
+		if (distancia1 <= distancia2)
 			return (inicio1 >= inicio2 && inicio1 <= inicio2 + distancia2)
-				|| (inicio1 + distancia1 >= inicio2 && inicio1 + distancia1 <= inicio2 + distancia2); }
-
-		else { if (help) console.log("2");
-
+				|| (inicio1 + distancia1 >= inicio2 && inicio1 + distancia1 <= inicio2 + distancia2);
+		else
 			return (inicio2 >= inicio1 && inicio2 <= inicio1 + distancia1)
-				|| (inicio2 + distancia2 >= inicio1 && inicio2 + distancia2 <= inicio1 + distancia1); }
-
+				|| (inicio2 + distancia2 >= inicio1 && inicio2 + distancia2 <= inicio1 + distancia1);
 	}
 
   static inteiroDentroDeDirecao(inicio1, distancia1, inicio2, distancia2)
@@ -310,6 +306,7 @@ class Interseccao
   static menorQtdObjColidePararColidir(objParado, objVaiAndar) //objParado e objVaiAndar sao formasGeometricas
   {
     //ver "Explicacao procCriou(...) obstaculo em relacao a colisao com pers.png"
+    // TODO: fazer com outras formasGeometricas (isso soh eh verdadeiro e eficiente com retangulos/quadrados)
     const xDireita = {
       valor: objParado.x + objParado.width - objVaiAndar.x,
       dir: Direcao.Direita
@@ -388,13 +385,11 @@ class Interseccao
 
 		let qtdPodeAndar = {x: qtdAndarX, y: qtdAndarY};
 
-		//caso especial mais simples: se o objeto que anda eh um quadrado ou retangulo
-    //e soh andou em uma direcao
-    // TODO: ABAIXO SOH FUNCIONA SE AMBOS OS OBJETOS FOREM QUADRADOS OU RETANGULOS (PROGRAMAR EM _montarParalelogramosAndar(...) PARALELOGRAMO PARA QTDANDARX E QTDANDARY = 0)
-		if ((obj2.codForma === Geometria.COD_QUADRADO || obj2.codForma === Geometria.COD_RETANGULO) &&
-        (qtdAndarX === 0 || qtdAndarY === 0))
+
+		//CASO ESPECIAL (simples): se obj2 eh FormaGeometricaSimples e SOH ANDA EM UMA DIRECAO
+    // TODO: ABAIXO SOH FUNCIONA SE AMBOS OS OBJETOS FOREM QUADRADOS OU RETANGULOS (PROGRAMAR EM _montarFormasGeomAndar(...) PARALELOGRAMO PARA QTDANDARX E QTDANDARY = 0)
+		if (obj2 instanceof FormaGeometricaSimples && (qtdAndarX === 0 || qtdAndarY === 0))
 		{
-			// SE ANDA SOH EM UMA DIRECAO:
 			if (qtdAndarX === 0)
 			{
 				if (qtdAndarY < 0)
@@ -459,18 +454,36 @@ class Interseccao
       return qtdPodeAndar;
 		}
 
+
+    // OTIMIZACAO:
+    //considerar um quadradao (de onde estava pra onde foi) antes de verificar a colisao perfeita
+    // obs: economiza tempo pois na maioria das vezes que esse metodo for executado, os dois objetos vao estar longe e soh considerando os dois como se fossem retangulos jah conclui-se que nao estah intersectando
+    const x2 = (qtdPodeAndar.x >= 0) ? obj2.x : obj2.x + qtdPodeAndar.x /*eh soma porque qtdPodeAndar.x eh negativo*/;
+    const y2 = (qtdPodeAndar.y >= 0) ? obj2.y : obj2.y + qtdPodeAndar.y /*eh soma porque qtdPodeAndar.x eh negativo*/;
+    if (!Interseccao.interseccaoRetDesmontado(obj1.x, obj1.y, obj1.width, obj1.height,
+      x2, y2, obj2.width + Math.abs(qtdPodeAndar.x), obj2.height + Math.abs(qtdPodeAndar.y)))
+    {
+      if (returnTrueFalse)
+        return false;
+      else
+        return qtdPodeAndar;
+    }
+
+
 		// daqui pra baixo nao pode ser um quadrado e retangulo que soh anda pra alguma direcao... (tambem quer andar alguma coisa pelo menos)
 
     //EXPLICACAO: qualquer quadrado, retangulo, triangulo ou paralelogramo quando vai andar forma
-    // um ou dois paralelogramos que representa(m) o caminho por onde a figura geometrica passará
-    const paralelogramos = Interseccao._montarParalelogramosAndar(obj2, qtdAndarX, qtdAndarY);
+    // paralelogramos (principalmente e normalmente 1 ou 2) que representa(m) o caminho por onde a figura geometrica passará
+    const formasGeomAndar = Interseccao._montarFormasGeomAndar(obj2, qtdAndarX, qtdAndarY);
 
 		//daqui pra baixo o(s) paralelogramo(s) jah está(ão) montado(s)...
 
-    //verificar se alguma parte do caminho do obj2 (oq vai andar) colidira com obj2
-    let colidiu = Interseccao.interseccao(paralelogramos[0], obj1);
-    if (!colidiu && paralelogramos.length > 1) //se tem posicoes zero e um
-      colidiu = Interseccao.interseccao(paralelogramos[1], obj1);
+    //verificar se alguma parte do caminho do obj2 (oq vai andar) colidirah com obj2
+    let colidiu = false;
+    formasGeomAndar.forEach(formaGeom => {
+      // TODO: der break quando colidir for true
+      colidiu = colidiu || Interseccao.interseccao(formaGeom, obj1);
+    });
 
     if (returnTrueFalse)
       return colidiu;
@@ -481,8 +494,7 @@ class Interseccao
 
     //daqui pra frente colidiu e eh pra retornar quanto pode andar antes de intersectar
 
-    // TODO : isso soh funciona se os dois forem quadrados ou retangulos
-
+    // TODO : isso soh funciona bem se os dois forem quadrados ou retangulos
     if (andarProporcional)
     {
       // a partir apenas de X
@@ -531,9 +543,6 @@ class Interseccao
       else
         qtdPodeAndarX = qtdAndarX;
 
-      if (Math.abs(qtdPodeAndarY) > Math.abs(qtdAndarY) || Math.abs(qtdPodeAndarX) > Math.abs(qtdAndarX))
-        console.log({pode: {x: qtdPodeAndarX, y: qtdPodeAndarY}, queria: {x: qtdAndarX, y: qtdAndarY}});
-
       return {x: qtdPodeAndarX, y: qtdPodeAndarY};
     }
 	}
@@ -576,61 +585,32 @@ class Interseccao
         return qtdAndar - qntNaoColidir;
     }
   }
-  static _montarParalelogramosAndar(obj, qtdAndarX, qtdAndarY)
+  static _montarFormasGeomAndar(obj, qtdAndarX, qtdAndarY, formasGeomAndar=[])
   //esse metodo vai retornar o(s) paralelogramo(s) que o andar de obj formaria (1 ou 2)
   {
-    let paralelogramos = [];
-    //dependendo de qual for a figura e como andar, pode nao ter 1 ou 2 paralelogramos
-    // PONTOS EM SENTIDO HORARIO
+    //formasGeometricas especiais que vao chamar esse mesmo metodo N vezes (recursao)
+    if (obj instanceof FormaGeometricaComposta || (obj instanceof FormaGeometricaComplexa && !(obj instanceof Triangulo)))
+    {
+      let vetorFormasGeom;
+      if (obj instanceof FormaGeometricaComposta)
+      //vetor formasGeometricas (quaisquer que sejam)
+        vetorFormasGeom = obj.formasGeometricas;
+      else
+      //if (obj instanceof FormaGeometricaComplexa)
+      //vetor de triangulos
+        vetorFormasGeom = obj.triangulos;
+
+      vetorFormasGeom.forEach(formaGeom => {
+        Interseccao._montarFormasGeomAndar(formaGeom, qtdAndarX, qtdAndarY, formasGeomAndar);
+        // muda formasGeomAndar por passagem por referencia
+      });
+      return formasGeomAndar;
+    }
+
+    // daqui pra baixo nao eh FormaGeometricaComposta nem FormaGeometricaComplexa...
 		switch (obj.codForma)
 		{
-			case Geometria.COD_RETANGULO:
-			case Geometria.COD_QUADRADO:
-        if (qtdAndarY < 0)
-        {
-          //paralelogramo que sai de cima
-          const p1 = new Ponto(obj.x + qtdAndarX, obj.y + qtdAndarY);
-          const p2 = new Ponto(obj.x + obj.width + qtdAndarX, obj.y + qtdAndarY);
-          const p3 = new Ponto(obj.x + obj.width, obj.y);
-          const p4 = new Ponto(obj.x, obj.y);
-          paralelogramos[0] = new Paralelogramo(p1, p2, p3, p4);
-        }else
-        {
-          //paralelogramo que sai de baixo
-          const p1 = new Ponto(obj.x, obj.y + obj.height);
-          const p2 = new Ponto(obj.x + obj.width, obj.y + obj.height);
-          const p3 = new Ponto(obj.x + obj.width + qtdAndarX, obj.y + obj.height + qtdAndarY);
-          const p4 = new Ponto(obj.x + qtdAndarX, obj.y + obj.height + qtdAndarY);
-          paralelogramos[0] = new Paralelogramo(p1, p2, p3, p4);
-        }
-
-        if (qtdAndarX < 0)
-        {
-          //paralelogramo que sai do lado esquerdo
-          const p1 = new Ponto(obj.x + qtdAndarX, obj.y + qtdAndarY);
-          const p2 = new Ponto(obj.x, obj.y);
-          const p3 = new Ponto(obj.x, obj.y + obj.height);
-          const p4 = new Ponto(obj.x + qtdAndarX, obj.y + obj.height + qtdAndarY);
-
-          if (qtdAndarY < 0)
-            paralelogramos[1] = new Paralelogramo(p1, p2, p3, p4);
-          else
-            paralelogramos[1] = new Paralelogramo(p2, p3, p4, p1);
-        }else
-        {
-          //paralelogramo que sai do lado esquerdo
-          const p1 = new Ponto(obj.x + obj.width + qtdAndarX, obj.y + qtdAndarY);
-          const p2 = new Ponto(obj.x + obj.width + qtdAndarX, obj.y + obj.height + qtdAndarY);
-          const p3 = new Ponto(obj.x + obj.width, obj.y + obj.height);
-          const p4 = new Ponto(obj.x + obj.width, obj.y);
-
-          if (qtdAndarY < 0)
-            paralelogramos[1] = new Paralelogramo(p1, p2, p3, p4);
-          else
-            paralelogramos[1] = new Paralelogramo(p4, p1, p2, p3);
-        }
-				break;
-			case Geometria.COD_TRIANGULO:
+      case Geometria.COD_TRIANGULO:
         //a unica difereca entre o procedimento que serah feito se entrar no if ou else a seguir
         //sao as variaveis usadas e a invercao de direita e esquerda...
 
@@ -682,14 +662,14 @@ class Interseccao
           // se B' estah a direita ou na Reta formada pelos pontos C e C'
           if (new Reta(c2, c).ondePontoEstah(b2)*mult >= 0)
             //Paralelogramo: A' - A - C - C'
-            paralelogramos[0] = new Paralelogramo(a2, a, c, c2);
+            formasGeomAndar.push(new Paralelogramo(a2, a, c, c2));
           else
           {
             //Paralelogramos (C' eh o vertice central):
               //1) C' - C - B - B'
-            paralelogramos[0] = new Paralelogramo(c2, c, b, b2);
+            formasGeomAndar.push(new Paralelogramo(c2, c, b, b2));
               //2) A' - A - C - C'
-            paralelogramos[1] = new Paralelogramo(a2, a, c, c2);
+            formasGeomAndar.push(new Paralelogramo(a2, a, c, c2));
           }
         }else
         // se C' estah a direita da linha ou em cima dela
@@ -697,35 +677,74 @@ class Interseccao
         {
           if (new Reta(b2, obj.vertices[1]).ondePontoEstah(c2)*mult <= 0)
             //Paralelogramo: A' - B' - B - A
-            paralelogramos[0] = new Paralelogramo(a2, b2, b, a);
+            formasGeomAndar.push(new Paralelogramo(a2, b2, b, a));
           else
           {
             //Paralelogramos (B' eh o vertice central):
               //1) A' - B' - B - A
-              paralelogramos[0] = new Paralelogramo(a2, b2, b, a);
+            formasGeomAndar.push(new Paralelogramo(a2, b2, b, a));
               //2) B' - C' - C - B
-              paralelogramos[1] = new Paralelogramo(b2, c2, c, b);
+            formasGeomAndar.push(new Paralelogramo(b2, c2, c, b));
           }
         }else
         {
           //Paralelogramos (A' eh o vertice central):
             //1) A' - B' - B - A
-            paralelogramos[0] = new Paralelogramo(a2, b2, b, a);
+            formasGeomAndar.push(new Paralelogramo(a2, b2, b, a));
             //2) A' - A - C - C'
-            paralelogramos[1] = new Paralelogramo(a2, a, c, c2);
+            formasGeomAndar.push(new Paralelogramo(a2, a, c, c2));
         }
 				break;
-			case Geometria.COD_PARALELOGRAMO:
-        // TODO: vaiIntersectar Paralelogramo
-        throw "FUNCIONALIDADE AINDA NAO EXISTE!!";
-				break;
-			case Geometria.COD_QUADRILATERO:
-        // TODO: vaiIntersectar Quadrilatero
-        throw "FUNCIONALIDADE AINDA NAO EXISTE!!";
+
+      // as demais formasGeometricas que ainda nao tem programacao propria serao considerados como retangulos
+			default:
+        if (qtdAndarY < 0)
+        {
+          //paralelogramo que sai de cima
+          const p1 = new Ponto(obj.x + qtdAndarX, obj.y + qtdAndarY);
+          const p2 = new Ponto(obj.x + obj.width + qtdAndarX, obj.y + qtdAndarY);
+          const p3 = new Ponto(obj.x + obj.width, obj.y);
+          const p4 = new Ponto(obj.x, obj.y);
+          formasGeomAndar.push(new Paralelogramo(p1, p2, p3, p4));
+        }else
+        {
+          //paralelogramo que sai de baixo
+          const p1 = new Ponto(obj.x, obj.y + obj.height);
+          const p2 = new Ponto(obj.x + obj.width, obj.y + obj.height);
+          const p3 = new Ponto(obj.x + obj.width + qtdAndarX, obj.y + obj.height + qtdAndarY);
+          const p4 = new Ponto(obj.x + qtdAndarX, obj.y + obj.height + qtdAndarY);
+          formasGeomAndar.push(new Paralelogramo(p1, p2, p3, p4));
+        }
+
+        if (qtdAndarX < 0)
+        {
+          //paralelogramo que sai do lado esquerdo
+          const p1 = new Ponto(obj.x + qtdAndarX, obj.y + qtdAndarY);
+          const p2 = new Ponto(obj.x, obj.y);
+          const p3 = new Ponto(obj.x, obj.y + obj.height);
+          const p4 = new Ponto(obj.x + qtdAndarX, obj.y + obj.height + qtdAndarY);
+
+          if (qtdAndarY < 0)
+            formasGeomAndar.push(new Paralelogramo(p1, p2, p3, p4));
+          else
+            formasGeomAndar.push(new Paralelogramo(p2, p3, p4, p1));
+        }else
+        {
+          //paralelogramo que sai do lado esquerdo
+          const p1 = new Ponto(obj.x + obj.width + qtdAndarX, obj.y + qtdAndarY);
+          const p2 = new Ponto(obj.x + obj.width + qtdAndarX, obj.y + obj.height + qtdAndarY);
+          const p3 = new Ponto(obj.x + obj.width, obj.y + obj.height);
+          const p4 = new Ponto(obj.x + obj.width, obj.y);
+
+          if (qtdAndarY < 0)
+            formasGeomAndar.push(new Paralelogramo(p1, p2, p3, p4));
+          else
+            formasGeomAndar.push(new Paralelogramo(p4, p1, p2, p3));
+        }
 				break;
 		}
 
-    return paralelogramos;
+    return formasGeomAndar;
   }
 }
 
@@ -830,7 +849,7 @@ class Geometria
       return (val > 0)? 1: 2; // sentido horário ou anti-horário
   }
 
-  //FORMAS: quadrado, retangulo, triangulo, paralelogramo, quadrilatero
+  //FORMAS: quadrado, retangulo, triangulo, paralelogramo, quadrilatero, formaComposta
   static get COD_QUADRADO()
   { return 1; }
   static get COD_RETANGULO()
@@ -841,4 +860,6 @@ class Geometria
   { return 4; }
   static get COD_QUADRILATERO()
   { return 5; }
+  static get COD_FORMA_COMPOSTA()
+  { return 10; }
 }

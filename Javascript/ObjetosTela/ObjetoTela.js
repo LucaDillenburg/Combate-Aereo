@@ -39,8 +39,6 @@ class ObjetoTelaSimples //recebe apenas uma classe informacao como parametro
 
   get formaGeometrica()
   { return this._formaGeometrica; }
-  colocarNoMeioX()
-  { this._formaGeometrica.colocarNoMeioX(); }
 
   draw()
   { this._formaGeometrica.draw(); }
@@ -68,85 +66,4 @@ class ObjetoTela extends ObjetoTelaSimples //recebe apenas uma classe informacao
   //outros metodos
   _mudarCorImgMorto()
   { this._formaGeometrica.corImg = this._corImgMorto; }
-}
-
-// visual: fazer inimigos e obstaculos irem aparecendo aos poucos e ficando menos transparentes
-const tempoObjetoAparecerAntesIniciarLv = 4000;
-//inimigo
-const tempoInimAparecerDuranteLv = 750;
-//obstaculo
-const tempoObstAparecerDuranteLv = 120;
-//pocao
-const tempoPocaoAparecerDuranteLv = 120;
-class ObjetoTelaAparecendo extends ObjetoTelaSimples
-{
-  constructor(pontoInicial, infoObjetoTela, callback)
-  {
-    super(pontoInicial, infoObjetoTela);
-
-    //pegar tempo objeto vai ficar aparecendo
-    let tempoObjetosAparec;
-    if (controladorJogo.criandoLevel)
-    // se estah criando o level (nao estah no meio do level)
-      tempoObjetosAparec = tempoObjetoAparecerAntesIniciarLv;
-    else
-    {
-      //pode ser inimigo, obstaculo, tiro ou pocao
-      if (infoObjetoTela instanceof InfoObstaculo)
-        tempoObjetosAparec = tempoObstAparecerDuranteLv;
-      else
-      if (infoObjetoTela instanceof InfoInimigo)
-        tempoObjetosAparec = tempoInimAparecerDuranteLv;
-      else
-        tempoObjetosAparec = tempoPocaoAparecerDuranteLv; //pocao tem que ser o ultimo pois nao tem um InfoPocao
-    }
-
-    //setar variaveis vitais
-    this._cadaPorcentagem = 1/(tempoObjetosAparec/frameRatePadrao);
-    this._porcentagemAtual = this._cadaPorcentagem;
-    this._mudarTamanhoFormaGeom(true);
-
-    if (ConjuntoObjetosTela.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.DeixarTempoMaisLento)
-    // PARTE DA EXECUCAO DA POCAO (deixar tempo mais lento do novo objeto aparecendo)
-      this.mudarTempo(porcentagemDeixarTempoLento);
-
-    //callback
-    this._callback = callback;
-  }
-
-  draw()
-  {
-    //desenha
-    this._formaGeometrica.draw(this._porcentagemAtual); //opacidade
-
-    //deixa forma geometrica maior e aumenta a porcentagemAtual
-    this._porcentagemAtual += this._cadaPorcentagem;
-    if (this._porcentagemAtual >= 1)
-      this._callback(); //chama funcao callback quando jah tiver aumentado
-    else
-      this._mudarTamanhoFormaGeom(false);
-  }
-  _mudarTamanhoFormaGeom(primeiraVez)
-  {
-    if (this._formaGeometrica instanceof Quadrado)
-      this._formaGeometrica.setTamanhoLadoPorcentagem(primeiraVez?this._porcentagemAtual:this._getPorcentagemAumentar());
-    else
-    {
-      const porcentagemAumentar = this._getPorcentagemAumentar();
-      this._formaGeometrica.setWidthPorcentagem(primeiraVez?this._porcentagemAtual:porcentagemAumentar);
-      this._formaGeometrica.setHeightPorcentagem(primeiraVez?this._porcentagemAtual:porcentagemAumentar);
-    }
-  }
-  _getPorcentagemAumentar()
-  {
-    // se nao for primeira vez:
-    // 100% --- porcentagemAtual - cadaPorcentagem
-    //   x  --- porcentagemAtual
-    // .: x = 100*porcentagemAtual/(porcentagemAtual - cadaPorcentagem) %
-    return this._porcentagemAtual/(this._porcentagemAtual - this._cadaPorcentagem);
-  }
-
-  //POCAO
-  mudarTempo(porcentagem)
-  { this._cadaPorcentagem *= porcentagem; }
 }

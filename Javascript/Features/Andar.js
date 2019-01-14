@@ -67,7 +67,7 @@ class ClasseAndar
         delete this._hipotenusaPadrao;
 
       if (tipo === TipoAndar.DirecaoPers)
-        this._setarQtdAndarTipoDirecao(formaGeom, ConjuntoObjetosTela.pers);
+        this._setarQtdAndarTipoDirecao(formaGeom, ControladorJogo.pers);
       else
       if (tipo === TipoAndar.DirecaoInimMaisProx)
       {
@@ -91,13 +91,13 @@ class ClasseAndar
   {
     //descobrir qual inimigo estah mais perto para seguir
     let praOndeAndar=null, menorHipotenusa=null;
-    for (let i=0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
+    for (let i=0; i<ControladorJogo.controladoresInimigos.length; i++)
     {
       //se tiver que ser soh inimigos essenciais e esse nao for, ele volta pro "cabecalho" do for
-      if (sohEssenciais && !ConjuntoObjetosTela.controladoresInimigos[i].ehDeInimigosEssenciais) continue;
+      if (sohEssenciais && !ControladorJogo.controladoresInimigos[i].ehDeInimigosEssenciais) continue;
 
       //informacoes de quanto andaria ateh inimigo mais proximo desse controlador
-      const praOndeAndarAtual = ConjuntoObjetosTela.controladoresInimigos[i].qntAndarInimigoMaisProximo(formaGeom);
+      const praOndeAndarAtual = ControladorJogo.controladoresInimigos[i].qntAndarInimigoMaisProximo(formaGeom);
       if (praOndeAndarAtual.inim !== undefined) //se tem algum inimigo nesse controlador
       {
         const hipotenusaAtual = Operacoes.hipotenusa(praOndeAndarAtual.x, praOndeAndarAtual.y);
@@ -130,7 +130,7 @@ class ClasseAndar
   procAndar(formaGeom, vaiAndar=true)
   {
     if ((this._tipoAndar === TipoAndar.SeguirInimMaisProx && !this._inimSeguir.vivo) ||
-      (this._tipoAndar === TipoAndar.SeguirPers && !ConjuntoObjetosTela.pers.vivo))
+      (this._tipoAndar === TipoAndar.SeguirPers && !ControladorJogo.pers.vivo))
     {
       this.mudarQtdAndarParaUltimoAndar();
       this.setTipoAndar(TipoAndar.Normal);
@@ -139,7 +139,7 @@ class ClasseAndar
     //objSeguir para this._qtdAndarFromTipo(...)
     let objSeguir;
     if (this._tipoAndar === TipoAndar.SeguirPers)
-      objSeguir = ConjuntoObjetosTela.pers;
+      objSeguir = ControladorJogo.pers;
     else
     if (this._tipoAndar === TipoAndar.SeguirInimMaisProx)
       objSeguir = this._inimSeguir;

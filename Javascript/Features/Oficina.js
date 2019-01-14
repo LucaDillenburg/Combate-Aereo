@@ -8,7 +8,7 @@ class Oficina
   constructor(level)
   {
     //eh quadrado que fica no meio
-    this._formaGeometrica = new Quadrado(null,null, Oficina.tamanhoOficinaPorLv(level), {fill: color("green"), stroke: color("green")});
+    this._formaGeometrica = new Quadrado(null,null, Oficina.tamanhoOficinaPorLv(level), {fill: "green", stroke: "green"});
     this._formaGeometrica.colocarNoMeioX();
     this._formaGeometrica.colocarNoMeioY();
 
@@ -16,19 +16,20 @@ class Oficina
     this.verificarEstahConsertando();
   }
 
-  verificarEstahConsertando() { this._persEstahConsertando = this._formaGeometrica.contem(ConjuntoObjetosTela.pers.formaGeometrica); /* se tiver inteiramente dentro */ }
+  verificarEstahConsertando() { this._persEstahConsertando = this._formaGeometrica.contem(ControladorJogo.pers.formaGeometrica); /* se tiver inteiramente dentro */ }
   procVerificarConsertando(level)
   {
     if (this._persEstahConsertando)
-      ConjuntoObjetosTela.pers.mudarVida(Oficina.qtdGanhaVidaEmOficinaLevel(level));
+      ControladorJogo.pers.mudarVida(Oficina.qtdGanhaVidaEmOficinaLevel(level));
   }
 
   static tamanhoOficinaPorLv(level)
   {
-    let porcentagemTamPers = 500 - level*25;
+    let porcentagemTamPers = 340 - level*25;
     if (porcentagemTamPers < porcentagemTamPersMinimoTamOficina)
       porcentagemTamPers = porcentagemTamPersMinimoTamOficina;
-    return ConjuntoObjetosTela.pers.formaGeometrica.width*porcentagemTamPers/100;
+    return Math.max(ControladorJogo.pers.formaGeometrica.width, ControladorJogo.pers.formaGeometrica.height)
+      * porcentagemTamPers/100;
   }
   static qtdGanhaVidaEmOficinaLevel(level)
   { return qntGanhaMinimoOficina + (level-1)*qntSomaACadaLvOficina; }

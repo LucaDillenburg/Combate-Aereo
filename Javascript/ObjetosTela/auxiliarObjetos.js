@@ -16,23 +16,33 @@ class AuxInfo
     else
       return {stroke: imgCor.stroke, fill: imgCor.fill}; //clone
   }
+}
 
-  static cloneConfiguracoesAtirar(configuracoesAtirar)
+//TIPOS DE OBJETOS TELA (quando precisar guardar qual o tipo do ObjetoTela - ex: morreu dos tiros)
+class TipoObjetos
+{
+  //retorna o numero que representa o tipo do objeto
+  static fromObj(obj)
   {
-    let cloneConfigs = new Array(configuracoesAtirar.length);
-    for (let i = 0; i<cloneConfigs.length; i++)
-      cloneConfigs[i] = configuracoesAtirar[i].clone();
-    return cloneConfigs;
+    if (obj instanceof Tiro)
+      return TipoObjetos.Tiro;
+    if (obj instanceof Obstaculo)
+      return TipoObjetos.Obstaculo;
+    if (obj instanceof Inimigo)
+      return TipoObjetos.Inimigo;
+    if (obj instanceof PersonagemPrincipal)
+      return TipoObjetos.Personagem;
   }
 
-  static cloneQtdsRotateDifHelice(qtdsRotateDifHelice)
-  {
-    if (qtdsRotateDifHelice === undefined) return undefined;
-
-    let ret = [];
-    qtdsRotateDifHelice.forEach(function(valor, index) { ret[index] = valor; }); //copiar
-    return ret;
-  }
+  //getters ("constantes")
+  static get Tiro()
+  { return 1; }
+  static get Obstaculo()
+  { return 2; }
+  static get Inimigo()
+  { return 3; }
+  static get Personagem()
+  { return 4; }
 }
 
 //CONTROLADORES OBJETOS
@@ -96,6 +106,8 @@ class AuxControladores
       return false;
   }
 
+ //para Adicionar Objetos:
+  //andar
   static qtdAndarDif(infoNovo, infoObjTelaPadrao, direcaoX, direcaoY, todoQtdDirecao)
   {
     if (infoNovo.infoAndar === undefined)
@@ -147,11 +159,30 @@ class AuxControladores
     }
   }
 
+  //ponto inicial
   static pontoInicialCorreto(pontoInicial = {} /*objeto vazio*/, formaGeometricaPadrao)
   {
     //(x ou posicaoX, y ou posicaoY)
     if (pontoInicial.x === undefined && pontoInicial.posicaoX === undefined) pontoInicial.x = formaGeometricaPadrao.x;
     if (pontoInicial.y === undefined && pontoInicial.posicaoY === undefined) pontoInicial.y = formaGeometricaPadrao.y;
     return pontoInicial;
+  }
+
+  //aparecer
+  static infoObjAparecendoCorreto(infoObjAparecendo, infoObjAparecendoPadrao)
+  {
+    if (infoObjAparecendo === undefined)
+      infoObjAparecendo = infoObjAparecendoPadrao;
+    else
+    {
+      //Atributos: mudarOpacidade, mudarTamanho, qtdAndar
+      if (infoObjAparecendo.mudarOpacidade === undefined)
+        infoObjAparecendo.mudarOpacidade = infoObjAparecendoPadrao.mudarOpacidade;
+      if (infoObjAparecendo.mudarTamanho === undefined)
+        infoObjAparecendo.mudarTamanho = infoObjAparecendoPadrao.mudarTamanho;
+      if (infoObjAparecendo.qtdAndar === undefined)
+        infoObjAparecendo.qtdAndar = infoObjAparecendoPadrao.qtdAndar;
+    }
+    return infoObjAparecendo;
   }
 }

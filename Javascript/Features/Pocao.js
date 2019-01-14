@@ -7,13 +7,16 @@ const qtdTiroAndarMaisRapido = 7;
 const porcentagemSetVel = 1.4;
 const qtdTiroMaisMortalidade = 3;
 const porcentagemVelTiroSeVoltarPers = 0.4;
-const porcentagemMortalidadeTiroSeVoltarPers = 0.20;
+const porcentagemMortalidadeTiroSeVoltarPers = 0.15;
 
 const qtdGanhaPoucaVida = 7;
 const qtdPerdeVida = 10;
 const qtdGanhaMuitaVida = 12;
 
 const qtdTiraVidaTodosInim = 70;
+
+const indexArmaMissilPers = 0; //de acordo com "TER EM MENTE.txt"
+const freqMissilPers = 22;
 
 //POCAO
 class Pocao
@@ -37,9 +40,9 @@ class Pocao
   {
     // TODO: fazer isso certo (soh fiz pra nao ter que fazer em tudo (depois mudar))
     if (strQuer === "img")
-      return {fill: color("white"), stroke: color("white")};
+      return {fill: "white", stroke: "white"};
     if (strQuer === "imgMorreu")
-      return {fill: color("orange"), stroke: color("orange")};
+      return {fill: "orange", stroke: "orange"};
 
     switch(codPocao) //nao estah na ordem dos levels
     {
@@ -103,7 +106,7 @@ class Pocao
       return {width: width, height: height};
 
     //se tiver que retornar forma geometrica em si
-    let formaGeometrica = new Retangulo(0,0,width,height);
+    let formaGeometrica = new Retangulo(undefined,undefined,width,height);
     formaGeometrica.corImg = Pocao.informacoesPocaoFromCod(this._codPocao, "img");
     return formaGeometrica;
   }
@@ -119,9 +122,9 @@ class Pocao
     this._personagemJahPegou = true;
 
     if (this._informacoesPocao.ativadoInstant)
-      ConjuntoObjetosTela.pers.controladorPocoesPegou.adicionarPocaoUsando(this);
+      ControladorJogo.pers.controladorPocoesPegou.adicionarPocaoUsando(this);
     else
-      ConjuntoObjetosTela.pers.controladorPocoesPegou.adicionarPocao(this);
+      ControladorJogo.pers.controladorPocoesPegou.adicionarPocao(this);
 
     return this._informacoesPocao.ativadoInstant;
   }
@@ -129,7 +132,6 @@ class Pocao
 
   //QUANDO USUARIO JAH PEGOU (se for imediatamente) ou quando ele usar (nao imediatamente)
   executarPocao()
-  //usar apenas ConjuntoObjetosTela
   {
     let tempoPocaoResta = null; //quanto tempo a pocao fica ativo ateh desaparecer de novo (em milisegundos)
 
@@ -137,7 +139,7 @@ class Pocao
     {
       case TipoPocao.DiminuirTamanhoPers:
         tempoPocaoResta = 7500;
-        ConjuntoObjetosTela.pers.mudarTamLados(porcentagemSetTam); //50% do tamanho
+        ControladorJogo.pers.mudarTamLados(porcentagemSetTam); //50% do tamanho
         break;
 
       case TipoPocao.MatarObjetos1Tiro:
@@ -147,7 +149,7 @@ class Pocao
 
       case TipoPocao.RUIMPersPerdeVel:
         tempoPocaoResta = 5000;
-        ConjuntoObjetosTela.pers.mudarVelocidade(porcentagemSetVelRuim);
+        ControladorJogo.pers.mudarVelocidade(porcentagemSetVelRuim);
         break;
 
       case TipoPocao.TiroPersMaisRapidoMortal:
@@ -155,22 +157,22 @@ class Pocao
 
         const infoTiroPersPadrao = ControladorJogo.infoTiroPersPadrao();
         let infoTiroMaisRapido = new InfoTiro(); //formaGeometrica, corImgMorto, infoAndar, ehDoPers, mortalidade
-        infoTiroMaisRapido.formaGeometrica = new Retangulo(0,0, 4, 6, {fill: color("black"), stroke: color("black")});
+        infoTiroMaisRapido.formaGeometrica = new Retangulo(undefined,undefined, 4, 6, {fill: "black", stroke: "black"});
         infoTiroMaisRapido.corImgMorto = {fill: color(30), stroke: color(30)};
         infoTiroMaisRapido.infoAndar = infoTiroPersPadrao.infoAndar;
         infoTiroMaisRapido.infoAndar.qtdAndarY -= qtdTiroAndarMaisRapido;
         infoTiroMaisRapido.mortalidade = infoTiroPersPadrao.mortalidade + qtdTiroMaisMortalidade;
 
         // TODO: todos os tiros vao ficar bons ou soh um deles? DEPENDE DAS NAVES DO PERSONAGEM. MUDAR FREQUENCIA TAMBEM? (ver desexecutar tambem)
-        ConjuntoObjetosTela.pers.procComTodosContrTiros(function(controladorTirosAtual)
+        ControladorJogo.pers.procComTodosContrTiros(function(controladorTirosAtual)
           { controladorTirosAtual.colocarInfoTiroEspecial(infoTiroMaisRapido); });
         break;
 
       case TipoPocao.MatarInimigosNaoEssenc:
-        for (let i = 0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
-          if (!ConjuntoObjetosTela.controladoresInimigos[i].ehDeInimigosEssenciais)
+        for (let i = 0; i<ControladorJogo.controladoresInimigos.length; i++)
+          if (!ControladorJogo.controladoresInimigos[i].ehDeInimigosEssenciais)
           //soh mata os inimigos nao essenciais
-            ConjuntoObjetosTela.controladoresInimigos[i].matarTodosInim();
+            ControladorJogo.controladoresInimigos[i].matarTodosInim();
         break;
 
       case TipoPocao.ReverterTirosJogoInimDirInim:
@@ -178,11 +180,11 @@ class Pocao
         break;
 
       case TipoPocao.GanharPoucaVida:
-        ConjuntoObjetosTela.pers.mudarVida(qtdGanhaPoucaVida);
+        ControladorJogo.pers.mudarVida(qtdGanhaPoucaVida);
         break;
 
       case TipoPocao.RUIMPersPerdeVida:
-        ConjuntoObjetosTela.pers.mudarVida(-qtdPerdeVida);
+        ControladorJogo.pers.mudarVida(-qtdPerdeVida);
         break;
 
       case TipoPocao.ReverterTirosJogoInimSeguirInim:
@@ -205,59 +207,69 @@ class Pocao
           -> quando tiros(sem ser do personagem), obstaculos ou inimigos(freqFuncAtirar tambem) forem criados. OK
         */
         //tiros tela
-        for (let i = 0; i<ConjuntoObjetosTela.controladoresTirosJogo.length; i++)
-          ConjuntoObjetosTela.controladoresTirosJogo[i].mudarTempo(porcentagemDeixarTempoLento);
+        for (let i = 0; i<ControladorJogo.controladoresTirosJogo.length; i++)
+          ControladorJogo.controladoresTirosJogo[i].mudarTempo(porcentagemDeixarTempoLento);
         //inimigos (incluindo tiros deles e freqFuncAtirar)
-        for (let i = 0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
-          ConjuntoObjetosTela.controladoresInimigos[i].mudarTempo(porcentagemDeixarTempoLento);
+        for (let i = 0; i<ControladorJogo.controladoresInimigos.length; i++)
+          ControladorJogo.controladoresInimigos[i].mudarTempo(porcentagemDeixarTempoLento);
         //obstaculos
-        for (let i = 0; i<ConjuntoObjetosTela.controladoresObstaculos.length; i++)
-          ConjuntoObjetosTela.controladoresObstaculos[i].mudarTempo(porcentagemDeixarTempoLento);
+        for (let i = 0; i<ControladorJogo.controladoresObstaculos.length; i++)
+          ControladorJogo.controladoresObstaculos[i].mudarTempo(porcentagemDeixarTempoLento);
         //Timers
         ConjuntoTimers.mudarTempo(porcentagemDeixarTempoLento);
         break;
 
       case TipoPocao.RUIMTirosPersDirEle:
-        ConjuntoObjetosTela.pers.procComTodosContrTiros(function(controladorTirosAtual)
-          { controladorTirosAtual.seVirarContraCriador(false); });
+        ControladorJogo.pers.procComTodosContrTiros(function(controladorTirosAtual)
+          {
+            controladorTirosAtual.seVirarContraCriador(false);
+            controladorTirosAtual.mudarQtdAndarTiros(porcentagemVelTiroSeVoltarPers);
+            controladorTirosAtual.mudarMortalidadeTiros(porcentagemMortalidadeTiroSeVoltarPers, true);
+          });
         break;
 
       case TipoPocao.GanharMuitaVida:
-        ConjuntoObjetosTela.pers.mudarVida(qtdGanhaMuitaVida);
+        ControladorJogo.pers.mudarVida(qtdGanhaMuitaVida);
         break;
 
       case TipoPocao.PersMaisRapido:
         tempoPocaoResta = 7500;
-        ConjuntoObjetosTela.pers.mudarVelocidade(porcentagemSetVel);
+        ControladorJogo.pers.mudarVelocidade(porcentagemSetVel);
         break;
 
-      case TipoPocao.PersComMissil: //maior, mais devagar e segue inimigo (index 0)
+      case TipoPocao.PersComMissil: //maior, mais devagar e segue inimigo
         tempoPocaoResta = 4500;
 
         let infoTiroMissil = new InfoTiro(); //formaGeometrica, corImgMorto, infoAndar, ehDoPers, mortalidade
-        infoTiroMissil.formaGeometrica = new Retangulo(0,0, 8, 10, {fill: color("white"), stroke: color("white")});
+        infoTiroMissil.formaGeometrica = new Retangulo(undefined,undefined, 8, 10, {fill: "white", stroke: "white"});
         infoTiroMissil.corImgMorto = {fill: color(200), stroke: color(200)};
         infoTiroMissil.infoAndar = new InfoAndar(0, -12, TipoAndar.SeguirInimMaisProx);
         infoTiroMissil.mortalidade = 20;
 
-        // deixa um pouco mais lento ANTES de se virar contra personagem (se nao, nao da tempo dele reagir)
-        ConjuntoObjetosTela.pers.getControladorTiros(0).mudarQtdAndarTiros(porcentagemVelTiroSeVoltarPers);
-        ConjuntoObjetosTela.pers.getControladorTiros(0).mudarMortalidadeTiros(porcentagemMortalidadeTiroSeVoltarPers, true);
-        ConjuntoObjetosTela.pers.getControladorTiros(0).colocarInfoTiroEspecial(infoTiroMissil);
-        ConjuntoObjetosTela.pers.procPosMudarTiroZero();
+        //setar novo tiro
+        ControladorJogo.pers.getControladorTiros(indexArmaMissilPers).colocarInfoTiroEspecial(infoTiroMissil);
+
+        //guardar frequencia e atirarDireto antigo
+        this._informacoesNaoMissil = {freq: ControladorJogo.pers.getFreqFuncAtirar(indexArmaMissilPers).freq,
+          atirarDireto: ControladorJogo.pers.getConfigAtirar(indexArmaMissilPers).atirarDireto};
+
+        //mudar freqAtirar e atirarDireto
+        ControladorJogo.pers.getFreqFuncAtirar(indexArmaMissilPers).freq = freqMissilPers;
+        ControladorJogo.pers.getFreqFuncAtirar(indexArmaMissilPers).setContadorUltimaEtapa(); //ele jah vai atirar missil em seguida
+        ControladorJogo.pers.getConfigAtirar(indexArmaMissilPers).atirarDireto = true;
         break;
 
       case TipoPocao.TirarVidaTodosInim:
         //passa por todos os controladores de inimigos
-        for (let i = 0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
-          ConjuntoObjetosTela.controladoresInimigos[i].tirarVidaTodosInim(qtdTiraVidaTodosInim);
+        for (let i = 0; i<ControladorJogo.controladoresInimigos.length; i++)
+          ControladorJogo.controladoresInimigos[i].tirarVidaTodosInim(qtdTiraVidaTodosInim);
         break;
 
       case TipoPocao.CongelarInimigos:
         tempoPocaoResta = 5000;
         //congelar todos os inimigos
-        for (let i=0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
-          ConjuntoObjetosTela.controladoresInimigos[i].mudarCongelarTodosInim(true);
+        for (let i=0; i<ControladorJogo.controladoresInimigos.length; i++)
+          ControladorJogo.controladoresInimigos[i].mudarCongelarTodosInim(true);
         break;
 
       default:
@@ -268,7 +280,7 @@ class Pocao
     {
       //programa quando quando vai parar com esse pocao
       const _this = this;
-      new Timer(function() { _this.desexecutarPocao(); }, tempoPocaoResta, false,
+      new Timer(function() { _this.desexecutarPocao(); }, tempoPocaoResta, false, false /*pocao transcende o level (mesmo se o level acabar ainda vai ter que desexecutar)*/,
         	{obj: this, atr: "_tempoRestante", estahEmMiliseg: true}); //atualiza quanto tempo falta
 
       this._tempoTotal = tempoPocaoResta;
@@ -278,7 +290,7 @@ class Pocao
   desexecutarPocao()
   // se sohSaberSeTem, eh soh pra saber se tem ou nao desexecutar (nao desexecuta)
   {
-    // SE FOR MUDAR AQUI COLAR DE NOVO EM "get temDesexecutar()"
+    // SE FOR MUDAR SE UMA POCAO TEM OU NAO DESEXECUTAR COLAR DE NOVO EM "get temDesexecutar()"
     switch(this._codPocao)
     {
       //case TipoPocao.MatarInimigosNaoEssenc: (acao pontual)
@@ -294,47 +306,60 @@ class Pocao
         break;
 
       case TipoPocao.DiminuirTamanhoPers:
-        ConjuntoObjetosTela.pers.mudarTamLados(Probabilidade.porcentagemVoltarNormal(porcentagemSetTam)); //200% do tamanho (50%) => vai voltar a 100% (proporcionalmente)
+        ControladorJogo.pers.mudarTamLados(Probabilidade.porcentagemVoltarNormal(porcentagemSetTam)); //200% do tamanho (50%) => vai voltar a 100% (proporcionalmente)
         break;
 
       case TipoPocao.RUIMPersPerdeVel:
-        ConjuntoObjetosTela.pers.mudarVelocidade(Probabilidade.porcentagemVoltarNormal(porcentagemSetVelRuim)); //aumenta a velocidade (proporcionalmente)
+        ControladorJogo.pers.mudarVelocidade(Probabilidade.porcentagemVoltarNormal(porcentagemSetVelRuim)); //aumenta a velocidade (proporcionalmente)
         break;
 
       case TipoPocao.TiroPersMaisRapidoMortal:
         // TODO: todos os tiros vao ficar bons ou soh um deles? DEPENDE DAS NAVES DO PERSONAGEM
-        ConjuntoObjetosTela.pers.procComTodosContrTiros(function(controladorTirosAtual)
+        ControladorJogo.pers.procComTodosContrTiros(function(controladorTirosAtual)
           { controladorTirosAtual.voltarInfoTiroPadrao(); /*volta tiro padrao (volta uma camada)*/ });
         break;
 
-      case TipoPocao.PersComMissil: //index 0
-        ConjuntoObjetosTela.pers.getControladorTiros(0).voltarInfoTiroPadrao(); //volta tiro padrao (volta uma camada)
-        ConjuntoObjetosTela.pers.procPosMudarTiroZero();
-        console.log(ConjuntoObjetosTela.pers._configContrTiros[0].freqFunc.freq);
+      case TipoPocao.PersComMissil:
+        //volta tiro padrao (volta uma camada)
+        ControladorJogo.pers.getControladorTiros(indexArmaMissilPers).voltarInfoTiroPadrao();
+
+        //voltar frequencia e atirarDireto antiga
+        ControladorJogo.pers.getFreqFuncAtirar(indexArmaMissilPers).freq = this._informacoesNaoMissil.freq;
+        ControladorJogo.pers.getConfigAtirar(indexArmaMissilPers).atirarDireto = this._informacoesNaoMissil.atirarDireto;
+
+        // zerar contagem do freqFunc
+        ControladorJogo.pers.getFreqFuncAtirar(indexArmaMissilPers).zerarContador();
+
+        //se for atirarDireto, falar que nao pode atirar
+        if (!ControladorJogo.pers.getConfigAtirar(indexArmaMissilPers).atirarDireto)
+          ControladorJogo.pers.getConfigAtirar(indexArmaMissilPers).podeAtirar = false;
+
+        //deletar variavel que guardava frequencia antiga
+        delete this._informacoesNaoMissil;
         break;
 
       case TipoPocao.PersMaisRapido:
-        ConjuntoObjetosTela.pers.mudarVelocidade(Probabilidade.porcentagemVoltarNormal(porcentagemSetVel)); //diminui a velocidade de novo (proporcionalmente)
+        ControladorJogo.pers.mudarVelocidade(Probabilidade.porcentagemVoltarNormal(porcentagemSetVel)); //diminui a velocidade de novo (proporcionalmente)
         break;
 
       case TipoPocao.CongelarInimigos:
         //descongelar todos os inimigos (voltar etapa)
-        for (let i=0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
-          ConjuntoObjetosTela.controladoresInimigos[i].mudarCongelarTodosInim(false);
+        for (let i=0; i<ControladorJogo.controladoresInimigos.length; i++)
+          ControladorJogo.controladoresInimigos[i].mudarCongelarTodosInim(false);
         break;
 
       case TipoPocao.DeixarTempoMaisLento:
       //voltar tempo ao normal
         const porcVoltarTempoNormal = Probabilidade.porcentagemVoltarNormal(porcentagemDeixarTempoLento);
         //tiros tela
-        for (let i = 0; i<ConjuntoObjetosTela.controladoresTirosJogo.length; i++)
-          ConjuntoObjetosTela.controladoresTirosJogo[i].mudarTempo(porcVoltarTempoNormal);
+        for (let i = 0; i<ControladorJogo.controladoresTirosJogo.length; i++)
+          ControladorJogo.controladoresTirosJogo[i].mudarTempo(porcVoltarTempoNormal);
         //inimigos (incluindo tiros deles e freqFuncAtirar)
-        for (let i = 0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
-          ConjuntoObjetosTela.controladoresInimigos[i].mudarTempo(porcVoltarTempoNormal);
+        for (let i = 0; i<ControladorJogo.controladoresInimigos.length; i++)
+          ControladorJogo.controladoresInimigos[i].mudarTempo(porcVoltarTempoNormal);
         //obstaculos
-        for (let i = 0; i<ConjuntoObjetosTela.controladoresObstaculos.length; i++)
-          ConjuntoObjetosTela.controladoresObstaculos[i].mudarTempo(porcVoltarTempoNormal);
+        for (let i = 0; i<ControladorJogo.controladoresObstaculos.length; i++)
+          ControladorJogo.controladoresObstaculos[i].mudarTempo(porcVoltarTempoNormal);
         //Timers
         ConjuntoTimers.mudarTempo(porcVoltarTempoNormal);
         break;
@@ -343,7 +368,7 @@ class Pocao
         console.trace();
     }
 
-    ConjuntoObjetosTela.pers.controladorPocoesPegou.acabouUsarPocao();
+    ControladorJogo.pers.controladorPocoesPegou.acabouUsarPocao();
   }
 
 
@@ -351,12 +376,12 @@ class Pocao
   _reverterTirosContraInimigos(seguir)
   {
     //tiros tela
-    for (let i = 0; i<ConjuntoObjetosTela.controladoresTirosJogo.length; i++)
-      ConjuntoObjetosTela.controladoresTirosJogo[i].seVirarContraCriador(seguir);
+    for (let i = 0; i<ControladorJogo.controladoresTirosJogo.length; i++)
+      ControladorJogo.controladoresTirosJogo[i].seVirarContraCriador(seguir);
 
     //tiros dos inimigos
-    for (let i = 0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
-      ConjuntoObjetosTela.controladoresInimigos[i].virarTirosContraCriador(seguir);
+    for (let i = 0; i<ControladorJogo.controladoresInimigos.length; i++)
+      ControladorJogo.controladoresInimigos[i].virarTirosContraCriador(seguir);
   }
 
   get tempoTotal() { return this._tempoTotal; }
@@ -437,9 +462,9 @@ class ObjetoTelaPocao
   intersectaPers(qtdAndarX, qtdAndarY)
   {
     if (qtdAndarX === undefined && qtdAndarY === undefined)
-      return Interseccao.interseccao(this._formaGeometrica, ConjuntoObjetosTela.pers.formaGeometrica);
+      return Interseccao.interseccao(this._formaGeometrica, ControladorJogo.pers.formaGeometrica);
     else
-      return Interseccao.vaiTerInterseccao(this._formaGeometrica, ConjuntoObjetosTela.pers.formaGeometrica, qtdAndarX, qtdAndarY);
+      return Interseccao.vaiTerInterseccao(this._formaGeometrica, ControladorJogo.pers.formaGeometrica, qtdAndarX, qtdAndarY);
   }
 
   morreu()
@@ -471,7 +496,7 @@ class ControladorPocaoTela
   //esse metodo vai adicionar uma pocao randomico possivel depois de certo tempo (dependendo de uma probabilidade para colocar ou nao pocoes na tela naquele level) e jah vai programar para tira-lo caso ele nao seja pego dentro do tempo
   {
     if (this._jahProgramouDeixarPocaoTela || //se jah fez um timer para colocar pocao na tela
-      !ControladorPocaoTela._probabilidadeExistirPocaoFromLevel(level)) // cada level tem uma chance de ter pocao diferente (os primeiros levels tem menos, e vai aumentando)
+     !ControladorPocaoTela._probabilidadeExistirPocaoFromLevel(level)) // cada level tem uma chance de ter pocao diferente (os primeiros levels tem menos, e vai aumentando)
       return;
 
     // estah programando para colocar poder na tela (soh pode programar para colocar outro quando esse jah tiver sumido)
@@ -482,10 +507,10 @@ class ControladorPocaoTela
     const _this = this;
     new Timer(function() {
       _this._colocarPocaoTela(level);
-    }, qntTempoFaltaPraColocar, false);
+    }, qntTempoFaltaPraColocar, false, false /*pocao transcende o level*/);
 
     //programar tira-lo depois de certo tempo
-    new Timer(function() { _this.tirarPocaoTela(); }, tempoVaiFicarTela + qntTempoFaltaPraColocar + tempoPocaoAparecerDuranteLv, false);
+    new Timer(function() { _this.tirarPocaoTela(); }, tempoVaiFicarTela + qntTempoFaltaPraColocar + tempoPocaoAparecerDuranteLv, false, false /*pocao transcende o level*/);
   }
   _colocarPocaoTela(level)
   {
@@ -507,14 +532,14 @@ class ControladorPocaoTela
     const pocao = new Pocao(pocoesPossiveis[Math.myrandom(0, qtdPocoesPossiveis)]); //cria pocao a partir do codigo
 
     //ponto onde pocao nao estah em cima do pers nem muuito perto dele
-    const pontoPode = this._pontoPodeColocar( pocao.getFormaGeometrica(true) );
+    const pontoPode = this._pontoPodeColocar(pocao.getFormaGeometrica(true));
 
     //fazer pocao ir aparecendo na tela aos poucos (opacidade e tamanho): ele nao interage com o meio ainda
     const _this = this;
-    const formaGeomPocao = pocao.getFormaGeometrica();
-    this._objPocao = new ObjetoTelaAparecendo(pontoPode, {formaGeometrica: formaGeomPocao}, function(){ //(funcao callback)
+    const infoObjAparecendo = new InfoObjetoTelaAparecendo(false, true, undefined, pocao.getFormaGeometrica());
+    this._objPocao = new ObjetoTelaAparecendo(pontoPode, infoObjAparecendo, function(){ //(funcao callback)
       //adicionar objPocao propriamente dito (e jah tirando o ObjetoTelaAparecendo)
-      _this._objPocao = new ObjetoTelaPocao(pontoPode.x, pontoPode.y, pocao, formaGeomPocao);
+      _this._objPocao = new ObjetoTelaPocao(pontoPode.x, pontoPode.y, pocao, _this._objPocao.formaGeometrica);
     });
   }
 
@@ -532,13 +557,13 @@ class ControladorPocaoTela
   _estahLongeSuficientePers(pontoPode, medidasFormaGeom)
   {
     //ve se estah intersectando
-    if (Interseccao.interseccaoRetDesmontado(ConjuntoObjetosTela.pers.formaGeometrica.x, ConjuntoObjetosTela.pers.formaGeometrica.y,
-      ConjuntoObjetosTela.pers.formaGeometrica.width, ConjuntoObjetosTela.pers.formaGeometrica.height,
+    if (Interseccao.interseccaoRetDesmontado(ControladorJogo.pers.formaGeometrica.x, ControladorJogo.pers.formaGeometrica.y,
+      ControladorJogo.pers.formaGeometrica.width, ControladorJogo.pers.formaGeometrica.height,
       pontoPode.x, pontoPode.y, medidasFormaGeom.width, medidasFormaGeom.height))
       return false;
 
     //calcula distancia do centro de massa do personagem ateh o centro de massa da pocao
-    return ConjuntoObjetosTela.pers.formaGeometrica.centroMassa.distancia
+    return ControladorJogo.pers.formaGeometrica.centroMassa.distancia
       (pontoPode.mais({x: medidasFormaGeom.width/2, y: medidasFormaGeom.height/2})) //centroMassa da pocao
         >= distanciaMinPersPocao;
   }
@@ -620,7 +645,7 @@ class ControladorPocaoTela
 
   tirarPocaoTela(tirouPorFaltaTempo = true)
   {
-    if (tirouPorFaltaTempo && !this._funcCamadasColTirPocaoTempo.descerCamada() || this._objPocao === undefined || !this._objPocao.vivo)
+    if (tirouPorFaltaTempo && (!this._funcCamadasColTirPocaoTempo.descerCamada() || this._objPocao === undefined))
       // se ainda nao eh a hora de tirar (por causa das camadas) ou se pocao jah foi tirada ou se ele jah estah morto
         return;
     delete this._objPocao;
@@ -631,7 +656,7 @@ class ControladorPocaoTela
   verificarPersPegouPocao(qtdAndarX, qtdAndarY)
   {
     if (this._objPocao !== undefined && this._objPocao instanceof ObjetoTelaPocao && //se for ObjetoTelaAparecendo nao interage com o meio
-      !ConjuntoObjetosTela.pers.controladorPocoesPegou.estahUsandoPocao && //soh pode pegar a pocao se pers nao tiver usando nenhuma no momento
+      !ControladorJogo.pers.controladorPocoesPegou.estahUsandoPocao && //soh pode pegar a pocao se pers nao tiver usando nenhuma no momento
       this._objPocao.intersectaPers(qtdAndarX, qtdAndarY))
       this._objPocao.morreu(); //ainda nao tira da tela (soh quando desenhar a ultima vez)
   }
@@ -640,7 +665,8 @@ class ControladorPocaoTela
   {
     if (this._objPocao !== undefined)
     {
-      this._objPocao.draw();
+      const criouObjetoPocao = this._objPocao.draw();
+      if (criouObjetoPocao === true) this._objPocao.draw(); //printa objeto pocao se ele acabou de ser criado (ObjetoTelaAparecendo nao vai ser printado se jah acabou seu tempo)
 
       //se morreu, mostra o objeto pela ultima vez e depois tira ele
       if (!(this._objPocao instanceof ObjetoTelaAparecendo) && !this._objPocao.vivo)
@@ -705,7 +731,7 @@ class ObjPocaoPers
       const diametro = 60;
       const x = this._formaGeometrica.x + 13.8;
       const y = this._formaGeometrica.y + 21;
-      const cor = color("blue");
+      const cor = "blue";
 
       const tamStrokeGrosso = 7;
       const tamStrokeFino = 3;
@@ -817,7 +843,7 @@ class ControladorPocoesPers
       {
         if (_this._funcEscreverNomePocao.descerCamada())
           delete _this._nomePocaoEscrever;
-      }, tempoNomePocaoApareceTela, false);
+      }, tempoNomePocaoApareceTela, false, false /*transcende o level*/);
   }
 
   acabouUsarPocao()
@@ -830,7 +856,7 @@ class ControladorPocoesPers
     this._arrumarLugarPocoes(InstrucaoArrumarLugar.removeu);
 
     //personagem podia estar em cima da pocao mas nao poder pegar porque jah estava usando um, quando esse acaba verifica se pode pegar instantaneamente (sem esperar ele andar)
-    ConjuntoObjetosTela.controladorPocaoTela.verificarPersPegouPocao();
+    ControladorJogo.controladorPocaoTela.verificarPersPegouPocao();
   }
 
   _arrumarLugarPocoes(instrucao)

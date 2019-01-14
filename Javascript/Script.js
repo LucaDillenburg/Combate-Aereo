@@ -3,8 +3,6 @@ window.addEventListener("load", setup);
 window.addEventListener("keydown", keyDown);
 window.addEventListener("keyup", keyUp);
 
-var controladorJogo;
-
 const tamStroke = 1.5;
 const frameRatePadrao = 40;
 const heightVidaUsuario = 30;
@@ -29,15 +27,15 @@ function setup()
   strokeWeight(tamStroke);
   noCursor();
 
-  //controladorJogo (estrutura de tudo)
-  controladorJogo = new ControladorJogo();
+  //ControladorJogo (estrutura de tudo)
+  ControladorJogo.inicializar();
 }
 
 // The statements in draw() are executed until the program is stopped. Each statement is executed in sequence and after the last line is read, the first line is executed again.
 //FRAME RATE diz de quanto em quanto tempo draw() deve ser executado
 function draw()
 {
-//ANDAR
+ //ANDAR
   //direcao X
   let direcaoX = null;
   if (keys[Direcao.Direita] === on)
@@ -54,17 +52,14 @@ function draw()
   if(keys[Direcao.Baixo] === on)
     direcaoY = Direcao.Baixo;
 
-  controladorJogo.andarPers(direcaoX, direcaoY);
-
-  //ATIRAR (automatico)
-  controladorJogo.atirar();
+  ControladorJogo.andarPers(direcaoX, direcaoY);
 
   //DESENHAR
-  controladorJogo.draw();
+  ControladorJogo.draw();
 }
 
 //funcoes teclado
-var keys = [];
+let keys = [];
 const on = 1;
 const off = 0;
 const option = 2;
@@ -74,20 +69,23 @@ function keyDown(event)
 {
   if (event.repeat) return;
 
-  if (controladorJogo.estadoJogo === EstadoJogo.NaoComecou)
+  if (ControladorJogo.estadoJogo === EstadoJogo.NaoComecou)
   {
     if (event.key === "Escape")
     {
-      alert("Começar o Jogo!");
-      controladorJogo.comecarJogo();
+      ControladorJogo.comecarJogo();
+      addQndPerderFocoPausar();
     }
   }else
   {
     if (event.key === "Enter") //pausar
-      controladorJogo.mudarPausado();
+      ControladorJogo.mudarPausado();
     else
     if (event.key === "q" || event.key === "Q") //pocao
-      controladorJogo.ativarPocaoPers();
+      ControladorJogo.ativarPocaoPers();
+    else
+    if (event.key === "e" || event.key === "E") //atirar nao automatico
+      ControladorJogo.persPuxouGatilho();
     else
       //mostra que usuário está clicando naquela tecla
       acionarKey(event.key);
@@ -98,109 +96,93 @@ function acionarKey(key)
   if (!ehKeyValida(key) || keys[key] === on) //se for uma tecla que nao faz nada ou uma tecla que jah esteja acionada
     return;
 
-  /*atirar automatico
-  if (key === " ") //espaco
-    keys[" "] = true;
-  else */
+  //desacionar chaves contrarias e acionar a chave certa
+  switch (key)
   {
-    //desacionar chaves contrarias e acionar a chave certa
-    switch (key)
-    {
-      //Explicacao: se clicou na setinha da direita, o da esquerda eh desativado
-      // (porem deixa-se o em OPTION se o da direita for desapertado, o da esquerda fica ON de novo)
-        case "ArrowRight":
-        case "d":
-        case "D":
-          keys[Direcao.Direita] = on; //aciona
-          if (keys[Direcao.Esquerda] === on)
-            keys[Direcao.Esquerda] = option; //desaciona oposta
-          break;
-        case "ArrowLeft":
-        case "a":
-        case "A":
-          keys[Direcao.Esquerda] = on; //aciona
-          if (keys[Direcao.Direita] === on)
-            keys[Direcao.Direita] = option; //desaciona oposta
-          break;
-        case "ArrowUp":
-        case "w":
-        case "W":
-          keys[Direcao.Cima] = on; //aciona
-          if (keys[Direcao.Baixo] === on)
-            keys[Direcao.Baixo] = option; //desaciona oposta
-          break;
-        case "ArrowDown":
-        case "s":
-        case "S":
-          keys[Direcao.Baixo] = on; //aciona
-          if (keys[Direcao.Cima] === on)
-            keys[Direcao.Cima] = option; //desaciona oposta
-          break;
-        default:
-          keys[key] = on;
-    }
+    //Explicacao: se clicou na setinha da direita, o da esquerda eh desativado
+    // (porem deixa-se o em OPTION se o da direita for desapertado, o da esquerda fica ON de novo)
+      case "ArrowRight":
+      case "d":
+      case "D":
+        keys[Direcao.Direita] = on; //aciona
+        if (keys[Direcao.Esquerda] === on)
+          keys[Direcao.Esquerda] = option; //desaciona oposta
+        break;
+      case "ArrowLeft":
+      case "a":
+      case "A":
+        keys[Direcao.Esquerda] = on; //aciona
+        if (keys[Direcao.Direita] === on)
+          keys[Direcao.Direita] = option; //desaciona oposta
+        break;
+      case "ArrowUp":
+      case "w":
+      case "W":
+        keys[Direcao.Cima] = on; //aciona
+        if (keys[Direcao.Baixo] === on)
+          keys[Direcao.Baixo] = option; //desaciona oposta
+        break;
+      case "ArrowDown":
+      case "s":
+      case "S":
+        keys[Direcao.Baixo] = on; //aciona
+        if (keys[Direcao.Cima] === on)
+          keys[Direcao.Cima] = option; //desaciona oposta
+        break;
+      default:
+        keys[key] = on;
   }
 }
 function ehKeyValida(key)
 {
-  //keys validas: setinhas e espaco (Enter eh tratado em outro lugar)
+  //keys validas: setinhas 1.0 e 2.0 (WADS)
   return key === "ArrowLeft" || key === "ArrowUp" || key === "ArrowRight" || key === "ArrowDown" ||  //mover personagem com setinhas
     key === "w" || key === "W" || key === "a" || key === "A" || key === "s" || key === "S" || key === "d" || key === "D"; //mover personagem com letras (WASD)
 }
 function keyUp(event)
 {
-  if (!ehKeyValida(event.key))
-    return;
-
   //mostra que usuário não está mais clicando naquela tecla
-  desacionarKey(event.key);
-}
-function desacionarKey(key)
-{
-  if (key === " ")
-    keys[" "] = false;
-  else
+  //desacionar reativar chaves contrarias que estavam ativadas
+  switch (event.key)
   {
-    //desacionar reativar chaves contrarias que estavam ativadas
-    switch (key)
-    {
-      //Explicacao: se desapertou clicou na setinha da direita, o da esquerda eh desativado
-      // (porem deixa-se o em OPTION se o da direita for desapertado, o da esquerda fica ON de novo)
-      case "ArrowRight":
-      case "d":
-      case "D":
-        keys[Direcao.Direita] = off; //desaciona
-        if (keys[Direcao.Esquerda] === option)
-          keys[Direcao.Esquerda] = on; //aciona oposta
-        break;
-      case "ArrowLeft":
-      case "a":
-      case "A":
-        keys[Direcao.Esquerda] = off; //desaciona
-        if (keys[Direcao.Direita] === option)
-          keys[Direcao.Direita] = on; //aciona oposta
-        break;
-      case "ArrowUp":
-      case "w":
-      case "W":
-        keys[Direcao.Cima] = off; //desaciona
-        if (keys[Direcao.Baixo] === option)
-          keys[Direcao.Baixo] = on; //aciona oposta
-        break;
-      case "ArrowDown":
-      case "s":
-      case "S":
-        keys[Direcao.Baixo] = off; //desaciona
-        if (keys[Direcao.Cima] === option)
-          keys[Direcao.Cima] = on; //aciona oposta
-        break;
-      default:
-        keys[key] = off;
-    }
+    //Explicacao: se desapertou clicou na setinha da direita, o da esquerda eh desativado
+    // (porem deixa-se o em OPTION se o da direita for desapertado, o da esquerda fica ON de novo)
+    case "ArrowRight":
+    case "d":
+    case "D":
+      keys[Direcao.Direita] = off; //desaciona
+      if (keys[Direcao.Esquerda] === option)
+        keys[Direcao.Esquerda] = on; //aciona oposta
+      break;
+    case "ArrowLeft":
+    case "a":
+    case "A":
+      keys[Direcao.Esquerda] = off; //desaciona
+      if (keys[Direcao.Direita] === option)
+        keys[Direcao.Direita] = on; //aciona oposta
+      break;
+    case "ArrowUp":
+    case "w":
+    case "W":
+      keys[Direcao.Cima] = off; //desaciona
+      if (keys[Direcao.Baixo] === option)
+        keys[Direcao.Baixo] = on; //aciona oposta
+      break;
+    case "ArrowDown":
+    case "s":
+    case "S":
+      keys[Direcao.Baixo] = off; //desaciona
+      if (keys[Direcao.Cima] === option)
+        keys[Direcao.Cima] = on; //aciona oposta
+      break;
+    default:
+      keys[event.key] = off;
   }
 }
 
 //Pra pausar quando janela perder o foco:
-window.addEventListener("focusout", focusout);
-function focusout()
-{ controladorJogo.pausar(); }
+function addQndPerderFocoPausar()
+{
+  document.getElementById("defaultCanvas0").addEventListener("focusout",
+    function() { alert("saiu"); ControladorJogo.pausar(); });
+}

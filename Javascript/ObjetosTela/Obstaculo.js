@@ -4,7 +4,7 @@ class ControladorObstaculos
   //O OBSTACULO MORTO SOH VAI SAIR DA LISTA [...] QUANDO OS TIROS DO PERSONAGEM ANDAREM (e o obstaculo tiver colidido com os tiros do pers)
   //ou QUANDO O PERSONAGEM ANDAR (e o obstaculo tiver colidido com o personagem- TEORICAMENTE ESSE ESTAH CERTO em verificarColidirComTiro(...))
 
-  constructor(infoObstaculoPadrao, indexContr)
+  constructor(indexContr, infoObstaculoPadrao, infoObjAparecendoPadrao)
   {
     //padrao
     this._infoObstaculoPadrao = infoObstaculoPadrao.clone();
@@ -14,15 +14,16 @@ class ControladorObstaculos
 
     // obstaculos que interagem com o meio
     this._obstaculos = new ListaDuplamenteLigada();
-    // obstaculos que NAO interagem com o meio (soh sao printados)
+    // obstaculos que NAO interagem com o meio (soh sao printados). para ObjetosTelaAparecendo:
     this._obstaculosSurgindo = []; //fila
+    this._infoObjAparecendoPadrao = infoObjAparecendoPadrao;
   }
 
   get infoObstaculoPadrao()
   { return this._infoObstaculoPadrao; }
 
   //novo obstaculo
-  adicionarObstaculoDif(pontoInicial, infoObst, direcaoX, direcaoY, todoQtdDirecao=false)
+  adicionarObstaculoDif(pontoInicial, infoObst, direcaoX, direcaoY, todoQtdDirecao=false, infoObjAparecendo)
   {
     if (infoObst === undefined)
     {
@@ -59,9 +60,9 @@ class ControladorObstaculos
     //(x ou posicaoX, y ou posicaoY)
     pontoInicial = AuxControladores.pontoInicialCorreto(pontoInicial, this._infoObstaculoPadrao.formaGeometrica);
 
-    this._adicionarObstaculo(pontoInicial, infoObst);
+    this._adicionarObstaculo(pontoInicial, infoObst, infoObjAparecendo);
   }
-  adicionarObstaculo(pontoInicial, infoObstaculo)
+  adicionarObstaculo(pontoInicial, infoObstaculo, infoObjAparecendo)
   {
 		if (infoObstaculo === undefined)
       infoObstaculo = this._infoObstaculoPadrao;
@@ -69,13 +70,17 @@ class ControladorObstaculos
     //(x ou posicaoX, y ou posicaoY)
     pontoInicial = AuxControladores.pontoInicialCorreto(pontoInicial, infoObstaculo.formaGeometrica);
 
-    this._adicionarObstaculo(pontoInicial, infoObstaculo);
+    this._adicionarObstaculo(pontoInicial, infoObstaculo, infoObjAparecendo);
   }
-  _adicionarObstaculo(pontoInicial, infoObstaculo)
+  _adicionarObstaculo(pontoInicial, infoObstaculo, infoObjAparecendo)
   {
+    //mesclar InfoObjAparecendo com InfoObjAparecendoPadrao
+    infoObjAparecendo = AuxControladores.infoObjAparecendoCorreto(infoObjAparecendo, this._infoObjAparecendoPadrao);
+    infoObjAparecendo.formaGeometrica = infoObstaculo.formaGeometrica;
+
     //fazer ele ir aparecendo na tela aos poucos (opacidade e tamanho): ele nao interage com o meio ainda
     const _this = this;
-    this._obstaculosSurgindo.unshift(new ObjetoTelaAparecendo(pontoInicial, infoObstaculo, function(){ //(funcao callback)
+    this._obstaculosSurgindo.unshift(new ObjetoTelaAparecendo(pontoInicial, infoObjAparecendo, function(){ //(funcao callback)
       //remover esse obstaculo (o primeiro a ser adicionado sempre vai ser o primeiro a ser retirado pois o tempo que ele vai ficar eh sempre igual ao dos outros que estao la)
       _this._obstaculosSurgindo.pop();
 
@@ -88,7 +93,7 @@ class ControladorObstaculos
 
       novoObstaculo.procCriou(_this._indexContr);
 
-      if (ConjuntoObjetosTela.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.DeixarTempoMaisLento)
+      if (ControladorJogo.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.DeixarTempoMaisLento)
       // PARTE DA EXECUCAO DA POCAO (deixar tempo mais lento do obstaculo que for adicionar)
         novoObstaculo.classeAndar.mudarTempo(porcentagemDeixarTempoLento);
       //adicionar novo obstaculo ao comeco da lista
@@ -255,18 +260,18 @@ class Obstaculo extends ObjetoTela
     this.verificarColisaoPersEstatico();
 
     //colisao com tiros do pers
-    ConjuntoObjetosTela.pers.procObjTelaColideCriarTodosContrTiros(this, indexContrObst);
+    ControladorJogo.pers.procObjTelaColideCriarTodosContrTiros(this, indexContrObst);
 
     //colisao com tiros dos inimigos (nao tira vida do obstaculo)
-    for (let i = 0; i < ConjuntoObjetosTela.controladoresInimigos.length; i++)
-      ConjuntoObjetosTela.controladoresInimigos[i].procObjCriadoColidirTirosInim(this, indexContrObst);
+    for (let i = 0; i < ControladorJogo.controladoresInimigos.length; i++)
+      ControladorJogo.controladoresInimigos[i].procObjCriadoColidirTirosInim(this, indexContrObst);
     //colisao com tiros da tela (nao tira vida do obstaculo)
-    for (let i = 0; i < ConjuntoObjetosTela.controladoresTirosJogo.length; i++)
-      ConjuntoObjetosTela.controladoresTirosJogo[i].procedimentoObjTelaColideCriar(this, indexContrObst, false);
+    for (let i = 0; i < ControladorJogo.controladoresTirosJogo.length; i++)
+      ControladorJogo.controladoresTirosJogo[i].procedimentoObjTelaColideCriar(this, indexContrObst, false);
 
     //se o lugar destino jah estiver ocupado, morre
-    for (let i = 0; i < ConjuntoObjetosTela.controladoresObstaculos.length; i++)
-      if (ConjuntoObjetosTela.controladoresObstaculos[i].obstVaiColidir(this) !== null)
+    for (let i = 0; i < ControladorJogo.controladoresObstaculos.length; i++)
+      if (ControladorJogo.controladoresObstaculos[i].obstVaiColidir(this) !== null)
       //se iria colidir com algum obstaculo de outro controlador, retorna falso
       {
         this.morreu();
@@ -277,12 +282,12 @@ class Obstaculo extends ObjetoTela
   //para procCriou obstaculo e aumentar tamanho personagem (eh estatico pois nao nao qtdAndar envolvido)
   verificarColisaoPersEstatico()
   {
-    if (Interseccao.interseccao(this._formaGeometrica, ConjuntoObjetosTela.pers.formaGeometrica))
+    if (Interseccao.interseccao(this._formaGeometrica, ControladorJogo.pers.formaGeometrica))
     {
       //verifica qual direcao eh mais facil para o personagem sair de cima do obstaculo
-      const qtdAndar = Interseccao.menorQtdObjColidePararColidir(this._formaGeometrica, ConjuntoObjetosTela.pers.formaGeometrica);
+      const qtdAndar = Interseccao.menorQtdObjColidePararColidir(this._formaGeometrica, ControladorJogo.pers.formaGeometrica);
       //tenta empurrar personagem para parar de colidir
-      const conseguiuAndarTudo = ConjuntoObjetosTela.pers.mudarXY(qtdAndar.x, qtdAndar.y);
+      const conseguiuAndarTudo = ControladorJogo.pers.mudarXY(qtdAndar.x, qtdAndar.y);
       if (!conseguiuAndarTudo)
       {
         //obstaculo explode
@@ -310,10 +315,10 @@ class Obstaculo extends ObjetoTela
   // tirar vida personagem
   tirarVidaPersBateu()
   //para quando personagem encostar em obstaculo: quando for barrado por ele OU quando obstaculo empurrar pers
-  { ConjuntoObjetosTela.pers.mudarVida(-this._qtdTiraVidaBatePers); }
+  { ControladorJogo.pers.mudarVida(-this._qtdTiraVidaBatePers); }
   tirarVidaPersNaoConsegueEmpurrar()
   //tirar vida personagem quando nao consegue empurrar o pesonagem
-  { ConjuntoObjetosTela.pers.mudarVida(-this._qtdTiraVidaNaoConsegueEmpurrarPers); }
+  { ControladorJogo.pers.mudarVida(-this._qtdTiraVidaNaoConsegueEmpurrarPers); }
 
   //outros getters e setters
   get qtdTiraVidaNaoConsegueEmpurrarPers()
@@ -353,11 +358,11 @@ class Obstaculo extends ObjetoTela
       qtdAndarXPadrao: qtdAndar.x, //nao muda
       qtdAndarYPadrao: qtdAndar.y //nao muda
     };
-    for (let i = 0; i<ConjuntoObjetosTela.controladoresObstaculos.length; i++)
-      ConjuntoObjetosTela.controladoresObstaculos[i].qtdAndarSemColidirOutrosObst(info, this);
+    for (let i = 0; i<ControladorJogo.controladoresObstaculos.length; i++)
+      ControladorJogo.controladoresObstaculos[i].qtdAndarSemColidirOutrosObst(info, this);
     //colidiu: !info.listaBateu.vazia
 
-    const qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(ConjuntoObjetosTela.pers.formaGeometrica, this._formaGeometrica,
+    const qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(ControladorJogo.pers.formaGeometrica, this._formaGeometrica,
       info.qtdPodeAndarX, info.qtdPodeAndarY, false);
     const hipotenusaPers = Operacoes.hipotenusa(qtdPodeAndar.x, qtdPodeAndar.y);
 
@@ -365,18 +370,15 @@ class Obstaculo extends ObjetoTela
     //opcoes: nao colidiu com ninguem, colidiu com obstaculo antes, colidiu com personagem antes
     if (hipotenusaPers < info.menorHipotenusa) //colidiu com pers
     {
-      const xPersAntes = ConjuntoObjetosTela.pers.formaGeometrica.x;
-      const yPersAntes = ConjuntoObjetosTela.pers.formaGeometrica.y;
+      const xPersAntes = ControladorJogo.pers.formaGeometrica.x;
+      const yPersAntes = ControladorJogo.pers.formaGeometrica.y;
 
       this.tirarVidaPersBateu(); // para quando personagem encostar em obstaculo: quando for barrado por ele OU quando obstaculo empurrar pers
-      const conseguiuAndarTudo = ConjuntoObjetosTela.pers.mudarXY(qtdAndar.x - qtdPodeAndar.x, qtdAndar.y - qtdPodeAndar.y);
+      const conseguiuAndarTudo = ControladorJogo.pers.mudarXY(qtdAndar.x - qtdPodeAndar.x, qtdAndar.y - qtdPodeAndar.y);
       if (!conseguiuAndarTudo)
       {
-        console.log("Tentou andar: ("+ info.qtdPodeAndarX +","+ info.qtdPodeAndarY +")");
-        console.log("Empurrou personagem: ("+(qtdAndar.x - qtdPodeAndar.x)+","+(qtdAndar.y - qtdPodeAndar.y)+")")
-
-        qtdAndar.x = qtdPodeAndar.x + ConjuntoObjetosTela.pers.formaGeometrica.x - xPersAntes;
-        qtdAndar.y = qtdPodeAndar.y + ConjuntoObjetosTela.pers.formaGeometrica.y - yPersAntes;
+        qtdAndar.x = qtdPodeAndar.x + ControladorJogo.pers.formaGeometrica.x - xPersAntes;
+        qtdAndar.y = qtdPodeAndar.y + ControladorJogo.pers.formaGeometrica.y - yPersAntes;
 
         //obstaculo explode
         this.morreu(true);
@@ -439,14 +441,14 @@ class Obstaculo extends ObjetoTela
     { }
 
     //verificar se vai bater em tiros do personagem e se tiro tem que sair da lista porque esse obstaculo andou, ele sai
-    ConjuntoObjetosTela.pers.procObjTelaColideAndarTodosContrTiros(this, qtdAndar.x, qtdAndar.y, indexContrObst);
+    ControladorJogo.pers.procObjTelaColideAndarTodosContrTiros(this, qtdAndar.x, qtdAndar.y, indexContrObst);
     // dentro desse metodo vai colidir com os tiros vivos (mata o tiro e se eh obstaculo com vida, tira vida dele)
 
     //colide com tiros dos inimigos e tiros da tela
-    for (let i = 0; i<ConjuntoObjetosTela.controladoresTirosJogo.length; i++)
-      ConjuntoObjetosTela.controladoresTirosJogo[i].procedimentoObjTelaColideAndar(this, qtdAndar.x, qtdAndar.y, indexContrObst, false);
-    for (let i = 0; i<ConjuntoObjetosTela.controladoresInimigos.length; i++)
-      ConjuntoObjetosTela.controladoresInimigos[i].procObjTelaAndarColidirTirosTodosInim(this, qtdAndar.x, qtdAndar.y, indexContrObst, false);
+    for (let i = 0; i<ControladorJogo.controladoresTirosJogo.length; i++)
+      ControladorJogo.controladoresTirosJogo[i].procedimentoObjTelaColideAndar(this, qtdAndar.x, qtdAndar.y, indexContrObst, false);
+    for (let i = 0; i<ControladorJogo.controladoresInimigos.length; i++)
+      ControladorJogo.controladoresInimigos[i].procObjTelaAndarColidirTirosTodosInim(this, qtdAndar.x, qtdAndar.y, indexContrObst, false);
 
     // andar propriamente dito
     this._formaGeometrica.x += qtdAndar.x;
@@ -497,7 +499,7 @@ class Obstaculo extends ObjetoTela
 
   qtdPersPodeAndar(infoQtdMudar)
   {
-    const qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(this._formaGeometrica, ConjuntoObjetosTela.pers.formaGeometrica,
+    const qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(this._formaGeometrica, ControladorJogo.pers.formaGeometrica,
       infoQtdMudar.qtdMudarXPadrao, infoQtdMudar.qtdMudarYPadrao, false);
 
     //se personagem vai bater em um obstaculo mais perto (pelo menos em alguma direcao) que o outro
@@ -521,7 +523,7 @@ class Obstaculo extends ObjetoTela
     //se tiro nao for do personagem (for do inimigo ou da tela, nao tira vida)
     if (!tiro.ehDoPers) return;
 
-    if (ConjuntoObjetosTela.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.MatarObjetos1Tiro)
+    if (ControladorJogo.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.MatarObjetos1Tiro)
     // PARTE DA EXECUCAO DA POCAO
       this._seMatar();
     else

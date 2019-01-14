@@ -1,66 +1,21 @@
 //FORMAS: quadrado, retangulo, triangulo, paralelogramo, quadrilatero
 
-// BASICO
-class FormaGeometrica
+// Base para formasGeometricas SEM atributo corImg
+class FormaGeometricaBasica
 {
-  constructor (corImg)
-  // corImg: imagem ou {stroke: cor, fill: cor}
+  constructor()
+  { }
+
+  get width()
+  { return this.maiorX - this.menorX; }
+  get height()
+  { return this.maiorY - this.menorY; }
+
+  //interseccao
+  interseccao(obj)
   {
-    //se nao estah querendo soh a parte de backend (sem colocar na tela)
-    if (corImg !== undefined)
-      this.corImg = corImg;
-  }
-
-  //imagem/cor
-  get corImg()
-  { return this._corImg; }
-  set corImg(corImg)
-  {
-    this._ehCor = corImg.fill !== undefined;
-    if (this._ehCor)
-    {
-      if (this._corImg === undefined)
-        this._corImg = {};
-
-      //isso impossibilita que se o corImg for mudado aqui ou la fora o outro seja mudado tambem
-      this._corImg.stroke = corImg.stroke;
-      this._corImg.fill = corImg.fill;
-    }else
-      this._corImg = loadImage(corImg); //se for imagem, passa soh o caminho dela como parametro
-  }
-  get ehCor()
-  { return this._ehCor; }
-
-  //desenhar imagem
-  _desenharImagem(opacidade)
-  {
-    //opacidade
-    if (opacidade!==undefined)
-      tint(255, opacidade*255/*base 1 para base 255*/);
-    else
-      noTint();
-
-    image(this._img, this.x, this.y, this.width, this.height);
-  }
-  _colocarCores(opacidade)
-  {
-    let strokeAtual;
-    if (opacidade===undefined)
-    {
-      strokeAtual = this._corImg.stroke;
-      fill(this._corImg.fill);
-    }else
-    {
-      //deixar cores com opacidade
-      if (this._corImg.stroke !== undefined)
-        strokeAtual = color(red(this._corImg.stroke), green(this._corImg.stroke), blue(this._corImg.stroke), opacidade*255/*base 1 para base 255*/);
-      fill(color(red(this._corImg.fill), green(this._corImg.fill), blue(this._corImg.fill), opacidade*255/*base 1 para base 255*/));
-    }
-
-    if (strokeAtual === undefined) //se nao tem stroke, eh noStroke()
-      noStroke();
-    else
-      stroke(strokeAtual);
+    return Interseccao.intersecDirecao(this.x, this.width, obj.x, obj.width)
+      && Interseccao.intersecDirecao(this.y, this.height, obj.y, obj.height);
   }
 
   //arestas
@@ -85,12 +40,6 @@ class FormaGeometrica
     return this._centroMassa;
   }
   // serve perfeitamente para quadrado e retangulo e mais ou menos para o resto
-
-  //width, height e posicoes
-  get width()
-  { return this.maiorX - this.menorX; }
-  get height()
-  { return this.maiorY - this.menorY; }
 
   // mudar (x,y)
   get xParaEstarNoMeio() { return Tela.xParaEstarNoMeio(this.width); }
@@ -162,6 +111,94 @@ class FormaGeometrica
       });
   }
 }
+
+// Base para formasGeometricas COM atributo corImg
+class FormaGeometrica extends FormaGeometricaBasica
+{
+  constructor (corImg, porcentagemImagem=1)
+  // corImg: imagem ou {fill*: cor, stroke: cor}
+  {
+    super();
+    //se nao estah querendo soh a parte de backend (sem colocar na tela)
+    if (corImg !== undefined)
+    {
+      this.corImg = corImg;
+      if (!this._ehCor) //se for imagem
+        this._porcentagemImagem = porcentagemImagem;
+    }
+  }
+
+  //imagem/cor
+  get corImg()
+  {
+    if (this._ehCor === false)
+    // seta corImg com o caminho, entao no get retorna o caminho tambem
+      return this._caminhoImg;
+    else
+      return this._corImg;
+  }
+  set corImg(corImg) // se for adicionar imagem tem que setar porcentagemImagem
+  {
+    this._ehCor = corImg.fill!==undefined || corImg.stroke!==undefined;
+    if (this._ehCor)
+    {
+      if (this._corImg === undefined)
+        this._corImg = {};
+
+      //isso impossibilita que se o corImg for mudado aqui ou la fora o outro seja mudado tambem
+      this._corImg.stroke = corImg.stroke;
+      this._corImg.fill = corImg.fill;
+
+      //deletar this._caminhoImg
+      delete this._caminhoImg;
+    }else
+    {
+      this._corImg = loadImage(corImg); //se for imagem, passa soh o caminho dela como parametro
+      this._caminhoImg = corImg;
+    }
+  }
+  set porcentagemImagem(porc)
+  { this._porcentagemImagem = porc; }
+  get ehCor()
+  { return this._ehCor; }
+
+  //desenhar imagem
+  _desenharImagem(opacidade)
+  {
+    //opacidade
+    if (opacidade!==undefined)
+      tint(255, opacidade*255/*base 1 para base 255*/);
+    else
+      noTint();
+
+    //deixar imagem no meio da formaGeometrica
+    const widthImg = this.width*this._porcentagemImagem;
+    const heightImg = this.height*this._porcentagemImagem;
+    const x = this.x + (this.width-widthImg)/2;
+    const y = this.y + (this.height-heightImg)/2;
+    image(this._corImg, x, y, widthImg, heightImg);
+  }
+  _colocarCores(opacidade)
+  {
+    let strokeAtual;
+    if (opacidade===undefined)
+    {
+      strokeAtual = this._corImg.stroke;
+      fill(this._corImg.fill);
+    }else
+    {
+      //deixar cores com opacidade
+      if (this._corImg.stroke !== undefined)
+        strokeAtual = color(red(this._corImg.stroke), green(this._corImg.stroke), blue(this._corImg.stroke), opacidade*255/*base 1 para base 255*/);
+      fill(color(red(this._corImg.fill), green(this._corImg.fill), blue(this._corImg.fill), opacidade*255/*base 1 para base 255*/));
+    }
+
+    if (strokeAtual === undefined) //se nao tem stroke, eh noStroke()
+      noStroke();
+    else
+      stroke(strokeAtual);
+  }
+}
 /*Quem der extends em FormaGeometricaComplexa tem que ter:
   //forma
   -> get codForma()
@@ -175,11 +212,13 @@ class FormaGeometrica
   -> get maiorY()
 
   -> get x()
-  -> set x()
   -> get y()
+  -> set x()
   -> set y()
 
   -> get centroMassa()
+
+  -> mudarTamanho(porcentagem)
 
   //desenho
   -> draw(opacidade)
@@ -193,9 +232,9 @@ ps: nao fiz com interface, pois nao faz muito sentido em javascript
 // FORMAS SIMPLES
 class FormaGeometricaSimples extends FormaGeometrica
 {
-  constructor(x, y, corImg)
+  constructor(x=0, y=0, corImg, porcentagemImagem)
   {
-    super(corImg);
+    super(corImg, porcentagemImagem);
     this._x = x;
     this._y = y;
 
@@ -218,27 +257,22 @@ class FormaGeometricaSimples extends FormaGeometrica
     return this._vertices;
   }
 
-  _mudouArestasVerticesCentro()
+  _mudouArestasVertices()
   {
     delete this._vertices;
     delete this._arestas;
-    delete this._centroMassa;
   }
   _mudouArestas()
   { delete this._arestas; }
-  _mudouAngulosDirecoes()
-  { delete this._ultimoAngDir; /*os outros gets ou sao fixos ou dependentes desse mais um valor fixo*/ }
 
   //forma
-  set x(x)
-  {
-    if (this._x === x)
-      return;
-    this._mudouArestasVerticesCentro();
-    this._x = x;
-  }
   get x()
   { return this._x; }
+  set x(x)
+  {
+    if (this._x === undefined) this._x = 0;
+    this.mudarX(x - this._x);
+  }
   mudarX(qtdMuda) //retorna se aparece um pouco do objeto pelo menos (nos objetos que tem que ficar sempre dentro da tela, verifica-se se vai estar totalmente dentro antes de mudar X)
   {
     if (qtdMuda !== 0)
@@ -256,15 +290,13 @@ class FormaGeometricaSimples extends FormaGeometrica
     //se aparece um pouco
     return this._x + this._width > 0 && this._x <= width;
   }
-  set y(y)
-  {
-    if (this._y === y)
-      return;
-    this._mudouArestasVerticesCentro();
-    this._y = y;
-  }
   get y()
   { return this._y; }
+  set y(y)
+  {
+    if (this._y === undefined) this._y = 0;
+    this.mudarY(y - this._y);
+  }
   mudarY(qtdMuda) //retorna se aparece um pouco do objeto pelo menos (nos objetos que tem que ficar sempre dentro da tela, verifica-se se vai estar totalmente dentro antes de mudar Y)
   {
     if (qtdMuda !== 0)
@@ -323,12 +355,7 @@ class FormaGeometricaSimples extends FormaGeometrica
     this._desenharImagensSecundarias();
   }
 
-  //interseccao
-  interseccao(obj)
-  {
-    return Interseccao.intersecDirecao(this._x, this.width, obj._x, obj.width)
-      && Interseccao.intersecDirecao(this._y, this.height, obj._y, obj.height);
-  }
+  //intersecccao
   contem(obj)
   {
     //todos os pontos tem que estar dentro
@@ -343,9 +370,9 @@ class FormaGeometricaSimples extends FormaGeometrica
 
 class Retangulo extends FormaGeometricaSimples
 {
-  constructor(x, y, width, height, corImg)
+  constructor(x, y, width, height, corImg, porcentagemImagem)
   {
-    super(x, y, corImg);
+    super(x, y, corImg, porcentagemImagem);
 
     if (width < 0 || height < 0)
       throw "Dados inválidos para criar retângulo!";
@@ -356,66 +383,35 @@ class Retangulo extends FormaGeometricaSimples
 
   //getters basicos
   get codForma()
-  { return 2; }
+  { return Geometria.COD_RETANGULO; }
+
   get width()
   { return this._width; }
   get height()
   { return this._height; }
 
   //setters tamanho
-  mudarWidth(qtdMuda)
+  mudarTamanho(porcentagem)
   {
-    if (this._width + qtdMuda < 0)
-    //nao deixa width ficar negativo
-      qtdMuda = -this._width;
-    if (qtdMuda === 0)
-      return this._width > 0;
+    if (porcentagem < 0)
+      porcentagem = 0;
 
     //aumenta ou diminui igual para os dois lados
-    this._x -= qtdMuda/2;
-    this._width += qtdMuda;
+    //width e x
+    this.x += (1.00 - porcentagem)*this._width/2;
+    this._width *= porcentagem;
+    //height e y
+    this.y += (1.00 - porcentagem)*this._height/2;
+    this._height *= porcentagem;
 
-    this._mudouArestasVerticesCentro();
-    this._mudouAngulosDirecoes();
-    return this._width > 0;
+    this._mudouArestasVertices();
+    return this._width > 0 && this._height > 0;
   }
-  set width(width)
-  {
-    if (width !== this._width)
-      this.mudarWidth(width - this._width);
-  }
-  setWidthPorcentagem(porcentagem)
-  { this.width = porcentagem*this._width; }
-
-  mudarHeight(qtdMuda)
-  {
-    if (this._height + qtdMuda < 0)
-    //nao deixa height ficar negativo
-      qtdMuda = -this._height;
-    if (qtdMuda === 0)
-      return this._height > 0;
-
-    //aumenta ou diminui igual para os dois lados
-    this._y -= qtdMuda/2;
-    this._height += qtdMuda;
-
-    this._mudouArestasVerticesCentro();
-    this._mudouAngulosDirecoes();
-    return this._height > 0;
-  }
-  set height(height)
-  {
-    if (height !== this._height)
-      this.mudarHeight(height - this._height);
-  }
-  setHeightPorcentagem(porcentagem)
-  { this.height = porcentagem*this._height; }
-
 
   //clone
   clone(x,y)
   {
-    let ret = new Retangulo(this._x, this._y, this._width, this._height, this._corImg);
+    let ret = new Retangulo(this._x, this._y, this._width, this._height, this.corImg, this._porcentagemImagem);
     ret.colocarLugarEspecificado(x,y); //coloca no lugar certo
     return ret;
   }
@@ -423,9 +419,9 @@ class Retangulo extends FormaGeometricaSimples
 
 class Quadrado extends FormaGeometricaSimples
 {
-  constructor(x, y, tamanhoLado, corImg)
+  constructor(x, y, tamanhoLado, corImg, porcentagemImagem)
   {
-    super(x, y, corImg);
+    super(x, y, corImg, porcentagemImagem);
 
     if (width < 0 || height < 0)
       throw "Dados inválidos para criar quadrado!";
@@ -435,7 +431,8 @@ class Quadrado extends FormaGeometricaSimples
 
   //getters basicos
   get codForma()
-  { return 1; }
+  { return Geometria.COD_QUADRADO; }
+
   get tamanhoLado()
   { return this._tamLado; }
   get width()
@@ -443,37 +440,23 @@ class Quadrado extends FormaGeometricaSimples
   get height()
   { return this._tamLado; }
 
-  //getters e setters tamanho
-  mudarTamanhoLado(qtdMuda)
+  //setters tamanho
+  mudarTamanho(porcentagem)
   {
-    if (this._tamLado + qtdMuda < 0)
-    //nao deixa tamanho lado ficar negativo
-      qtdMuda = -this._tamLado;
-    if (qtdMuda !== 0)
-    {
-      //aumenta ou diminui igual para os dois lados
-      this._x -= qtdMuda/2;
-      this._y -= qtdMuda/2;
-      this._tamLado += qtdMuda;
+    if (porcentagem < 0) porcentagem = 0;
 
-      this._mudouArestasVerticesCentro();
-      this._mudouAngulosDirecoes();
-    }
+    //aumenta ou diminui igual para os dois lados
+    this.x += (1.00 - porcentagem)*this._tamLado/2;
+    this._tamLado *= porcentagem;
 
+    this._mudouArestasVertices();
     return this._tamLado > 0;
   }
-  set tamanhoLado(tamLado)
-  {
-    if (this._tamLado !== tamLado)
-      this.mudarTamanhoLado(tamLado - this._tamLado);
-  }
-  setTamanhoLadoPorcentagem(porcentagem)
-  { this.tamanhoLado = porcentagem*this._tamLado; }
 
   //clone
   clone(x,y)
   {
-    let ret = new Quadrado(this._x, this._y, this._tamLado, this._corImg);
+    let ret = new Quadrado(this._x, this._y, this._tamLado, this.corImg, this._porcentagemImagem);
     ret.colocarLugarEspecificado(x,y); //coloca no lugar certo
     return ret;
   }
@@ -484,9 +467,9 @@ class Quadrado extends FormaGeometricaSimples
 class FormaGeometricaComplexa extends FormaGeometrica
 {
   //PRIMEIRO VERTICE SENDO O MAIS ALTO (COM MENOS Y) E O RESTO EM SENTIDO HORARIO
-  constructor (a, corImg)
+  constructor (a, corImg, porcentagemImagem)
   {
-    super(corImg);
+    super(corImg, porcentagemImagem);
 
     //forma
     this._a = a;
@@ -494,13 +477,19 @@ class FormaGeometricaComplexa extends FormaGeometrica
     //outras variaveis que soh sao criadas se forem chamadas no get: this._width, this._maiorX, this._menorX, this._maiorY, this._vertices, this._arestas
   }
 
+  //getters (x,y) e (width,height)
+  get x()
+  { return this.menorX; }
+  get y()
+  { return this.menorY; }
+
   _mudouArestasTriang()
   {
     delete this._arestas;
-    delete this.__triangulos;
+    delete this._triangulos;
   }
 
-  //forma
+  //setters (x,y)
   set x(novoX) //muda todos os vertices
   { this.mudarX(novoX - this.x); }
   mudarX(qtdMuda) //muda todos os vertices
@@ -596,16 +585,39 @@ class FormaGeometricaComplexa extends FormaGeometrica
       (this.menorY > 0 && this.menorY < height - heightVidaUsuario);
   }
 
-  //get (x,y)
-  get x()
-  { return this.menorX; }
-  get y()
-  { return this.menorY; }
+  //setters tamanho
+  mudarTamanho(porcentagem)
+  {
+    if (porcentagem < 0) porcentagem = 0;
 
-  get width()
-  { return this.maiorX - this.menorX; }
-  get height()
-  { return this.maiorY - this.menorY; }
+    //muda (x,y) para crescer igual para os dois lados
+    const qtdCrescerWidth = (1.00 - porcentagem)*this.width;
+    const qtdCrescerHeight = (1.00 - porcentagem)*this.height;
+    this.x += qtdCrescerWidth/2; //arruma this._menorX
+    this.y += qtdCrescerHeight/2; //arruma this._menorY
+
+    //mudar tamanho propriamente dito
+    let pontoInicial = new Ponto(this.menorX, this.menorY);
+    for (let i=0; i<this.vertices.length; i++)
+    {
+      //Procedimento:
+        // - subtrair (x,y) de todos os vertices
+        // - multiplicar pela porcentagem
+        // - somar (x,y)
+      this._mudarVertice(i, this._vertices[i].menos(pontoInicial).multiplicado(porcentagem).mais(pontoInicial));
+    }
+
+    // arrumar maiorX e maiorY
+    if (this._maiorX !== undefined)
+      this._maiorX += qtdCrescerWidth;
+    if (this._maiorY !== undefined)
+      this._maiorY += qtdCrescerHeight;
+
+    // centroMassa nao muda (ele vai crescer igualmente para todos os lados)
+
+    this._mudouArestasTriang();
+    return this.width > 0 && this.height > 0;
+  }
 
   //maior/menor x/y
   _pegarMenorMaiorXY()
@@ -746,13 +758,13 @@ class FormaGeometricaComplexa extends FormaGeometrica
   }
 
   //triangulos
-  get _triangulos()
+  get triangulos()
   {
-    if (this.__triangulos === undefined)
+    if (this._triangulos === undefined)
     {
-      this.__triangulos = new Array(this.nLados - 2);
+      this._triangulos = new Array(this.nLados - 2);
       //colocar vertices na ordem certa!!
-      for (let i = 0; i<this.__triangulos.length; i++)
+      for (let i = 0; i<this._triangulos.length; i++)
       {
         let triang;
         switch (i)
@@ -761,16 +773,20 @@ class FormaGeometricaComplexa extends FormaGeometrica
           case 1: triang = new Triangulo(this._a, this._c, this._d); break;
           // Para novas figuras complexas: ...
         }
-        this.__triangulos[i] = triang;
+        this._triangulos[i] = triang;
       }
     }
 
-    return this.__triangulos;
+    return this._triangulos;
   }
 
   //interseccao
   interseccao(obj)
   {
+    //Otimizacao: verificar se estah intersectando como retangulo antes
+    if (!super.interseccao(obj))
+      return false;
+
     // EXPLICACAO:
       // 1. Se algum vertice de obj estah dentro de algum dos triangulos dessa figura
           // ou
@@ -797,8 +813,8 @@ class FormaGeometricaComplexa extends FormaGeometrica
   pontoEstahDentroAlgumTriang(p)
   {
     // verificar se esse ponto estah dentro de algum dos triangulos
-    for (let i = 0; i<this._triangulos.length; i++)
-      if (this.__triangulos[i].pontoEstahDentro(p))
+    for (let i = 0; i<this.triangulos.length; i++)
+      if (this._triangulos[i].pontoEstahDentro(p))
         return true;
     return false;
   }
@@ -811,6 +827,7 @@ class FormaGeometricaComplexa extends FormaGeometrica
     return false;
   }
 
+  // TODO: esse metodo nao funciona perfeitamente para FormaGeometricaComposta, porque os vertices retornados por ele sao o de um quadrado
   contem(obj)
   {
     //todos os pontos tem que estar dentro
@@ -924,9 +941,9 @@ ps: nao fiz com interface, pois nao faz muito sentido em javascript
 class Quadrilatero extends FormaGeometricaComplexa
 {
   //PRIMEIRO VERTICE SENDO O MAIS ALTO (COM MENOS Y) E O RESTO EM SENTIDO HORARIO
-  constructor(a, b, c, d, corImg)
+  constructor(a, b, c, d, corImg, porcentagemImagem)
   {
-    super(a, corImg);
+    super(a, corImg, porcentagemImagem);
 
     this._b = b;
     this._c = c;
@@ -935,7 +952,7 @@ class Quadrilatero extends FormaGeometricaComplexa
 
   //getters basicos
   get codForma()
-  { return 5; }
+  { return Geometria.COD_QUADRILATERO; }
   get nLados()
   { return 4; }
 
@@ -960,7 +977,7 @@ class Quadrilatero extends FormaGeometricaComplexa
   //clone
   clone(x,y)
   {
-    let ret = new Quadrilatero(this._a, this._b, this._c, this._d, this._corImg);
+    let ret = new Quadrilatero(this._a, this._b, this._c, this._d, this.corImg, this._porcentagemImagem);
     ret.colocarLugarEspecificado(x,y); //coloca no lugar certo
     return ret;
   }
@@ -969,9 +986,9 @@ class Quadrilatero extends FormaGeometricaComplexa
 class Paralelogramo extends Quadrilatero
 {
   //PRIMEIRO VERTICE SENDO O MAIS ALTO (COM MENOS Y) E O RESTO EM SENTIDO HORARIO
-  constructor(a, b, c, d, corImg, colocarVerticesOrdemCorreta = false)
+  constructor(a, b, c, d, corImg, porcentagemImagem, colocarVerticesOrdemCorreta = false)
   {
-    super(a, b, c, d, corImg);
+    super(a, b, c, d, corImg, porcentagemImagem);
     if (colocarVerticesOrdemCorreta)
       this.colocarVerticesOrdemCorreta();
       //os nulos serao os ultimos
@@ -1002,12 +1019,14 @@ class Paralelogramo extends Quadrilatero
 
   //getters basicos
   get codForma()
-  { return 4; }
+  { return Geometria.COD_PARALELOGRAMO; }
 
   //clone
   clone(x,y)
   {
-    let ret = new Paralelogramo(this._a, this._b, this._c, this._d, this._corImg, false);
+    let ret = new Paralelogramo(this._a, this._b, this._c, this._d, this.corImg, this._porcentagemImagem, false);
+    // colocarVerticesOrdemCorreta eh false porque mesmo se quando essa formaGeometrica era true, o construtor jah colocou os vertices jah estao na ordem certa (nao tem porque a proxima formaGeometrica fazer o mesmo)
+
     ret.colocarLugarEspecificado(x,y); //coloca no lugar certo
     return ret;
   }
@@ -1016,9 +1035,9 @@ class Paralelogramo extends Quadrilatero
 class Triangulo extends FormaGeometricaComplexa
 {
   //PRIMEIRO VERTICE SENDO O MAIS ALTO (COM MENOS Y) E O RESTO EM SENTIDO HORARIO
-  constructor(a, b, c, corImg)
+  constructor(a, b, c, corImg, porcentagemImagem)
   {
-    super(a, corImg);
+    super(a, corImg, porcentagemImagem);
 
     this._b = b;
     this._c = c;
@@ -1028,7 +1047,7 @@ class Triangulo extends FormaGeometricaComplexa
 
   //getters basicos
   get codForma()
-  { return 3; }
+  { return Geometria.COD_TRIANGULO; }
   get nLados()
   { return 3; }
 
@@ -1060,6 +1079,19 @@ class Triangulo extends FormaGeometricaComplexa
 		return this._area;
 	}
 
+  mudarTamanho(porcentagem)
+  {
+    const ret = super.mudarTamanho(porcentagem);
+
+    if (porcentagem !== 1)
+    {
+      delete this._area;
+      delete this._contrVertices;
+    }
+
+    return ret;
+  }
+
   get centroMassa()
   {
     if (this._centroMassa === undefined)
@@ -1088,7 +1120,7 @@ class Triangulo extends FormaGeometricaComplexa
   //clone
   clone(x,y)
   {
-    let ret = new Triangulo(this._a, this._b, this._c, this._corImg);
+    let ret = new Triangulo(this._a, this._b, this._c, this.corImg, this._porcentagemImagem);
     ret.colocarLugarEspecificado(x,y); //coloca no lugar certo
     return ret;
   }
@@ -1096,3 +1128,260 @@ class Triangulo extends FormaGeometricaComplexa
 
 //se for adicionar novas formas geometricas complexas,
 // adicionar conteudo em: "// Para novas figuras complexas: ..."
+
+//FORMAS COMPOSTAS
+class FormaGeometricaComposta extends FormaGeometrica
+// uma FormaGeometrica com 1 corImg porem com varias subdivisoes de formasGeometricas para a interseccao e outros metodos ficarem mais condizentes com a imagem
+{
+  constructor(x=0, y=0, formasGeometricas, corImg, porcentagemImagem)
+  // (x,y) das formasGeometricas eh relativo aos parametros x e y
+  {
+    super(corImg, porcentagemImagem);
+    if (formasGeometricas.length <= 1) throw "FormaGeometricaComposta precisa de mais de uma formaGeometrica";
+
+    //formasGeometricas
+    this._formasGeometricas = [];
+    let menorX = x;
+    let menorY = y;
+    const _this = this;
+    formasGeometricas.forEach(formaGeom => {
+      // as formasGeometricas ficarao com valor absoluto (nao relativo ao (x,y) como passado por parametro)
+      const cloneFormaGeom = formaGeom.clone(formaGeom.x + x, formaGeom.y + y);
+      _this._formasGeometricas.push(cloneFormaGeom);
+
+      //menorX e menorY
+      if (cloneFormaGeom.menorX < menorX)
+        menorX = cloneFormaGeom.menorX;
+      if (cloneFormaGeom.menorY < menorY)
+        menorX = cloneFormaGeom.menorY;
+    });
+
+    this._x = menorX;
+    this._y = menorY;
+  }
+
+  //codForma
+  get codForma()
+  { return Geometria.COD_FORMA_COMPOSTA; }
+
+  get formasGeometricas()
+  { return this._formasGeometricas; }
+
+  get corImg()
+  {
+    if (this._ehCor === true)
+      return this._formasGeometricas[0].corImg;
+    return this._caminhoImg;
+  }
+  set corImg(corImg)
+  {
+    //super
+    super.corImg = corImg;
+
+    //se for cor, colocar em todos as formasGeometricas
+    if (this._ehCor)
+    {
+      formasGeometricas.forEach(formaGeom => {
+        // setar as formasGeometricas com essa cor, pois elas serao printadas
+        formaGeom.corImg = corImg;
+      });
+
+      delete this._corImg;
+    }
+    // se for imagem, jah colocou em super.corImg = corImg
+  }
+
+  // getters e setters de (x,y)
+  get x() { return this._x; }
+  get y() { return this._y; }
+  set x(x)
+  {
+    if (x === this._x) return;
+
+    let qtdMudaX = x - this._x;
+    // setar a corImg em todas as formas
+    this._formasGeometricas.forEach(formaGeom => {
+      formaGeom.x += qtdMudaX;
+    });
+    this._x += qtdMudaX;
+
+    // arrumar outras variaveis que dependem de (x,y)
+    if (this._maiorX !== undefined)
+      this._maiorX += qtdMudaX; //nao precisa arrumar menorX, pq ele retorna this._x
+    if (this._centroMassa !== undefined)
+      this._centroMassa.x += qtdMudaX;
+    this._mudouArestasVertices();
+  }
+  set y(y)
+  {
+    if (y === this._y) return;
+
+    let qtdMudaY = y - this._y;
+    // setar a corImg em todas as formas
+    this._formasGeometricas.forEach(formaGeom => {
+      formaGeom.y += qtdMudaY;
+    });
+    this._y += qtdMudaY;
+
+    // arrumar outras variaveis que dependem de (x,y)
+    if (this._maiorY !== undefined)
+      this._maiorY += qtdMudaY; //nao precisa arrumar menorY, pq ele retorna this._ys
+    if (this._centroMassa !== undefined)
+      this._centroMassa.y += qtdMudaY;
+    this._mudouArestasVertices();
+  }
+
+  interseccao(obj) //retorna se estah intersectando
+  {
+    //Otimizacao: verificar se estah intersectando como retangulo antes
+    if (!super.interseccao(obj))
+      return false;
+      
+    this._formasGeometricas.forEach(formaGeom => {
+      if (Interseccao.interseccao(formaGeom, obj))
+      //esse codForma eh maior que todos os outros entao em Interseccao.interseccao() entre essa formaGeometrica e outra, sempre vira para a funcao interseccao dessa classe
+      //porem nao necessariamente as formas dentro da FormaComposta terao codForma maior que obj
+        return true;
+    });
+    return false; //nenhuma formaGeometrica estah intersectando
+  }
+
+  mudarTamanho(porcentagem)
+  {
+    if (porcentagem < 0) porcentagem = 0;
+
+    this._formasGeometricas.forEach(forma => {
+      forma.mudarTamanho(porcentagem);
+    });
+
+    const qtdCrescerWidth = (1.00 - porcentagem)*this.width;
+    const qtdCrescerHeight = (1.00 - porcentagem)*this.height;
+
+    //mudar (x,y)
+    // obs: NAO "this.x" E "this._y" POIS AS FORMAS GEOMETRICAS JAH ESTAO NO LUGAR CERTO
+    this._x += qtdCrescerWidth/2; //eh this.menorX
+    this._y += qtdCrescerHeight/2; //eh this.menorY
+
+    // arrumar maiorX e maiorY
+    if (this._maiorX !== undefined)
+      this._maiorX += qtdCrescerWidth;
+    if (this._maiorY !== undefined)
+      this._maiorY += qtdCrescerHeight;
+
+    this._mudouArestasVertices();
+    return this.width > 0 && this.height > 0;
+  }
+
+  get centroMassa()
+  {
+    if (this._centroMassa === undefined)
+    {
+      let somaCentros = new Ponto(0,0);
+      this._formasGeometricas.forEach(formaGeom => {
+        somaCentros = somaCentros.mais(formaGeom.centroMassa);
+      });
+      this._centroMassa = somaCentros.dividido(this._formasGeometricas.length);
+    }
+    return this._centroMassa;
+  }
+
+  get menorX() { return this._x; }
+  get menorY() { return this._y; }
+  get maiorX()
+  {
+    if (this._maiorX === undefined)
+    {
+      this._formasGeometricas.forEach(formaGeom => {
+        if (this._maiorX === undefined)
+          this._maiorX = formaGeom.maiorX;
+        else
+        if (formaGeom.maiorX > this._maiorX)
+          this._maiorX = formaGeom.maiorX;
+      });
+    }
+    return this._maiorX;
+  }
+  get maiorY()
+  {
+    if (this._maiorY === undefined)
+    {
+      this._formasGeometricas.forEach(formaGeom => {
+        if (this._maiorY === undefined)
+          this._maiorY = formaGeom.maiorY;
+        else
+        if (formaGeom.maiorY > this._maiorY)
+          this._maiorY = formaGeom.maiorY;
+      });
+    }
+    return this._maiorY;
+  }
+
+  //desenho
+  draw(opacidade)
+  {
+    // se corImg for cor, desenhar todas as formas, senao desenhar apenas a imagem
+    if (this._ehCor)
+      this._formasGeometricas.forEach(formaGeom => {
+        formaGeom.draw(opacidade);
+      });
+    else
+      this._desenharImagem();
+
+    //AQUI
+    if (testando)
+      this._formasGeometricas.forEach(formaGeom => {
+        formaGeom.corImg = {fill: "green"};
+        formaGeom.draw(opacidade);
+      });
+  }
+
+  clone(x, y)
+  {
+    // o parametro das formasGeometricas eh relativo ao parametro x e y (e this._formasGeometricas tem o x e y absoluto)
+    let formasGeometricas = [];
+    this._formasGeometricas.forEach(formaGeom => {
+      formasGeometricas.push(formaGeom.clone(formaGeom.x - this._x, formaGeom.y - this._y));
+    });
+
+    let ret = new FormaGeometricaComposta(this._x, this._y, formasGeometricas, this.corImg, this._porcentagemImagem);
+    ret.colocarLugarEspecificado(x,y); //coloca no lugar certo
+    return ret;
+  }
+
+  //QUANDO FOR CONSIDERAR THIS COMO UM RETANGULO:
+  get nLados()
+  { return 4; }
+  _mudouArestasVertices()
+  {
+    delete this._vertices;
+    delete this._arestas;
+  }
+  get vertices()
+  {
+    if (this._vertices === undefined)
+    {
+      this._vertices = new Array(4);
+      this._vertices[0] = new Ponto(this._x, this._y);
+      this._vertices[1] = new Ponto(this._x + this.width, this._y);
+      this._vertices[2] = new Ponto(this._x + this.width, this._y + this.height);
+      this._vertices[3] = new Ponto(this._x, this._y + this.height);
+    }
+
+    return this._vertices;
+  }
+
+  // angulo
+  get pontoAngInicial()
+  { return this.vertices[1]; }
+  get ultimoAngDir()
+  {
+    if (this._ultimoAngDir === undefined)
+      this._ultimoAngDir = new Angulo(this.pontoAngInicial, this.centroMassa, this.vertices[2],
+        Angulo.MAIOR_180_CIMA).valorGraus;
+    return this._ultimoAngDir;
+  }
+  get ultimoAngBaixo()
+  { return 180; }
+  get ultimoAngEsq()
+  { return this.ultimoAngDir + 180; }
+}
