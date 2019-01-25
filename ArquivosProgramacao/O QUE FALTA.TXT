@@ -1,0 +1,136 @@
+Novas features:
+- Usar formaGeometrica.rotacionar() para:
+  .Tiro sair na direcao certa
+    -> em ArmaGiratoria (mudanca em ObjetoComArmas)
+    -> quando atira pra baixo, pra direita e pra esquerda mesmo em armas normais
+      - pra pegar infoTiro (quando sempre for adicionar o tiro no controlador virado pra uma direcao especifica): mudanca em ArmazenadorInfoObjetos
+      - pra adicionar tiro (quando for mudar a direcao que o tiro estah apontando antes de adicionar o tiro): ControladorTiro.adicionarTiroDif(...)
+  .Andar do tiro (o tiro fica apontado pra onde ele estah indo). (ex: TipoAndar.Segue... e TipoAndar.Direcao...)
+- opcao para limitar a curva de objetos com TipoAndar.Seguir... (e diminuir a velocidade quando anda sendo limitado pelo angulo maximo de rotacao)
+- opcao para rotacionar inimigo igual o tiro quando ele andar (USO: inimigos com TipoAndar.SeguePersPrinc)
+- opcao para soh atirar se uma condicao for verdadeira (retorno de uma funcao)
+
+Otimizacao:
+- mudar class ListaLigada para classe do proprio Javascript?? Tem todos os metodos mas aparentemente eh mais lento quando fica-se adicionando e removendo coisas (principalmente removendo)... ver se vale a pena. GUARDAR ATUAL EH MUITA PORQUISSE
+Ver qual sao e quais as diferencas dos Array methods de:
+ .deletar um item (.pop, .shift, .splice, .filter)
+ .adicionar um item (.push, .unshift)
+ .fazer for (for, for...in, .forEach, .every, .some, .map, .reduce)
+- mudar Interseccao.montarFormasGeometricas: fazer metodo que retorna se colidiu ao inves de todas as formas para ir montando as formas e verificando se colidiu simultaneamente (soh criar duas formas e depois testar as duas se for Triangulo)
+
+Criacao de Levels:
+- criacao de classe ArmazenadorInfoObjetos
+- fazer esquema pra criar tiros e inimigos (com todos os parametros necessarios)
+- Criacao de alguns Tiros, Inimigos e PersonagensPrincipais (nao muito perfeito)
+
+Geometria:
+- fazer opcao para rotacionar FormasGeometricas (inclusive FormaGeometricaComposta)
+ps: (https://stackoverflow.com/questions/3249083/is-this-how-rotation-about-a-point-is-done)
+- arrumar mudarTamanho das FormasGeometricas
+- agora o centroMassa de FormaGeometricaComposta eh a media ponderada de todos os centroMassas das formasGeometricas
+
+outros:
+- estah MEDIO arrumado: adicionar mais de um obstaculo e/ou mais de um inimigo
+- concatenar tiros dos inimigos e do jogo em controladorTiros[0] quando for passar de level (antes de deletar os controladoresTirosJogo e controladoresInimigos)
+- desenhar todos os inimigosSurgindo e obstaculosSurgindo e depois o resto
+- arrumei armaGiratoria
+- arrumei: nas duas primeiras vezes que puxa o gatilho nao tinha que esperar o tempo desejado em AviaoMaster
+- InfoArma.mudarDirAndarTiroDirSai nao existe mais
+- tirar "const _this = this;" e ao inves de "function() {...}" colocar " () => {...}"
+
+Modificacoes estruturais:
+
+---------------------------------------------------------------------------------------------
+
+FAZER AGORA:
+
+COMITAR!!
+
+- fazer esquema para rotacionar qualquer tiro, obstaculo e inimigo (direto do ArmazenadorInfoObjetos e no adicionar...Dif)
+- tirar [i] de ObjetoComTiros
+- verificar se inimigo anda proporcionalmente
+- Mover e fazer tais procedimentos antes de printa-los na tela?
+
+- para inimigos que rotacionam: atirar
+
+- tiro nao estah sendo printado da primeira vez
+- transicao de objAparecendo para Inimigo estah piscando
+- arrumar transicao de ObjetoTelaAparecendo para Inimigo e Obstaculo (tentar arrumar direito)
+ps: alem de: 1 obstaculo surgindo estah sendo printado uma vez mais doq deveria
+
+//FAZER PREVIA DO JOGO!!
+ .pensar em como o level vai ser (em todos os diferenciais: Helicoptero, ArmasGiratorias, Missil, inimigos em TipoAndar.Direcao, inimigos pequenos com a vida desaparecendo, Oficina, Escurecer,...)
+ .fazer static gets para avioes e tiros que vou usar
+ .implementar:
+   -> pesquisar: "PREVIA JOGO"
+   -> mudar ControladorJogo._iniciarLevel(), ControladorPocaoTela._probabilidadeExistirPocaoFromLevel(...),  ControladorPocaoTela._pocoesPossiveisFromLevel(...), FormaGeometrica.draw(...)
+ ps: no final do tempo: escrever quais sao os diferenciais/coisas dificeis
+
+- pesquisar: //AQUI
+
+- mudar Pocao baseado nas alteracoes feitas (em ArmazenadorInfoObjetos.info... - ex: tiro)
+- printar ObjComTiros depois dos tiros em si
+
+- Otimizar: tentar tirar Exatidao.ehQuaseExato(...)
+- ver se tem que clonar Info ou nao (acho que nao precisa clonar quando for passar InfoX por parametro porque no proprio construtor ele clona o que precisa (tem coisas que nao precisam ser clonadas))
+
+- melhorar ponto vermelho da mira do AviaoMaster (fazer vetor de X pontos e ir printando cada vez menor e com menos opacidade: minimo de 50%) -> deixar isso dentro de PersonagemPrincipal e desenhar em draw
+- colocar retângulos de 2 cores pra mostrar quanto tempo falta pra poder atirar manualmente
+- imgMorreu dos tiros eh com fogo por cima (atingiu alguma coisa), printar uma vez antes de desaparecer
+
+- aprender sobre push() e pop()
+- Otimizacao: tentar nao dar delete em vertices e arestas e sim mudar seus valores (ver oq eh mais rapido, mudar cada vertice e aresta ou refazer)
+
+
+//DESIGN
+- Design: background inicio do jogo, fonte, pause, ganhou (Trofeu?Mario?)
+- no pause ter opção para mostrar controles e regras(??)
+- ver comentarios //TODO
+
+Geometria:
+- pensar um pouco na colisao de obstaculos (para onde eles vao quando colidem)
+- podemos saber se um ponto estah dentro de um quadrilatero (ou soh paralelogramo?) se estiver entre as retas de cima e de baixo e da direita e da esquerda (qual maneira eh mair rapida??)
+- em Interseccao.vaiTerInterseccao(...) de formasComplexas e formasCompostas estao sendo criados paralelogramos desnecessarios (sobre parte da forma e de outros paralelogramos). pensar numa maneira de acabar com isso
+
+- fazer esquema para tiros sairem muito rapido, desacelerarem e depois ficarem constante
+
+- deixar todos os angulos como do ciclo trigonometrico??
+- deixar tamanho proporcional a tela, e a velocidade proporcional ao frameRatePadrao
+
+- mudar nome de PersonagemPrincipal (nao eh um personagem e tem soh 1 dele) e "pers" => AviaoUsuario
+- mudar centroMassa para centro e fazer alteracoes cabiveis
+- mudar "nave" para outra coisa
+- Quando o canvas perde o foco, pausa-lo (teoricamente ta certo mas evento nao fire)
+
+- Geometria: ORGANIZAR EXPLICACOES: COLOCAR NO GIT EXPLICACOES DO PAPEL (DEIXAR BONITINHA) + MUDAR NOME DOS ARQUIVOS DO PAINT E DEIXAR MAIS BONITINHO TAMBEM
+
+// CRIAR LEVELS
+- PEGAR IMAGENS PARA PERSONAGEM, INIMIGOS, OBSTACULOS, POCOES. ps: ver imagens do safari, computador e outras
+- tratar essas imagens (deixar como .PNG e sem fundo)
+- pensar nas caracteristicas de cada
+- pensar em como vai ser os levels
+- implementar no ControladorJogo propriamente dito:
+ .fazer um static get para cada avião e helicóptero do personagem e do inimigo (receber todas as informações necessárias para retornar o InfoInim ou InfoPers - ex: qnt pra andar em qual direção, tipo andar,...)
+  ps: para o qtdAndar dos infosObjetoTela passa apenas o angulo do andar e o tipo (se o angulo for nulo, eh pra ele ficar parado)
+ .fazer funções: velocidade(x), vida(x),... sendo “x” o coeficiente da velocidade e retornando (x*umaVida).toFixed(1)
+ .resto
+
+---------   ATEH AQUI EH ESSENCIAL...   ---------
+--------- nao essencial daqui pra baixo ---------
+
+
+- mudar corImg para img em ObjetoTela
+- esquema pra desenhar caminho de inimigos/obstaculos?? (outro .html?) ps: pensar em diferenca do width e height de cada execucao. Ver outros jogos do tipo...
+- Obstaculo.especial: corImg vira vetor de imgs, tira mais vida
+
+Geometria:
+- fazer FormaGeometrica para circulo com interseccao e procedimento em Interseccao
+
+Otimizar mais o codigo
+
+Totalmente Superfluos:
+- quando objetos com vida perderem vida abaixar a vida gradativamente (mudarVida gradativamente)
+- arrumar andar do personagem (quando jah tem duas teclas pressionadas quando uma terceira eh pressionada, o evento nao eh fired)
+- e colisao de inimigo com inimigo e obstaculo ??
+- opcao para mudar tamanho obstaculo??
+- colocar som??

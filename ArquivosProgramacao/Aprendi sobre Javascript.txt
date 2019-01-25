@@ -1,0 +1,28 @@
+Array Methods:
+.Loops
+ *for...in: todas os elementos (sejam indices de numeros ou strings), tem continue e break
+ - forEach: percorre todos os elementos em que os indices sao numeros ou "12" (mesmo que nao esteja na sequencia ou pule indexes)
+ - every: forEach com break ("return true" continua a funcao e "return false" funciona como break)
+ - map: retorna um array em que cada elemento foi mudado (ex: todos os elementos foram colocados ao quadrado; ex: para retornar um vetor com todos os element.x do vetor original)
+ - filter: return new array com todos os elementos que obedecem a uma condicao
+ - reduce: reduzir todos os elementos a 1 soh (ex: somar todos eles)
+
+.Insertion
+ - push: no final
+ - unshift: no comeco
+ - splice: pode-se adicionar com splice
+
+.Deletion
+ - pop: remove do final
+ - shift: remove do comeco
+ - splice: remove de qualquer lugar, quantos quiser (pode adicionar elementos junto tambem)
+ - filter: filtro (retorna novo array)
+
+*not really an array method
+
+
+Arrow functions VS. Normal functions
+ - Arrow functions:
+   .consegue acessar o contexto do que criou ela (inclusive o "this" eh o mesmo)
+   .pode-se colocar mais argumentos doq estao nomeados e eh possivel ve-los pelo nome: "arguments"
+   .good to use: se for simplesmente um return, para callbacks
