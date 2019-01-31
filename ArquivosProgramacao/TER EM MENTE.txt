@@ -1,3 +1,5 @@
+ - o inimigo que segue o personagem fica girando em volta dele de vez em quando por causa do limitarCurva (ta muito perto e ele conseguiria chegar ateh o centro considerando o quanto ele pode andar mas nao pode considerando o angulo que ele andaria. portanto nao ha oq se fazer, estah certo)
+
  - EM TODOS OS HELICOPTEROS AS IMAGENS SECUNDARIAS DA HELICE DEVEM TER O NOME: "heliceX" sendo X o numero index da helice (comecando em zero)
  - NO AVIAO COM ARMA GIRATORIA A ARMA GIRATORIA DEVE TER A CHAVE "armaGiratoriaX" (sendo X o index da arma giratoria comecando em zero) NAS IMAGENS SECUNDARIAS DA FORMA GEOMETRICA
 
@@ -12,13 +14,6 @@
  - ha controladores de inimigos, controladores de obstaculos e controladores de tiros
  - nos controladores sempre precisa se verificar se o objeto que ele controla jah morreu ou nao
  - num ObjetoTela, get eh com formaGeometrica dos obstaculos, mas setter soh na propria classe
-
--------------------------------------------------
-
-DEFINICAO VETOR CONTROLADORES E CONFIGS:
-quantos tiros o personagem pode ter? INDEFINIDO
-em qual vai ficar o missil (quando tiver)? 0
-em qual vai ficar a arma que gira (quando tiver)? 1. ps: vetor em qntPraDentroObj com 4 posicoes: Direcao.Cima,...
 
 -------------------------------------------------
 
@@ -45,6 +40,7 @@ em qual vai ficar a arma que gira (quando tiver)? 1. ps: vetor em qntPraDentroOb
 
 
  EXPLICAÇÃO COLISÃO DE OBJETOS:
+ obs: tudo o que eh do inimigo (inimigo, tiro nao do pers, suporteAereo) nao colide entre si
     . tiros
       -> colide com obstaculos (independente de ser ou nao do pers, porem soh tira vida dele se for do pers)
       -> se de pers, colide com inimigos, se não com personagem

@@ -75,12 +75,15 @@ class Pocao
   }
 
   //getters
+  get codPocao() { return this._codPocao; }
   get nome()
   { return this._informacoesPocao.nome; }
   get ativadoInstant()
   { return this._informacoesPocao.ativadoInstant; }
   get temDesexecutar() { return this._informacoesPocao.temDesexecutar; }
-  get codPocao() { return this._codPocao; }
+
+  get tempoTotal() { return this._tempoTotal; }
+  get tempoRestante() { return this._tempoRestante; }
 
   static informacoesPocaoFromCod(codPocao, strQuer)
   {
@@ -132,27 +135,33 @@ class Pocao
     }
   }
 
-  getFormaGeometrica(sohWidthHeight = false)
-  //toma em consideracao se this._personagemJahPegou
+  getMedidasFormaGeometrica(ehPrimeiraPocao=false)
+  //toma em consideracao se this._personagemJahPegou e se ehPrimeiraPocao (quando jah pegou)
+  //ehPrimeiraPocao: se personagem jah pegou, se eh a pocao mais a baixo ou nao
   {
-    let width, height; //1 -> 1.5 | w -> h
+    let medidas = {width: 1, height: 1}; //sempre deixar height=1
+    let tamanho;
     if (this._personagemJahPegou)
     {
-      //tamanho padrao (pequeno)
-      width = 28;
-      height = 42;
+      if (ehPrimeiraPocao)
+      //se eh a proxima a ser chamada
+        tamanho = heightPrimeiraPocao;
+      else
+      //se nao estah usando
+        tamanho = heightOutrasPocoes;
     }
     else
-    {
-      //tamanho padrao (maior)
-      width = 32;
-      height = 44.3;
-    }
-    if (sohWidthHeight) //soh retornar tamanho
-      return {width: width, height: height};
+      tamanho = 32;
+    medidas.width *= tamanho;
+    medidas.height *= tamanho;
+    return medidas;
+  }
+  getFormaGeometrica(ehPrimeiraPocao)
+  {
+    const medidas = this.getMedidasFormaGeometrica(ehPrimeiraPocao);
 
     //se tiver que retornar forma geometrica em si
-    let formaGeometrica = new Retangulo(undefined,undefined,width,height);
+    let formaGeometrica = new Retangulo(undefined,undefined, medidas.width, medidas.height);
     formaGeometrica.corImg = Pocao.informacoesPocaoFromCod(this._codPocao, "img");
     return formaGeometrica;
   }
@@ -202,9 +211,9 @@ class Pocao
         tempoPocaoResta = 8500;
 
         const infoTiroPersPadrao = ArmazenadorInfoObjetos.infoTiroPersPadrao();
-        let infoTiroMaisRapido = new InfoTiro(); //formaGeometrica, corImgMorto, infoAndar, ehDoPers, mortalidade
+        let infoTiroMaisRapido = new InfoTiro(); //formaGeometrica, infoImgMorto, infoAndar, ehDoPers, mortalidade
         infoTiroMaisRapido.formaGeometrica = new Retangulo(undefined,undefined, 4, 6, {fill: "black", stroke: "black"});
-        infoTiroMaisRapido.corImgMorto = {fill: color(30), stroke: color(30)};
+        infoTiroMaisRapido.infoImgMorto = new InfoImgMorto([{fill: color(30)}]);
         infoTiroMaisRapido.infoAndar = infoTiroPersPadrao.infoAndar;
         infoTiroMaisRapido.infoAndar.qtdAndarY -= qtdTiroAndarMaisRapido;
         infoTiroMaisRapido.mortalidade = infoTiroPersPadrao.mortalidade + qtdTiroMaisMortalidade;
@@ -254,9 +263,10 @@ class Pocao
           -> quando Timers forem criados. OK
           -> quando tiros(sem ser do personagem), obstaculos ou inimigos(freqFuncAtirar tambem) forem criados. OK
         */
-        //tiros tela
-        ControladorJogo.controladoresTirosJogo.forEach(controladorTirosJogo =>
-          controladorTirosJogo.mudarTempo(porcentagemDeixarTempoLento));
+        //tiros sem dono
+        ControladorJogo.controladorOutrosTirosNaoPers.mudarTempo(porcentagemDeixarTempoLento);
+        //suportes aereos
+        ControladorJogo.controladorSuportesAereos.suportesAereos.forEach(suporteAereo => suporteAereo.mudarTempo(porcentagemDeixarTempoLento));
         //inimigos (incluindo tiros deles e freqFuncAtirar)
         ControladorJogo.controladoresInimigos.forEach(controladorInims =>
           controladorInims.mudarTempo(porcentagemDeixarTempoLento));
@@ -290,9 +300,9 @@ class Pocao
       case TipoPocao.PersComMissil: //maior, mais devagar e segue inimigo
         tempoPocaoResta = 4500;
 
-        let infoTiroMissil = new InfoTiro(); //formaGeometrica, corImgMorto, infoAndar, ehDoPers, mortalidade
+        let infoTiroMissil = new InfoTiro(); //formaGeometrica, infoImgMorto, infoAndar, ehDoPers, mortalidade
         infoTiroMissil.formaGeometrica = new Retangulo(undefined,undefined, 8, 10, {fill: "white", stroke: "white"});
-        infoTiroMissil.corImgMorto = {fill: color(200), stroke: color(200)};
+        infoTiroMissil.infoImgMorto = new InfoImgMorto([{fill: color(200), stroke: color(200)}]);
         infoTiroMissil.infoAndar = new InfoAndar(0, -12, TipoAndar.SeguirInimMaisProx);
         infoTiroMissil.mortalidade = 20;
 
@@ -400,9 +410,10 @@ class Pocao
       case TipoPocao.DeixarTempoMaisLento:
       //voltar tempo ao normal
         const porcVoltarTempoNormal = Probabilidade.porcentagemVoltarNormal(porcentagemDeixarTempoLento);
-        //tiros tela
-        ControladorJogo.controladoresTirosJogo.forEach(controladorTirosJogo =>
-          controladorTirosJogo.mudarTempo(porcVoltarTempoNormal));
+        //tiros sem dono
+        ControladorJogo.controladorOutrosTirosNaoPers.mudarTempo(porcVoltarTempoNormal);
+        //suportes aereos
+        ControladorJogo.controladorSuportesAereos.suportesAereos.forEach(suporteAereo => suporteAereo.mudarTempo(porcVoltarTempoNormal));
         //inimigos (incluindo tiros deles e freqFuncAtirar)
         ControladorJogo.controladoresInimigos.forEach(controladorInims =>
           controladorInims.mudarTempo(porcVoltarTempoNormal));
@@ -417,24 +428,20 @@ class Pocao
         console.trace();
     }
 
-    ControladorJogo.pers.controladorPocoesPegou.acabouUsarPocao();
+    ControladorJogo.pers.controladorPocoesPegou.acabouUsarPocao(true);
   }
 
 
   //auxiliares
   _reverterTirosContraInimigos(seguir)
   {
-    //tiros tela
-    ControladorJogo.controladoresTirosJogo.forEach(controladorTirosJogo =>
-      controladorTirosJogo.virarTirosContraCriador(seguir));
-
+    //tiros sem dono
+    ControladorJogo.controladorOutrosTirosNaoPers.virarTirosContraCriador(seguir);
+    //suportes aereos
+    ControladorJogo.controladorSuportesAereos.suportesAereos.forEach(suporteAereo => suporteAereo.virarTirosContraCriador(seguir));
     //tiros dos inimigos
-    ControladorJogo.controladoresInimigos.forEach(controladorInims =>
-      controladorInims.virarTirosInimsContraCriador(seguir));
+    ControladorJogo.controladoresInimigos.forEach(controladorInims => controladorInims.virarTirosInimsContraCriador(seguir));
   }
-
-  get tempoTotal() { return this._tempoTotal; }
-  get tempoRestante() { return this._tempoRestante; }
 }
 //ps: tudo que eh execucao da pocao feito fora dessa classe estah escrito: "PARTE DA EXECUCAO DA POCAO"...
 
@@ -460,6 +467,7 @@ class ObjetoTelaPocao
     this._vivo = true;
   }
 
+  get formaGeometrica() { return this._formaGeometrica; }
   get vivo() { return this._vivo; }
 
   intersectaPers(qtdAndarX, qtdAndarY)
@@ -493,6 +501,11 @@ class ControladorPocaoTela
     this._jahProgramouDeixarPocaoTela = false; //se jah criou o Timer para colocar Pocao tela
     this._funcCamadasColTirPocaoTempo = new FuncEmCamadas();
   }
+
+  get temObjPocao()
+  { return this._objPocao!==undefined; }
+  get objPocao()
+  { return this._objPocao; }
 
   //antes da pocao ter sido adicionado a tela
   colocarPocaoEmTempoSeChance(level)
@@ -534,11 +547,11 @@ class ControladorPocaoTela
     const pocao = new Pocao(pocoesPossiveis[Math.myrandom(0, qtdPocoesPossiveis)]); //cria pocao a partir do codigo
 
     //ponto onde pocao nao estah em cima do pers nem muuito perto dele
-    const pontoPode = this._pontoPodeColocar(pocao.getFormaGeometrica(true));
+    const pontoPode = this._pontoPodeColocar(pocao.getMedidasFormaGeometrica());
 
     //fazer pocao ir aparecendo na tela aos poucos (opacidade e tamanho): ele nao interage com o meio ainda
     const infoObjAparecendo = new InfoObjetoTelaAparecendo(false, true, undefined, pocao.getFormaGeometrica());
-    this._objPocao = new ObjetoTelaAparecendo(pontoPode, infoObjAparecendo,
+    this._objPocao = new ObjetoTelaAparecendo(pontoPode, infoObjAparecendo, TipoObjetos.Pocao,
       () => this._objPocao = new ObjetoTelaPocao(pontoPode.x, pontoPode.y, pocao, this._objPocao.formaGeometrica));
       //adicionar objPocao propriamente dito (e jah tirando o ObjetoTelaAparecendo)
   }
@@ -676,92 +689,118 @@ class ControladorPocaoTela
 
 
 //quando personagem jah pegou
-//frontend
-const heightCadaPocao = 50;
-const qtdSubirAdicionarPocao = 8;
-const tempoNomePocaoApareceTela = 2500;
+const xPrimeiraPocao = 26;
+const xOutrasPocoesGuardadas = 5;
+const qtdYPrimAcimaVidaPers = 10;
+const heightPrimeiraPocao = 28;
+const heightOutrasPocoes = 15;
+const espacoEntrePocoesPers = 10;
 
-const xPocoes = 26;
-var yPrimeiroPocao; //vai como uma constante quando ControladorPocoesPers for instanciado (porque o height nao estah definido aqui ainda)
+const diametroSemiCirculoPocao = heightPrimeiraPocao*2;
+const qtdSubirComecouUsarPocao = diametroSemiCirculoPocao * 0.4;
+
+const tempoNomePocaoApareceTela = 2500;
 
 class ObjPocaoPers
 {
   constructor(pocao, qtdPocoes)
   //qtdPocoes eh com esse jah
   {
-    //backend
     this._pocao = pocao;
-
-    //tela
-    this._formaGeometrica = this._pocao.getFormaGeometrica();
-    this._formaGeometrica.x = xPocoes;
-    this._formaGeometrica.y = yPrimeiroPocao;
-
     this._estahSendoUsado = false;
-  }
 
-  comecouAUsar()
-  { this._estahSendoUsado = true; }
-  get estahSendoUsado() { return this._estahSendoUsado; }
+    this.ehPrimeiraPocao = true; // cria formaGeometrica
+    //ps: todo ObjPocaoPers criado vai pro comeco/mais embaixo
+  }
 
   get pocao()
   { return this._pocao; }
+  get formaGeometrica()
+  { return this._formaGeometrica; }
 
-  mudarY(instrucao)
-  //InstrucaoArrumarLugar: removeu, comecou a usar, adicionou
+  comecouAUsar()
+  { this._estahSendoUsado = true; }
+  get estahSendoUsado()
+  { return this._estahSendoUsado; }
+
+  set ehPrimeiraPocao(ehPrim)
+  {
+    const formaGeomAnterior = this._formaGeometrica;
+
+    this._formaGeometrica = this._pocao.getFormaGeometrica(ehPrim);
+    this._formaGeometrica.x = (ehPrim) ? xPrimeiraPocao : xOutrasPocoesGuardadas;
+    if (formaGeomAnterior === undefined)
+      this._formaGeometrica.y = height - (heightVidaUsuario + qtdYPrimAcimaVidaPers + this._formaGeometrica.height);
+    else
+      this._formaGeometrica.y = formaGeomAnterior.y;
+  }
+
+  arrumarLugar(instrucao, pocaoRemovidaTinhaDesexecutar=false)
+  //pocaoRemovidaTinhaDesexecutar: soh quando instrucao for Remover
   {
     if (instrucao !== InstrucaoArrumarLugar.comecouAUsar) //adicionou ou removeu
-      this._formaGeometrica.y += heightCadaPocao*(instrucao===InstrucaoArrumarLugar.adicionou?-1:1);
+    {
+      let qtdMudarY = (heightOutrasPocoes + espacoEntrePocoesPers) * (instrucao===InstrucaoArrumarLugar.adicionou?-1:1);
+      if (instrucao===InstrucaoArrumarLugar.removeu && pocaoRemovidaTinhaDesexecutar)
+      //se instrucao=removeu e ela estava sendo executada (por um periodo de tempo, isto eh, tinha o semiCirculo em volta), eh porque a primeira pocao foi usada e acabou
+        qtdMudarY += qtdSubirComecouUsarPocao;
+      this._formaGeometrica.y += qtdMudarY;
+    }
     else //comecou a usar
-      this._formaGeometrica.y -= qtdSubirAdicionarPocao / (this._estahSendoUsado?2:1);
+      this._formaGeometrica.y -= qtdSubirComecouUsarPocao/(this._estahSendoUsado?2:1);
       //ps: se estah sendo usado soh sobe metade (soh pela metade de baixo do circlo)
   }
 
-  draw()
+  draw(opacidade)
   {
     //desenha semi-circulo antes (fica embaixo)
     if (this._estahSendoUsado)
-    {
-      //proporcao
-      const porcentagemDisponivel = this._pocao.tempoRestante / this._pocao.tempoTotal;
-
-      //visual/tela
-      fill(100);
-      const diametro = 60;
-      const x = this._formaGeometrica.x + 13.8;
-      const y = this._formaGeometrica.y + 21;
-      const cor = "red";
-
-      const tamStrokeGrosso = 7;
-      const tamStrokeFino = 3;
-
-      if (porcentagemDisponivel === 1)
-      {
-        strokeWeight(tamStrokeGrosso);
-        stroke(cor);
-        ellipse(x, y, diametro);
-      }else
-      {
-        strokeWeight(tamStrokeFino);
-        stroke(30);
-        ellipse(x, y, diametro);
-
-        strokeWeight(tamStrokeGrosso);
-        stroke(cor);
-        arc(x, y, diametro, diametro, -PI/2, porcentagemDisponivel*2*PI - PI/2);
-        // (x, y, "diametro width", "diametro height", angulo em radiano onde comeca, angulo em radiano onde termina o circulo)
-        // o circulo trigonometrico usado deve ser no sentido contrario (aumenta em sentido horario)
-      }
-      strokeWeight(tamStroke);
-
-      noStroke(); fill(255);
-      textSize(17);
-      // quanto tempo falta (tempoRestante estah em milisegundos)
-      text((this._pocao.tempoRestante/1000).toFixed(1) + "s", x + diametro/2 - 6, y + diametro/2 + 8); //quanto tempo falta
-    }
+      this._desenharSemiCirculo(opacidade);
 
     //desenha pocao em si
-    this._formaGeometrica.draw();
+    this._formaGeometrica.draw(opacidade);
+  }
+  _desenharSemiCirculo(opacidade)
+  {
+    const opacidadeBaseCerta = (opacidade===undefined) ? undefined : opacidade * 255;
+
+    //visual/tela
+    fill(color(100,100,100, opacidadeBaseCerta));
+    const x = this._formaGeometrica.centroMassa.x;
+    const y = this._formaGeometrica.centroMassa.y;
+    const cor = color(255,0,0, opacidadeBaseCerta);
+    const tamStrokeGrosso = 6;
+    const tamStrokeFino = 3;
+
+    //proporcao
+    const porcentagemDisponivel = this._pocao.tempoRestante / this._pocao.tempoTotal;
+
+    noFill();
+    if (porcentagemDisponivel === 1)
+    {
+      strokeWeight(tamStrokeGrosso);
+      stroke(cor);
+      ellipse(x, y, diametroSemiCirculoPocao);
+    }else
+    {
+      strokeWeight(tamStrokeFino);
+      stroke(color(30,30,30, opacidadeBaseCerta));
+      ellipse(x, y, diametroSemiCirculoPocao);
+
+      strokeWeight(tamStrokeGrosso);
+      stroke(cor);
+      strokeCap(SQUARE); //para ficar "quadradinho" e nao circular no final
+      arc(x, y, diametroSemiCirculoPocao, diametroSemiCirculoPocao, -PI/2, porcentagemDisponivel*2*PI - PI/2);
+      // (x, y, "diametro width", "diametro height", angulo em radiano onde comeca, angulo em radiano onde termina o circulo)
+      // o circulo trigonometrico usado deve ser no sentido contrario (aumenta em sentido horario)
+    }
+    strokeWeight(tamStroke);
+
+    noStroke();
+    fill(color(255,255,255, opacidadeBaseCerta));
+    textSize(17);
+    // quanto tempo falta (tempoRestante estah em milisegundos)
+    text((this._pocao.tempoRestante/1000).toFixed(1) + "s", x + diametroSemiCirculoPocao/2 - 1, y + diametroSemiCirculoPocao/2 + 5); //quanto tempo falta
   }
 }
 
@@ -773,10 +812,6 @@ class ControladorPocoesPers
   {
     this._pocoesPers = []; // 4 pocoes acumuladas (ativado nao instanteamente) + pegar pocao ativada instantaneamente
     //os que nao estao sendo usados e o que estah (se houver)
-
-    //inicializa a variavel e a faz funcionar como uma contante (nao pode ser contante em si porque depende de height, que nao tem um valor literal)
-    yPrimeiroPocao = height - heightVidaUsuario - 10;
-    Object.freeze(yPrimeiroPocao);
 
     // se vai escrever o nome da primeira pocao, que estah sendo usada
     this._funcEscreverNomePocao = new FuncEmCamadas();
@@ -799,17 +834,17 @@ class ControladorPocoesPers
     this.adicionarPocao(pocao, false); //nao remove a pocao se jah tiver no maximo
     this.usarPocaoAtual();
   }
-  adicionarPocao(pocao, removerPorSePrec = true)
+  adicionarPocao(pocao, removerSePrec = true)
   {
-    //adiciona no comeco
-    this._pocoesPers.unshift(new ObjPocaoPers(pocao, this._pocoesPers.length+1));
-
-    if (removerPorSePrec && this._pocoesPers.length >= maxPocoesAcumulados + 1)
+    if (removerSePrec && this._pocoesPers.length >= maxPocoesAcumulados + 1)
     //se tem mais pocoes do que pode (remove a ultima)
       this._pocoesPers.pop();
 
     //arrumar lugar das pocoes agora que adicionou um embaixo
     this._arrumarLugarPocoes(InstrucaoArrumarLugar.adicionou);
+
+    //adiciona no comeco
+    this._pocoesPers.unshift(new ObjPocaoPers(pocao, this._pocoesPers.length+1));
   }
 
   usarPocaoAtual()
@@ -826,7 +861,7 @@ class ControladorPocoesPers
         //arrumar lugar das pocoes agora que comecou a usar (circulo em volta)
         this._arrumarLugarPocoes(InstrucaoArrumarLugar.comecouAUsar);
       }else
-        this.acabouUsarPocao();
+        this.acabouUsarPocao(false);
     }
   }
   _programarParaEscreverNomePocao()
@@ -844,29 +879,63 @@ class ControladorPocoesPers
       }, tempoNomePocaoApareceTela, false, false /*transcende o level*/);
   }
 
-  acabouUsarPocao()
+  acabouUsarPocao(pocaoRemovidaTinhaDesexecutar)
   {
     //remover pocao que acabou de se usado (comeco)
     this._pocoesPers.shift();
     //(agora a primeira pocao do personagem nao estah sendo usado mais)
 
     //arrumar lugar das pocoes agora que removeu o de baixo
-    this._arrumarLugarPocoes(InstrucaoArrumarLugar.removeu);
+    this._arrumarLugarPocoes(InstrucaoArrumarLugar.removeu, pocaoRemovidaTinhaDesexecutar);
 
     //personagem podia estar em cima da pocao mas nao poder pegar porque jah estava usando um, quando esse acaba verifica se pode pegar instantaneamente (sem esperar ele andar)
     ControladorJogo.controladorPocaoTela.verificarPersPegouPocao();
   }
 
-  _arrumarLugarPocoes(instrucao)
+  _arrumarLugarPocoes(instrucao, pocaoRemovidaTinhaDesexecutar)
   //instrucao: removeu, comecou a usar ou adicionou
+  //pocaoRemovidaTinhaDesexecutar: soh para intrucao=removeu
   {
-    this._pocoesPers.forEach(pocaoPers => pocaoPers.mudarY(instrucao));
+    if (this._pocoesPers.length > 0)
+    {
+      //mudar formaGeometrica das pocoes (a primeira pocao eh maior que as demais)
+      if (instrucao === InstrucaoArrumarLugar.adicionou)
+      //(ainda nao adicionou) se vai adicionar, tem setar ehPrimeiraPocao=false na atual primeira pocao
+        this._pocoesPers[0].ehPrimeiraPocao = false;
+      else
+      if (instrucao === InstrucaoArrumarLugar.removeu)
+      //(jah removeu) se jah removeu, tem setar ehPrimeiraPocao=true na primeira pocao
+        this._pocoesPers[0].ehPrimeiraPocao = true;
+    }
+
+    // mudarY das pocoes
+    this._pocoesPers.forEach(pocaoPers => pocaoPers.arrumarLugar(instrucao, pocaoRemovidaTinhaDesexecutar));
   }
 
   //desenhar todos as pocoes
   draw()
   {
-    this._pocoesPers.forEach(pocaoPers => pocaoPers.draw());
+    //se tem algum objeto importante no espaco onde iria printar as pocoes do personagem
+    let opacidade;
+    if (this._pocoesPers.length>0)
+    {
+      //primeira pocao
+      if (ControladorJogo.algumObjetoImportanteNesseEspaco(this._pocoesPers[0].formaGeometrica))
+        opacidade = opacidadePainelPersObjsEmBaixo;
+      else
+      //outras pocoes (se houver)
+      if (this._pocoesPers.length>1)
+      {
+        const formaUltimaPocao = this._pocoesPers[this._pocoesPers.length-1].formaGeometrica;
+        const retanguloEspaco = new Retangulo(formaUltimaPocao.x, formaUltimaPocao.y, formaUltimaPocao.width,
+          this._pocoesPers[1].formaGeometrica.y + this._pocoesPers[1].formaGeometrica.height - formaUltimaPocao.y);
+        if (ControladorJogo.algumObjetoImportanteNesseEspaco(retanguloEspaco))
+          opacidade = opacidadePainelPersObjsEmBaixo;
+      }
+    }
+    else {} //deixa undefined mesmo
+
+    this._pocoesPers.forEach(pocaoPers => pocaoPers.draw(opacidade));
     /*ps: nao importa a ordem sempre vai colocar os mesmos nos lugares certos */
 
     if (this._nomePocaoEscrever !== undefined)
@@ -875,7 +944,7 @@ class ControladorPocoesPers
       // TODO: design
       noStroke();
       textSize(30);
-      text(this._nomePocaoEscrever, width/2 - 10, (height-heightCadaPocao)/2 - 30); //escrever nome da pocao
+      text(this._nomePocaoEscrever, width/2 - 10, (height-heightPrimeiraPocao)/2 - 30); //escrever nome da pocao
     }
   }
 }

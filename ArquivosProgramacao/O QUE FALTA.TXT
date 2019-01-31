@@ -1,62 +1,44 @@
-Novas features:
-- Usar formaGeometrica.rotacionar() para:
-  .Tiro sair na direcao certa
-    -> em ArmaGiratoria (mudanca em ObjetoComArmas)
-    -> quando atira pra baixo, pra direita e pra esquerda mesmo em armas normais
-      - pra pegar infoTiro (quando sempre for adicionar o tiro no controlador virado pra uma direcao especifica): mudanca em ArmazenadorInfoObjetos
-      - pra adicionar tiro (quando for mudar a direcao que o tiro estah apontando antes de adicionar o tiro): ControladorTiro.adicionarTiroDif(...)
-  .Andar do tiro (o tiro fica apontado pra onde ele estah indo). (ex: TipoAndar.Segue... e TipoAndar.Direcao...)
-- opcao para limitar a curva de objetos com TipoAndar.Seguir... (e diminuir a velocidade quando anda sendo limitado pelo angulo maximo de rotacao)
-- opcao para rotacionar inimigo igual o tiro quando ele andar (USO: inimigos com TipoAndar.SeguePersPrinc)
-- opcao para soh atirar se uma condicao for verdadeira (retorno de uma funcao)
-
-Otimizacao:
-- mudar class ListaLigada para classe do proprio Javascript?? Tem todos os metodos mas aparentemente eh mais lento quando fica-se adicionando e removendo coisas (principalmente removendo)... ver se vale a pena. GUARDAR ATUAL EH MUITA PORQUISSE
-Ver qual sao e quais as diferencas dos Array methods de:
- .deletar um item (.pop, .shift, .splice, .filter)
- .adicionar um item (.push, .unshift)
- .fazer for (for, for...in, .forEach, .every, .some, .map, .reduce)
-- mudar Interseccao.montarFormasGeometricas: fazer metodo que retorna se colidiu ao inves de todas as formas para ir montando as formas e verificando se colidiu simultaneamente (soh criar duas formas e depois testar as duas se for Triangulo)
-
-Criacao de Levels:
-- criacao de classe ArmazenadorInfoObjetos
-- fazer esquema pra criar tiros e inimigos (com todos os parametros necessarios)
-- Criacao de alguns Tiros, Inimigos e PersonagensPrincipais (nao muito perfeito)
-
-Geometria:
-- fazer opcao para rotacionar FormasGeometricas (inclusive FormaGeometricaComposta)
-ps: (https://stackoverflow.com/questions/3249083/is-this-how-rotation-about-a-point-is-done)
-- arrumar mudarTamanho das FormasGeometricas
-- agora o centroMassa de FormaGeometricaComposta eh a media ponderada de todos os centroMassas das formasGeometricas
-
-outros:
-- estah MEDIO arrumado: adicionar mais de um obstaculo e/ou mais de um inimigo
-- concatenar tiros dos inimigos e do jogo em controladorTiros[0] quando for passar de level (antes de deletar os controladoresTirosJogo e controladoresInimigos)
-- desenhar todos os inimigosSurgindo e obstaculosSurgindo e depois o resto
-- arrumei armaGiratoria
-- arrumei: nas duas primeiras vezes que puxa o gatilho nao tinha que esperar o tempo desejado em AviaoMaster
-- InfoArma.mudarDirAndarTiroDirSai nao existe mais
-- tirar "const _this = this;" e ao inves de "function() {...}" colocar " () => {...}"
+﻿Novas features:
+- para inimigos que rotacionam: atirar
+- criacao de ControladorSuportesAereos e SuporteAereo: colisao com tiros e personagem
+- helices girando quando helicoptero eh ObjetoTelaAparecendo
 
 Modificacoes estruturais:
+- dar load nas imagens antes de comecar o jogo em ArmazenadorInfoObjetos e passar a imagem em si pra formaGeometrica (isso fez os tiros serem printados logo da primeira vez)
+- trocar imgMorreu por infoImgMorto: {vetorImg, qtdVezesPrintarCadaImg, infoAdicionarImgSec} (infoAdicionarImgSec: undefined=>substituir corImg da formaGeometrica; {porcWidth,porcLadosCentroImg}=>adicionar imagem secundaria com tais especificacoes)
+- criacao da classe Helices (para que ObjetosComArmas e ObjetoTelaAparecendo pudessem usar)
+- usar push() e pop()
+- separar ObjetoComArmas em: ObjetoComArmas e ObjetoComArmasComVida (para criar SuporteAereo)
+
+Geometria:
+- considerar opacidade em todos os possiveis caminhos das FormaGeometrica.draw()
+- adicionei, em FormaGeometrica.mudarTamanho(), a mudanca de tamanho e reposicionamento das imagensSecundarias
+- arrumei draw imagensSecundarias quando formaGeometrica estah rotacionada
+
+Design:
+- melhorar ponto vermelho da mira do AviaoMaster (fazer vetor de X pontos e ir printando cada vez menor e com menos opacidade: minimo de 50%) -> deixar isso dentro de PersonagemPrincipal e desenhar em draw
+- colocar retângulos de 2 cores pra mostrar quanto tempo falta pra poder atirar manualmente
+- se tiver algum objeto importante no espaco onde printa [pocoes do pers] e [frequencia atirar nao automatico (se for AviaoMaster)], printa esses dois blocos opacos
+
+Criacao de Levels:
+- fazer esquema para criar qualquer tiro, obstaculo e inimigo jah rotacionado (em ArmazenadorInfoObjetos e no adicionar...Dif)
+
+Otimizacao:
+- tirar [i] de ObjetoComTiros
+
+outros:
+- arrumei: tiro nao estah sendo printado da primeira vez
+- arrumei: lugar tiro de ObjetoComArmas quando ele estah rotacionado
+- printar tiros mortos em cima de todos os ObjetosTela
+- o que falta em mudarTempo:
+  .Helices
+  .classeAndar.limitarCurva.maiorAnguloMudanca e classeAndar.aceleracao
+- em ObjetoTelaAparecendo, o objeto estah andando, mudando de tamanho e opacidade corretamente
+- fazer algoritmo para verificar se os tiros ou inimigos que tem TipoAndar.Seguir... vao voltar para o ceu antes de deleta-los
 
 ---------------------------------------------------------------------------------------------
 
 FAZER AGORA:
-
-COMITAR!!
-
-- fazer esquema para rotacionar qualquer tiro, obstaculo e inimigo (direto do ArmazenadorInfoObjetos e no adicionar...Dif)
-- tirar [i] de ObjetoComTiros
-- verificar se inimigo anda proporcionalmente
-- Mover e fazer tais procedimentos antes de printa-los na tela?
-
-- para inimigos que rotacionam: atirar
-
-- tiro nao estah sendo printado da primeira vez
-- transicao de objAparecendo para Inimigo estah piscando
-- arrumar transicao de ObjetoTelaAparecendo para Inimigo e Obstaculo (tentar arrumar direito)
-ps: alem de: 1 obstaculo surgindo estah sendo printado uma vez mais doq deveria
 
 //FAZER PREVIA DO JOGO!!
  .pensar em como o level vai ser (em todos os diferenciais: Helicoptero, ArmasGiratorias, Missil, inimigos em TipoAndar.Direcao, inimigos pequenos com a vida desaparecendo, Oficina, Escurecer,...)
@@ -66,37 +48,38 @@ ps: alem de: 1 obstaculo surgindo estah sendo printado uma vez mais doq deveria
    -> mudar ControladorJogo._iniciarLevel(), ControladorPocaoTela._probabilidadeExistirPocaoFromLevel(...),  ControladorPocaoTela._pocoesPossiveisFromLevel(...), FormaGeometrica.draw(...)
  ps: no final do tempo: escrever quais sao os diferenciais/coisas dificeis
 
-- pesquisar: //AQUI
-
 - mudar Pocao baseado nas alteracoes feitas (em ArmazenadorInfoObjetos.info... - ex: tiro)
 - printar ObjComTiros depois dos tiros em si
 
 - Otimizar: tentar tirar Exatidao.ehQuaseExato(...)
 - ver se tem que clonar Info ou nao (acho que nao precisa clonar quando for passar InfoX por parametro porque no proprio construtor ele clona o que precisa (tem coisas que nao precisam ser clonadas))
+- tirar getters e setters desnecessarios
 
-- melhorar ponto vermelho da mira do AviaoMaster (fazer vetor de X pontos e ir printando cada vez menor e com menos opacidade: minimo de 50%) -> deixar isso dentro de PersonagemPrincipal e desenhar em draw
-- colocar retângulos de 2 cores pra mostrar quanto tempo falta pra poder atirar manualmente
-- imgMorreu dos tiros eh com fogo por cima (atingiu alguma coisa), printar uma vez antes de desaparecer
-
-- aprender sobre push() e pop()
-- Otimizacao: tentar nao dar delete em vertices e arestas e sim mudar seus valores (ver oq eh mais rapido, mudar cada vertice e aresta ou refazer)
-
-
-//DESIGN
+Coisas Importantes - DESIGN
 - Design: background inicio do jogo, fonte, pause, ganhou (Trofeu?Mario?)
-- no pause ter opção para mostrar controles e regras(??)
-- ver comentarios //TODO
+- mostrar controles no pause e no inicio do jogo
+- nao sumir com os objetos da tela quando o level acabar
 
-Geometria:
+Coisas Importantes - backend:
+- deixar tamanho proporcional a tela, e a velocidade proporcional ao frameRatePadrao
 - pensar um pouco na colisao de obstaculos (para onde eles vao quando colidem)
 - podemos saber se um ponto estah dentro de um quadrilatero (ou soh paralelogramo?) se estiver entre as retas de cima e de baixo e da direita e da esquerda (qual maneira eh mair rapida??)
+- Mover e fazer tais procedimentos antes de printa-los na tela?
+- fazer colisao entre inimigos e suportesAereos com obstaculo:
+  .se for TipoAndar = inverte direcao, inverter direcao
+  .se for TipoAndar = normal/direcao, parar?
+  .se for TipoAndar = Seguir, contornar
 - em Interseccao.vaiTerInterseccao(...) de formasComplexas e formasCompostas estao sendo criados paralelogramos desnecessarios (sobre parte da forma e de outros paralelogramos). pensar numa maneira de acabar com isso
+- transicao de objAparecendo para Inimigo e Obstaculo estah piscando
+ps: alem de: 1 obstaculo surgindo estah sendo printado uma vez mais doq deveria
 
+- pesquisar: //AQUI
+- ver comentarios //TODO
+- usar cloneDicionario, pesquisar "{"
+- Otimizacao: tentar nao dar delete em vertices e arestas e sim mudar seus valores (ver oq eh mais rapido, mudar cada vertice e aresta ou refazer)
 - fazer esquema para tiros sairem muito rapido, desacelerarem e depois ficarem constante
 
 - deixar todos os angulos como do ciclo trigonometrico??
-- deixar tamanho proporcional a tela, e a velocidade proporcional ao frameRatePadrao
-
 - mudar nome de PersonagemPrincipal (nao eh um personagem e tem soh 1 dele) e "pers" => AviaoUsuario
 - mudar centroMassa para centro e fazer alteracoes cabiveis
 - mudar "nave" para outra coisa

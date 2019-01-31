@@ -33,8 +33,9 @@ class FormaGeometricaBasica
     if (pontoReferenciaCentral === undefined)
     {
       //para aumentar ou diminui igual para os dois lados
-      this.x += (1.00 - porcentagem)*this._width/2;
-      this.y += (1.00 - porcentagem)*this._height/2;
+      const qtdCresceu = this._qtdCresceuMedidasMudarTamanho(porcentagem);
+      this.x -= qtdCresceu.width/2;
+      this.y -= qtdCresceu.height/2;
     }else
     {
       //para mudarTamanho baseado num outro ponto de referencia central sem ser o proprio
@@ -54,6 +55,11 @@ class FormaGeometricaBasica
       this.x = (this.x - pontoReferenciaCentral.x)*porcentagem + pontoReferenciaCentral.x;
       this.y = (this.y - pontoReferenciaCentral.y)*porcentagem + pontoReferenciaCentral.y;
     }
+  }
+  _qtdCresceuMedidasMudarTamanho(porcentagem)
+  {
+    return {width: (porcentagem - 1.00)*this.width,
+      height: (porcentagem - 1.00)*this.height};
   }
 
   //arestas
@@ -92,23 +98,23 @@ class FormaGeometricaBasica
   colocarParedeCima() { this.y = 0; }
   colocarNoMeioY() { this.y = this.yParaEstarNoMeio; }
   colocarParedeBaixo() { this.y = this.yParaEstarParedeBaixo; }
-
+  //
   colocarLugarEspecificado(x,y)
   {
     if (x !== undefined) this.x = x;
     if (y !== undefined) this.y = y;
   }
 
-  // toString
-  toString()
-  { return "{x: "+this.x+", y:"+this.y+"}\nwidth: " + this.width + "; height: " + this.height; }
-
+  //Metodos Obrigatorios
   //para clone()
   _procedimentosClone(ret, x, y)
   //muda ret por passagem por referencia
   {
     ret.colocarLugarEspecificado(x,y); //coloca no lugar certo
   }
+  //toString
+  toString()
+  { return "{x: "+this.x+", y:"+this.y+"}\nwidth: " + this.width + "; height: " + this.height; }
 }
 
 // Base para formasGeometricas COM atributo corImg
@@ -126,54 +132,141 @@ class FormaGeometrica extends FormaGeometricaBasica
 
   //imagem/cor
   get corImg()
-  {
-    if (this._ehCor === false)
-    // seta corImg com o caminho, entao no get retorna o caminho tambem
-      return this._caminhoImg;
-    else
-      return this._corImg;
-  }
+  { return this._corImg; }
   set corImg(corImg) // se for adicionar imagem tem que setar porcentagemImagem
   {
     this._ehCor = corImg.fill!==undefined || corImg.stroke!==undefined;
     if (this._ehCor)
     {
-      if (this._corImg === undefined)
+      if (this._corImg === undefined || this._corImg.drawingContext!==undefined/*se eh p5.Image*/)
         this._corImg = {};
 
       //isso impossibilita que se o corImg for mudado aqui ou la fora o outro seja mudado tambem
       this._corImg.stroke = corImg.stroke;
       this._corImg.fill = corImg.fill;
-
-      //deletar this._caminhoImg
-      delete this._caminhoImg;
     }else
-    {
-      this._corImg = loadImage(corImg); //se for imagem, passa soh o caminho dela como parametro
-      this._caminhoImg = corImg;
-    }
+    //se for imagem, passa soh o caminho dela como parametro
+      this._corImg = corImg;
   }
   set porcentagemImagem(porc)
   { this._porcentagemImagem = porc; }
   get ehCor()
   { return this._ehCor; }
 
-  //desenhar imagem
-  _desenharImagem(opacidade)
+ //imagens por cima da orginal
+  //adicionar e remover
+  adicionarImagemSecundaria(chave, img, porcWidth, porcLadosCentroImg)
+  // porcLadosCentroImg deve ser (x,y), sendo x a porcentagem de this.width onde estah xCentro, e ,y a porcentagem de this.height onde estah yCentro
   {
-    //opacidade
-    if (opacidade!==undefined)
-      tint(255, opacidade*255/*base 1 para base 255*/);
-    else
-      noTint();
+    if (this._imagensSecundarias === undefined)
+      this._imagensSecundarias = [];
 
-    //deixar imagem no meio da formaGeometrica
-    const widthImg = this.width*this._porcentagemImagem;
-    const heightImg = this.height*this._porcentagemImagem;
-    const x = this.x + (this.width-widthImg)/2;
-    const y = this.y + (this.height-heightImg)/2;
-    image(this._corImg, x, y, widthImg, heightImg);
+    let infoImgSec = {img: img, porcWidth: porcWidth, porcLadosCentroImg: porcLadosCentroImg, rotacao: 0};
+
+    //Medidas da Imagem
+    //descobrir height proporcionalmente a width:
+    //Regra de 3: [width da imagem] estah para [height da imagem] assim como [width] esta para [x]
+    infoImgSec.width = porcWidth * this.widthSemRotac;
+    infoImgSec.height = infoImgSec.img.height*infoImgSec.width/infoImgSec.img.width;
+
+    if (chave === undefined)
+    {
+      this._imagensSecundarias.push(infoImgSec);
+      return this._imagensSecundarias.length;
+    }else
+      this._imagensSecundarias[chave] = infoImgSec;
   }
+  removerImagemSecundaria(chave)
+  { delete this._imagensSecundarias[chave]; }
+  //rotacao
+  rotacionarImagemSecundaria(chave, qtdMuda)
+  {
+    this._imagensSecundarias[chave].rotacao = Angulo.entrePIeMenosPI(this._imagensSecundarias[chave].rotacao + qtdMuda);
+    //deixar "rotacao" sempre entre -PI a PI
+  }
+  getRotacaoImgSecundaria(chave) { return this._imagensSecundarias[chave].rotacao; }
+  //pontoCentral (usa porcLadosCentroImg)
+  getPontoCentralAbsolutoImagemSecundaria(chave) //ponto central absoluto (considerando o ponto mais em cima e da direita do canvas (0,0))
+  {
+    const porcLadosCentroImg = this._imagensSecundarias[chave].porcLadosCentroImg;
+    return new Ponto(this.x + porcLadosCentroImg.x*this.width, this.y + porcLadosCentroImg.y*this.height);
+  }
+  //medidas (width, height)
+  getMedidaImagemSecundaria(chave, ehWidth)
+  {
+    if (ehWidth)
+      return this._imagensSecundarias[chave].width;
+    else
+      return this._imagensSecundarias[chave].height;
+  }
+  //desenhar
+  _desenharImagensSecundarias(opacidade)
+  {
+    let jahSetouOpacidade = false;
+
+    //porque usei for...in aqui? find "*PORQUE FOR...IN EM IMAGENSSECUNDARIAS"
+    for (let chave in this._imagensSecundarias)
+      if (typeof this._imagensSecundarias[chave] !== 'function')
+      {
+        const infoImgSec = this._imagensSecundarias[chave];
+
+        //opacidade (ZERO ou 1 vez por metodo)
+        if (!jahSetouOpacidade)
+        {
+          push(); //por causa da opacidade
+          this._colocarOpacidadeParaImg(opacidade); //opacidade imagens secundarias
+          jahSetouOpacidade = true;
+
+          if (this.anguloRotacionouTotal!==0)
+          {
+            push();
+            translate(this.centroMassa.x, this.centroMassa.y);
+            rotate(this._anguloRotacionouTotal);
+          }
+        }
+
+        //desenhar imagem
+        let centroX = infoImgSec.porcLadosCentroImg.x*this.width;
+        let centroY = infoImgSec.porcLadosCentroImg.y*this.height;
+        if (this.anguloRotacionouTotal!==0)
+        {
+          centroX -= this.distXCentroAbs;
+          centroY -= this.distYCentroAbs;
+        }else
+        {
+          centroX += this.x;
+          centroY += this.y;
+        }
+
+        this._desenharImagemRotacionada(infoImgSec.img, infoImgSec.rotacao,
+          centroX, centroY, infoImgSec.width, infoImgSec.height);
+
+        if (this.anguloRotacionouTotal!==0)
+          pop();
+      }
+
+    if (jahSetouOpacidade)
+    {
+      pop(); //por causa da opacidade
+      if (this.anguloRotacionouTotal!==0)
+        pop(); //por causa do rotacionar da formaGeometrica
+    }
+  }
+  _mudarTamanhoImgsSecundarias(porcentagem)
+  {
+    //porque usei for...in aqui? find "*PORQUE FOR...IN EM IMAGENSSECUNDARIAS"
+    for (let chave in this._imagensSecundarias)
+      if (typeof this._imagensSecundarias[chave] !== 'function')
+      {
+        const infoImgSec = this._imagensSecundarias[chave];
+        //medidas
+        infoImgSec.width *= porcentagem;
+        infoImgSec.height *= porcentagem;
+      }
+  }
+
+  //PARA DRAW:
+  //opacidade e cores
   _colocarCores(opacidade)
   {
     let strokeAtual;
@@ -194,60 +287,23 @@ class FormaGeometrica extends FormaGeometricaBasica
     else
       stroke(strokeAtual);
   }
-
- //imagens por cima da orginal
-  //adicionar e remover
-  adicionarImagemSecundaria(chave, img, width, height, pontoCentral)
-  // pontoCentral deve ser relativo ao (x,y) da formaGeometrica em questao
+  //opacidade e imagem
+  _colocarOpacidadeParaImg(opacidade)
   {
-    if (this._imagensSecundarias === undefined)
-      this._imagensSecundarias = [];
-
-    const infoImgSec = {img: loadImage(img), caminhoImg: img/*pra clone*/, width: width, height: height, pontoCentral: pontoCentral, rotacao: 0};
-    if (chave === undefined)
-    {
-      this._imagensSecundarias.push(infoImgSec);
-      return this._imagensSecundarias.length;
-    }else
-      this._imagensSecundarias[chave] = infoImgSec;
+    //opacidade
+    if (opacidade!==undefined)
+      tint(255, opacidade*255/*base 1 para base 255*/);
   }
-  removerImagemSecundaria(chave)
-  { delete this._imagensSecundarias[chave]; }
-  //rotacao
-  rotacionarImagemSecundaria(chave, qtdMuda)
+  //imagem
+  _desenharImagem()
   {
-    this._imagensSecundarias[chave].rotacao = Angulo.entrePIeMenosPI(this._imagensSecundarias[chave].rotacao + qtdMuda);
-    //deixar "rotacao" sempre entre -PI a PI
+    //deixar imagem no meio da formaGeometrica
+    const widthImg = this.width*this._porcentagemImagem;
+    const heightImg = this.height*this._porcentagemImagem;
+    const x = this.x + (this.width-widthImg)/2;
+    const y = this.y + (this.height-heightImg)/2;
+    image(this._corImg, x, y, widthImg, heightImg);
   }
-  getRotacaoImgSecundaria(chave) { return this._imagensSecundarias[chave].rotacao; }
-  //pontoCentral
-  getPontoCentralImagemSecundaria(chave) //ponto central relativo (considerando o ponto mais em cima e da direita da forma geometrica (0,0))
-  { return this._imagensSecundarias[chave].pontoCentral; }
-  getPontoCentralAbsolutoImagemSecundaria(chave) //ponto central absoluto (considerando o ponto mais em cima e da direita do canvas (0,0))
-  { return new Ponto(this.x, this.y).mais(this._imagensSecundarias[chave].pontoCentral); }
-  //medidas (width, height)
-  getMedidaImagemSecundaria(chave, ehWidth)
-  {
-    if (ehWidth)
-      return this._imagensSecundarias[chave].width;
-    else
-      return this._imagensSecundarias[chave].height;
-  }
-  //desenhar
-  _desenharImagensSecundarias()
-  {
-    //porque usei for...in aqui? find "*PORQUE FOR...IN EM IMAGENSSECUNDARIAS"
-    for (let chave in this._imagensSecundarias)
-      if (typeof this._imagensSecundarias[chave] !== 'function')
-      {
-        const infoImgSec = this._imagensSecundarias[chave];
-        const centroX = this.x + infoImgSec.pontoCentral.x;
-        const centroY = this.y + infoImgSec.pontoCentral.y;
-        this._desenharImagemRotacionada(infoImgSec.img, infoImgSec.rotacao, centroX, centroY,
-          infoImgSec.width, infoImgSec.height);
-      }
-  }
-
   // para desenhar this._corImg quando a formaGeometrica for rotacionada e this._ehCor E para desenhar imagens secundarias
   _desenharImagemRotacionada(img, anguloRotacao, centroX, centroY, widthImg, heightImg,
     distXCentroAbs = widthImg/2, distYCentroAbs = heightImg/2)
@@ -277,7 +333,7 @@ class FormaGeometrica extends FormaGeometricaBasica
       {
         const infoImgSec = this._imagensSecundarias[chave];
         //adicionar imagem secundaria
-        formaGeom.adicionarImagemSecundaria(chave, infoImgSec.caminhoImg, infoImgSec.width, infoImgSec.height, infoImgSec.pontoCentral);
+        formaGeom.adicionarImagemSecundaria(chave, infoImgSec.img, infoImgSec.porcWidth, infoImgSec.porcLadosCentroImg);
         //rotaciona como ela estava
         formaGeom.rotacionarImagemSecundaria(chave, infoImgSec.rotacao);
       }
@@ -441,6 +497,10 @@ class FormaGeometricaSimples extends FormaGeometrica
   { return this._getMedidasSemRotacionar().width/2; }
   get distYCentroAbs()
   { return this._getMedidasSemRotacionar().height/2; }
+  get widthSemRotac()
+  { return this._getMedidasSemRotacionar().width; }
+  get heightSemRotac()
+  { return this._getMedidasSemRotacionar().height; }
   //rotacionar
   setRotacao(anguloRotacaoTotal, centroRotacao)
   //retorna formaGeometrica rotacionada
@@ -478,7 +538,7 @@ class FormaGeometricaSimples extends FormaGeometrica
       new Ponto(this.x+this.width, this.y), //(x+w, y)
       new Ponto(this.x+this.width, this.y+this.height), //(x+w, y+h)
       new Ponto(this.x, this.y+this.height), //(x, y+h)
-      this.corImg, this._porcentagemImagem
+      this._corImg, this._porcentagemImagem
     );
     this._passarImagensSecundariasParaOutraForma(quadrilatero); //passa imagens secundarias dessa forma para o quadrilatero
     // nao precisa colocarLugarEspecificado() pois jah estah no lugar certo
@@ -597,23 +657,31 @@ class FormaGeometricaSimples extends FormaGeometrica
   //draw
   draw(opacidade)
   {
+    push(); //opacidadeImg ou fill/stroke
     if (this._ehCor)
     {
+      //cor e opacidade
       this._colocarCores(opacidade);
       //desenhar retangulo
       rect(this._x, this._y, this.width, this.height);
     }else
-    //desenhar a imagem
-      this._desenharImagem(opacidade);
+    {
+      //opacidade
+      this._colocarOpacidadeParaImg(opacidade);
+      //desenhar a imagem
+      this._desenharImagem();
+    }
+    pop(); //opacidadeImg ou fill/stroke
 
-    this._desenharImagensSecundarias();
+    //imagens secundarias
+    this._desenharImagensSecundarias(opacidade);
   }
   // para quando forma estiver sido rotacionada tambem funcionar
-  _desenharImagem(opacidade)
+  _desenharImagem()
   {
     if (this._anguloRotacionouTotal===undefined || Exatidao.ehQuaseExato(this._anguloRotacionouTotal,0))
     // se nao rotacionou nada (ou estah como se nao tivesse rotacionado), printa normal (por otimizacao de tempo)
-      super._desenharImagem(opacidade);
+      super._desenharImagem();
     else
     {
       const medidasSemRotacionar = this._getMedidasSemRotacionar();
@@ -630,7 +698,7 @@ class FormaGeometricaSimples extends FormaGeometrica
   {
     super._procedimentosClone(ret,x,y); //coloca lugar especificado + passa imagens secundarias dessa forma para o clone
 
-    if (this._anguloRotacionouTotal !== undefined)
+    if (this.anguloRotacionouTotal !== 0)
       ret._anguloRotacionouTotal = this._anguloRotacionouTotal;
       //jah estah rotacionado (entao soh precisa colocar variaveis de rotacao no ret)
   }
@@ -663,12 +731,19 @@ class Retangulo extends FormaGeometricaSimples
   {
     if (porcentagem < 0) porcentagem = 0;
 
+    //imagens secundarias (tem que ser antes de tudo mesmo)
+    this._mudarTamanhoImgsSecundarias(porcentagem);
+
     //deixar (x,y) certo de acordo com o pontoReferenciaCentral
     this._setXYMudarTamanho(porcentagem, pontoReferenciaCentral);
 
     //mudar tamanho
     this._width *= porcentagem;
     this._height *= porcentagem;
+
+    // se ele cresceu com pontoReferenciaCentral sendo seu proprio centroMassa, centroMassa nao muda (ele vai crescer igualmente para todos os lados)
+    if (pontoReferenciaCentral!==undefined)
+      delete this._centroMassa;
 
     this._mudouArestasVertices();
     return this._width > 0 && this._height > 0;
@@ -677,7 +752,7 @@ class Retangulo extends FormaGeometricaSimples
   //clone
   clone(x,y)
   {
-    let ret = new Retangulo(this._x, this._y, this._width, this._height, this.corImg, this._porcentagemImagem);
+    let ret = new Retangulo(this._x, this._y, this._width, this._height, this._corImg, this._porcentagemImagem);
     this._procedimentosClone(ret, x, y) //coloca lugar especificado + passa imagens secundarias dessa forma para o clone + rotaciona o clone como esse this estah
     return ret;
   }
@@ -711,11 +786,18 @@ class Quadrado extends FormaGeometricaSimples
   {
     if (porcentagem < 0) porcentagem = 0;
 
+    //imagens secundarias (tem que ser antes de tudo mesmo)
+    this._mudarTamanhoImgsSecundarias(porcentagem);
+
     //deixar (x,y) certo de acordo com o pontoReferenciaCentral
     this._setXYMudarTamanho(porcentagem, pontoReferenciaCentral);
 
     //muda tamanho
     this._tamLado *= porcentagem;
+
+    // se ele cresceu com pontoReferenciaCentral sendo seu proprio centroMassa, centroMassa nao muda (ele vai crescer igualmente para todos os lados)
+    if (pontoReferenciaCentral!==undefined)
+      delete this._centroMassa;
 
     this._mudouArestasVertices();
     return this._tamLado > 0;
@@ -724,7 +806,7 @@ class Quadrado extends FormaGeometricaSimples
   //clone
   clone(x,y)
   {
-    let ret = new Quadrado(this._x, this._y, this._tamLado, this.corImg, this._porcentagemImagem);
+    let ret = new Quadrado(this._x, this._y, this._tamLado, this._corImg, this._porcentagemImagem);
     this._procedimentosClone(ret, x, y) //coloca lugar especificado + passa imagens secundarias dessa forma para o clone + rotaciona o clone como esse this estah
     return ret;
   }
@@ -752,7 +834,21 @@ class FormaGeometricaRotacionaTudo extends FormaGeometrica
   get distXCentroAbs()
   { return this._distXCentroAbs; }
   get distYCentroAbs()
-  { return this._distXCentroAbs; }
+  { return this._distYCentroAbs; }
+  get widthSemRotac()
+  {
+    if (this._widthSemRotacionar===undefined)
+      return this.width;
+    else
+      return this._widthSemRotacionar;
+  }
+  get heightSemRotac()
+  {
+    if (this._heightSemRotacionar===undefined)
+      return this.height;
+    else
+      return this._heightSemRotacionar;
+  }
 
   //rotacionar
   setRotacao(anguloRotacaoTotal, centroRotacao)
@@ -765,15 +861,28 @@ class FormaGeometricaRotacionaTudo extends FormaGeometrica
   }
 
   //desenhar imagem (pode ter rotacionado)
-  _desenharImagem(opacidade)
+  _desenharImagem()
   {
     if (this._anguloRotacionouTotal===undefined || Exatidao.ehQuaseExato(this._anguloRotacionouTotal,0))
     // se nao rotacionou nada (ou estah como se nao tivesse rotacionado), printa normal (por otimizacao de tempo)
-      super._desenharImagem(opacidade);
+      super._desenharImagem();
     else
       this._desenharImagemRotacionada(this._corImg, this._anguloRotacionouTotal,
         this.centroMassa.x, this.centroMassa.y, this._widthSemRotacionar, this._heightSemRotacionar,
         this._distXCentroAbs, this._distYCentroAbs);
+  }
+
+  //para mudarTamanho
+  _mudarTamanhoVariaveisRotacionar(porcentagem)
+  {
+    if (this._anguloRotacionouTotal !== undefined)
+    //se as variaveis rotacionar jah foram setadas
+    {
+      this._widthSemRotacionar *= porcentagem;
+      this._heightSemRotacionar *= porcentagem;
+      this._distXCentroAbs *= porcentagem;
+      this._distYCentroAbs *= porcentagem;
+    }
   }
 
   //para clone
@@ -974,32 +1083,8 @@ class FormaGeometricaComplexa extends FormaGeometricaRotacionaTudo
     // soh comeca a gastar a memoria dessa variavel quando usa pela primeira vez
     if (this._anguloRotacionouTotal === undefined) this._setarVariaveisRotacionar();
 
-    //Explicacao: para rotacionar uma formaComplexo precisa-se
-      // 1. em cada vertice, subtrair o centroRotacao da formaGeometrica (para deixar o centroRotacao sendo (0,0))
-      // 2. calcular cada x e y de cada vertice como ficaria depois de rotacionado se o centroRotacao fosse (0,0)
-        /* ps: a partir das formulas:
-        x' = cos(angulo)*x - sin(angulo)*y
-        y' = sin(angulo)*x + cos(angulo)*y */
-      // 3. somar o centroRotacao antigo (para voltar para a posicao certa)
-
-    this.vertices.forEach((vert,i) =>
-      {
-        // 1.
-        vert = vert.menos(centroRotacao);
-
-        // 2.
-        const x = vert.x;
-        const y = vert.y;
-        //ps: vert.x jah vai estar diferente quando for calcular o valor de vert.y
-        vert.x = Math.cos(angulo)*x - Math.sin(angulo)*y;
-        vert.y = Math.sin(angulo)*x + Math.cos(angulo)*y;
-
-        // 3.
-        vert = vert.mais(centroRotacao);
-
-        //colocar o valor correto e diferente agora no
-        this._mudarVertice(i, vert);
-      });
+    //Explicacao: para rotacionar uma formaComplexo precisa-se rotacionar todos os vertices com centroRotacao=centroMassa
+    this.vertices.forEach((vert,i) => this._mudarVertice(i, vert.rotacionar(angulo, centroRotacao)));
 
     // com o rotacionar os vertices podem ter ficado de maneira em que o primeiro nao eh o mais alto da esquerda
     // porem ainda estah em sentido horario, entao this.colocarVerticesOrdemCorreta() faria muitas coisas desnecessarias.
@@ -1038,6 +1123,9 @@ class FormaGeometricaComplexa extends FormaGeometricaRotacionaTudo
   {
     if (porcentagem < 0) porcentagem = 0;
 
+    //imagens secundarias (tem que ser antes de tudo mesmo)
+    this._mudarTamanhoImgsSecundarias(porcentagem);
+
     //deixar (x,y) certo de acordo com o pontoReferenciaCentral
     this._setXYMudarTamanho(porcentagem, pontoReferenciaCentral);
 
@@ -1064,7 +1152,12 @@ class FormaGeometricaComplexa extends FormaGeometricaRotacionaTudo
     if (this._heightSemRotacionar !== undefined)
       this._heightSemRotacionar *= porcentagem;
 
-    // centroMassa nao muda (ele vai crescer igualmente para todos os lados)
+    // se ele cresceu com pontoReferenciaCentral sendo seu proprio centroMassa, centroMassa nao muda (ele vai crescer igualmente para todos os lados)
+    if (pontoReferenciaCentral!==undefined)
+      delete this._centroMassa;
+
+    //para rotacao
+    this._mudarTamanhoVariaveisRotacionar(porcentagem);
 
     this._mudouArestasTriang();
     return this.width > 0 && this.height > 0;
@@ -1401,7 +1494,9 @@ class Triangulo extends FormaGeometricaComplexa
 
     if (porcentagem !== 1)
     {
-      delete this._area;
+      if (this._area!==undefined)
+      //quando se multiplica todos os lados por um numero a area de uma figura fica multiplicada por esse numero ao quadrado
+        this._area *= porcentagem*porcentagem;
       delete this._contrVertices;
     }
 
@@ -1410,25 +1505,32 @@ class Triangulo extends FormaGeometricaComplexa
 
   draw(opacidade)
   {
+    push(); //opacidade ou fill/stroke
     if (this._ehCor)
     {
-      //colocar cores
+      //cor e opacidade
       this._colocarCores(opacidade);
       //desenhar triangulo
       triangle(this._a.x, this._a.y,
         this._b.x, this._b.y,
         this._c.x, this._c.y);
     }else
-    //desenhar a imagem
-      this._desenharImagem(opacidade);
+    {
+      //opacidade
+      this._colocarOpacidadeParaImg(opacidade);
+      //desenhar a imagem
+      this._desenharImagem();
+    }
+    pop(); //opacidadeImg ou fill/stroke
 
-    this._desenharImagensSecundarias();
+    //imagens secundarias
+    this._desenharImagensSecundarias(opacidade);
   }
 
   //clone
   clone(x,y)
   {
-    let ret = new Triangulo(this._a.clone(), this._b.clone(), this._c.clone(), this.corImg, this._porcentagemImagem);
+    let ret = new Triangulo(this._a.clone(), this._b.clone(), this._c.clone(), this._corImg, this._porcentagemImagem);
     this._procedimentosClone(ret, x, y) //coloca lugar especificado + passa imagens secundarias dessa forma para o clone + rotaciona o clone como esse this estah
     return ret;
   }
@@ -1455,9 +1557,10 @@ class Quadrilatero extends FormaGeometricaComplexa
 
   draw(opacidade)
   {
+    push(); //opacidade ou fill/stroke
     if (this._ehCor)
     {
-      //colocar cores
+      //cor e opacidade
       this._colocarCores(opacidade);
       //desenhar o quadrilatero
       quad(this._a.x, this._a.y,
@@ -1465,16 +1568,22 @@ class Quadrilatero extends FormaGeometricaComplexa
            this._c.x, this._c.y,
            this._d.x, this._d.y);
     }else
-    //desenhar a imagem
-      this._desenharImagem(opacidade);
+    {
+      //opacidade
+      this._colocarOpacidadeParaImg(opacidade);
+      //desenhar a imagem
+      this._desenharImagem();
+    }
+    pop(); //opacidadeImg ou fill/stroke
 
-    this._desenharImagensSecundarias();
+    //imagens secundarias
+    this._desenharImagensSecundarias(opacidade);
   }
 
   //clone
   clone(x,y)
   {
-    let ret = new Quadrilatero(this._a.clone(), this._b.clone(), this._c.clone(), this._d.clone(), this.corImg, this._porcentagemImagem);
+    let ret = new Quadrilatero(this._a.clone(), this._b.clone(), this._c.clone(), this._d.clone(), this._corImg, this._porcentagemImagem);
     this._procedimentosClone(ret, x, y) //coloca lugar especificado + passa imagens secundarias dessa forma para o clone + rotaciona o clone como esse this estah
     return ret;
   }
@@ -1521,7 +1630,7 @@ class Paralelogramo extends Quadrilatero
   //clone
   clone(x,y)
   {
-    let ret = new Paralelogramo(this._a.clone(), this._b.clone(), this._c.clone(), this._d.clone(), this.corImg, this._porcentagemImagem, false);
+    let ret = new Paralelogramo(this._a.clone(), this._b.clone(), this._c.clone(), this._d.clone(), this._corImg, this._porcentagemImagem, false);
     // ps: colocarVerticesOrdemCorreta eh false porque mesmo se quando essa formaGeometrica era true, o construtor jah colocou os vertices jah estao na ordem certa (nao tem porque a proxima formaGeometrica fazer o mesmo)
     this._procedimentosClone(ret, x, y) //coloca lugar especificado + passa imagens secundarias dessa forma para o clone + rotaciona o clone como esse this estah
     return ret;
@@ -1552,7 +1661,8 @@ class FormaGeometricaComposta extends FormaGeometricaRotacionaTudo
 
     this._setarXY();
 
-    this.corImg = corImg;
+    if (corImg!==undefined)
+      this.corImg = corImg;
   }
 
   //getters
@@ -1565,7 +1675,7 @@ class FormaGeometricaComposta extends FormaGeometricaRotacionaTudo
   {
     if (this._ehCor === true)
       return this._formasGeometricas[0].corImg;
-    return this._caminhoImg;
+    return this._corImg;
   }
   set corImg(corImg)
   {
@@ -1650,25 +1760,29 @@ class FormaGeometricaComposta extends FormaGeometricaRotacionaTudo
   {
     if (porcentagem < 0) porcentagem = 0;
 
+    //imagens secundarias (tem que ser antes de tudo mesmo)
+    this._mudarTamanhoImgsSecundarias(porcentagem);
+
+    //mudar (x,y)
+    // obs: NAO "this.x" E "this.y" POIS AS FORMAS GEOMETRICAS JAH ESTAO NO LUGAR CERTO
+    const qtdCresceu = this._qtdCresceuMedidasMudarTamanho(porcentagem);
+    this._x -= qtdCresceu.width/2; //eh this.menorX
+    this._y -= qtdCresceu.height/2; //eh this.menorY
+
     // mudarTamanho das outras formasGeometricas
     const pontoReferenciaCentral = this.centroMassa;
     this._formasGeometricas.forEach(forma => forma.mudarTamanho(porcentagem, pontoReferenciaCentral));
 
-    //mudar (x,y)
-    // obs: NAO "this.x" E "this._y" POIS AS FORMAS GEOMETRICAS JAH ESTAO NO LUGAR CERTO
-    const qtdCrescerWidth = (porcentagem - 1.00)*this.width;
-    const qtdCrescerHeight = (porcentagem - 1.00)*this.height;
-    this._x -= qtdCrescerWidth/2; //eh this.menorX
-    this._y -= qtdCrescerHeight/2; //eh this.menorY
-
     // arrumar maiorX e maiorY
     if (this._maiorX !== undefined)
-      this._maiorX += qtdCrescerWidth/2;
+      this._maiorX += qtdCresceu.width/2;
     if (this._maiorY !== undefined)
-      this._maiorY += qtdCrescerHeight/2;
+      this._maiorY += qtdCresceu.height/2;
+
+    //para rotacao
+    this._mudarTamanhoVariaveisRotacionar(porcentagem);
 
     this._mudouArestasVertices();
-
     return this.width > 0 && this.height > 0;
   }
 
@@ -1768,9 +1882,19 @@ class FormaGeometricaComposta extends FormaGeometricaRotacionaTudo
     if (this._ehCor)
       this._formasGeometricas.forEach(formaGeom => formaGeom.draw(opacidade));
     else
+    {
+      push(); //opacidade
+
+      //opacidade
+      this._colocarOpacidadeParaImg(opacidade);
+      //desenhar a imagem
       this._desenharImagem();
 
-    this._desenharImagensSecundarias();
+      pop(); //opacidadeImg ou fill/stroke
+    }
+
+    //imagens secundarias
+    this._desenharImagensSecundarias(opacidade);
 
     //AQUI
     if (testando)

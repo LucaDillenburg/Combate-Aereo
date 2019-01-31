@@ -1,9 +1,9 @@
 //PERSONAGEM PRINCIPAL
-class InfoPersonagemPrincipal extends InfoObjetoComArmas
+class InfoPersonagemPrincipal extends InfoObjetoComArmas_e_Vida
 {
-  constructor(formaGeometrica, corImgMorto, vida, qtdAndar, infoArmas, qtdHelices, qtdsRotateDifHelices)
+  constructor(formaGeometrica, infoImgMorto, vida, qtdAndar, infoArmas, qtdHelices, qtdsRotateDifHelices)
   {
-    super(formaGeometrica, corImgMorto, vida, infoArmas, qtdHelices, qtdsRotateDifHelices);
+    super(formaGeometrica, infoImgMorto, vida, infoArmas, qtdHelices, qtdsRotateDifHelices);
     this.qtdAndar = qtdAndar;
   }
 }
@@ -12,7 +12,9 @@ const heightVidaUsuario = 30;
 const indexArmaNaoAutomaticaAviaoMasterPers = 0;
 const numeroAviaoMasterPers = 3; //eh o Terceiro aviao
 const maxRotacionarArmaGiratoriaPers = PI/24;
-class PersonagemPrincipal extends ObjetoComArmas
+//para painel
+const opacidadePainelPersObjsEmBaixo = 0.4;
+class PersonagemPrincipal extends ObjetoComArmas_e_Vida
 {
   constructor(infoPersonagemPrincipal, pontoInicial = {}, numeroAviao=1)
   {
@@ -29,6 +31,9 @@ class PersonagemPrincipal extends ObjetoComArmas
 
     //numero aviao (pra saber qual aviao eh). Comeca em ZERO
     this._numeroAviao = numeroAviao;
+
+    if (this.ehAviaoMaster)
+      this._vetorMiraArmaGiratoria = [];
   }
 
   get numeroAviao() { return this._numeroAviao; }
@@ -148,21 +153,24 @@ class PersonagemPrincipal extends ObjetoComArmas
       qtdMudarYPadrao: qtdAndarNaoSairY,
       qtdPodeMudarX : qtdAndarNaoSairX,
       qtdPodeMudarY : qtdAndarNaoSairY,
-      obstaculosBarram : []
+      objetosBarraram : []
     };
 
     //nao conseguiu andar nada (por colidir com parede)
     if (infoQtdMudar.qtdPodeMudarX === 0 && infoQtdMudar.qtdPodeMudarY === 0)
       return false;
 
-    //obstaculos
-    //colisao com obstaculos, vai definir quanto pode andar em cada direcao
+    //colisao com obstaculos e suportesAereos: vai definir quanto pode andar em cada direcao
     ControladorJogo.controladoresObstaculos.forEach(controladorObsts =>
       controladorObsts.qtdPersPodeAndar(infoQtdMudar));
-    //aqui tudo o que devia ser feito com obstaculos estah OK
+    ControladorJogo.controladorSuportesAereos.suportesAereos.forEach(suporteAereo => suporteAereo.qtdPersPodeAndar(infoQtdMudar));
 
     // quando personagem eh barrado, ele perde vida
-    infoQtdMudar.obstaculosBarram.forEach(obstaculoBarrou => obstaculoBarrou.tirarVidaPersBateu());
+    infoQtdMudar.objetosBarraram.forEach(objBarrou =>
+        {
+          if (objBarrou instanceof Obstaculo)
+            objBarrou.tirarVidaPersBateu();
+        });
 
     //nao conseguiu andar nada (por colidir com obstaculo)
     if (infoQtdMudar.qtdPodeMudarX === 0 && infoQtdMudar.qtdPodeMudarY === 0)
@@ -179,9 +187,10 @@ class PersonagemPrincipal extends ObjetoComArmas
           infoQtdMudar.qtdPodeMudarY);
       });
 
-    //controladoresTiros do jogo
-    ControladorJogo.controladoresTirosJogo.forEach(controladorTirosJogo =>
-      controladorTirosJogo.procObjVaiAndarColideTiros(this, infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY));
+    //tiros sem dono e dos suportesAereos
+    ControladorJogo.controladorOutrosTirosNaoPers.procObjVaiAndarColideTiros(this, infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
+    ControladorJogo.controladorSuportesAereos.suportesAereos.forEach(suporteAereo =>
+      suporteAereo.procObjVaiAndarColideTiros(this, infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY));
 
     //verifica se colidiu com pocao
     ControladorJogo.controladorPocaoTela.verificarPersPegouPocao(infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
@@ -217,9 +226,10 @@ class PersonagemPrincipal extends ObjetoComArmas
         controladorInims.procObjCriadoColidirTirosInims(this)
         controladorInims.procPersCresceu();
       });
-    //colisao com tiros do jogo
-    ControladorJogo.controladoresTirosJogo.forEach(controladorTirosJogo =>
-      controladorTirosJogo.procObjCriadoColideTiros(this)); //tiros jogo
+    //colisao com tiros sem dono
+    ControladorJogo.controladorOutrosTirosNaoPers.procObjCriadoColideTiros(this);
+    //colisao com tiros dos suportesAereos
+    ControladorJogo.controladorSuportesAereos.suportesAereos.forEach(suporteAereo => suporteAereo.procObjCriadoColideTiros(this));
     //colisao com obstaculos
     ControladorJogo.controladoresObstaculos.forEach(controladorObsts =>
       controladorObsts.procPersCresceu());
@@ -265,16 +275,37 @@ class PersonagemPrincipal extends ObjetoComArmas
   //ps: se for undefined, desenhar os dois
   {
     if (!desenharPainel || desenharPainel===undefined)
-      super.draw();
-
+      this._desenharParteCeu();
     if (desenharPainel || desenharPainel===undefined)
-    {
-      this._colocacarVidaTela();
-      this._controladorPocoesPegou.draw(); //desenha as pocoes que o personagem tem guardados
-    }
+      this._desenharPainelPers();
   }
-  _colocacarVidaTela()
+  _desenharParteCeu()
+  //desenhar coisas do personagem que estao no ceu (Personagem, Tiros e MiraArmaGiratoria)
   {
+    //desenha personagem e tiros
+    super.draw();
+
+    //mira arma giratoria
+    if (this.ehAviaoMaster)
+      this._desenharMiraArmaGiratoria();
+  }
+  _desenharPainelPers()
+  {
+    //vida
+    this._desenharVida();
+
+    //as pocoes que o personagem tem guardados
+    this._controladorPocoesPegou.draw();
+
+    //retangulos que simbolizam quanto falta para personagem poder atirar com arma nao automatica
+    if (this.ehAviaoMaster)
+      this._desenharFreqArmaNaoAutom();
+  }
+
+  _desenharVida()
+  {
+    push();
+
     stroke(0);
     fill(255);
     rect(0, height - heightVidaUsuario, width, heightVidaUsuario);
@@ -290,5 +321,104 @@ class PersonagemPrincipal extends ObjetoComArmas
     text("Vida: " + (this._vida.toFixed(Operacoes.primAlgoritDpVirgulaEhZero(this._vida)?0:1)) + "/" +
       (this._vidaMAX.toFixed(Operacoes.primAlgoritDpVirgulaEhZero(this._vidaMAX)?0:1)),
       5, height - heightVidaUsuario + fontSize);
+
+    pop();
+  }
+  _desenharFreqArmaNaoAutom()
+  {
+    push();
+
+    //constantes de front-end
+    const widthRet = 120;
+    const heightRet = 13;
+    const qtdPxlsEntreRet = 4;
+    const qtdPxlsAfastadoParede = 8;
+    const qtdPxlsAfastadoVida = 8;
+
+    //qtd retangulos
+    const freqFuncArmaNaoAutom = this._armas[indexArmaNaoAutomaticaAviaoMasterPers].freqFunc;
+    const qtdRetangulos = 5; //porque a frequencia eh muito grande e eu nao quero que desenhem tantos retangulos assim;
+    const count = (freqFuncArmaNaoAutom.count===0) ? freqFuncArmaNaoAutom.freq : freqFuncArmaNaoAutom.count; //porque quando
+    // para saber quantos retangulos prontos: Regra de 3 ([frequencia] estah para [qtdRetangulos] assim como [count] estah para [qtdRetProntos])
+    const qtdRetProntos = Math.floor(qtdRetangulos*count/freqFuncArmaNaoAutom.freq);
+
+    //(x,y)
+    const x = width - (widthRet + qtdPxlsAfastadoParede);
+    let y = height - (heightVidaUsuario + qtdPxlsAfastadoVida + heightRet);
+    let qtdMudaY = - (heightRet + qtdPxlsEntreRet);
+
+    //se tem algum objeto importante no espaco onde iria printar a frequencia do atirar nao automatico
+    let opacidadeRetangulos;
+    if (ControladorJogo.algumObjetoImportanteNesseEspaco(new Retangulo(x, y + qtdMudaY*(qtdRetangulos-1),
+      widthRet, qtdPxlsEntreRet*(qtdRetangulos-1) + heightRet*qtdRetangulos)))
+      opacidadeRetangulos = opacidadePainelPersObjsEmBaixo*255;
+    else {} //deixa undefined mesmo
+
+    for (let i = 0; i<qtdRetangulos; i++)
+    {
+      let corRet;
+      if (i < qtdRetProntos)
+      //desenhar retangulo pronto
+        corRet = {fill: color(13, 13, 13, opacidadeRetangulos), stroke: color(0,0,0, opacidadeRetangulos)};
+      else
+      //desenhar retangulo nao pronto
+        corRet = {fill: color(191, 191, 191, opacidadeRetangulos), stroke: color(176, 176, 176, opacidadeRetangulos)};
+
+      stroke(corRet.stroke);
+      fill(corRet.fill);
+      rect(x, y, widthRet, heightRet);
+
+      //o y muda
+      y += qtdMudaY;
+    }
+
+    pop();
+  }
+  _desenharMiraArmaGiratoria()
+  {
+    push();
+
+    //DESENHAR MIRA ARMA GIRATORIA
+    const maxMirasArmaGiratoria = 6;
+    const raioPrimeiraMira = 8;
+    const porcTamUltimaMira = 0.2;
+    const opacidadeUltimaMira = 0.3;
+    const corMira = color(230, 0, 0);
+    const strokeMira = color(128, 0, 0);
+
+    //se antes de adicionar a mira mais recente jah estah com o maximo de miras, tem que tirar a mais antiga (a primeira)
+    if (this._vetorMiraArmaGiratoria.length >= maxMirasArmaGiratoria)
+      this._vetorMiraArmaGiratoria.shift();
+
+    //a mira da arma giratoria mais recente estarah por ultimo
+    this._vetorMiraArmaGiratoria.push(new Ponto(mouseX, mouseY));
+
+    //tem que mudar o raio e a opacidade a cada miraArma desenhada
+      //raio
+    const qtdMudaTamanhoCadaMira = (raioPrimeiraMira - porcTamUltimaMira*raioPrimeiraMira)/(maxMirasArmaGiratoria-1);
+    let raioMiraAtual = raioPrimeiraMira - qtdMudaTamanhoCadaMira*(this._vetorMiraArmaGiratoria.length-1)/*raio mira mais antiga (primeira posicao do array)*/;
+      //opacidade
+    const qtdMudaOpacidadeCadaMira = (1 - opacidadeUltimaMira)/(maxMirasArmaGiratoria-1);
+    let opacidadeMiraAtual = 1 - qtdMudaOpacidadeCadaMira*(this._vetorMiraArmaGiratoria.length-1)/*opacidade mira mais antiga (primeira posicao do array)*/;
+      //stroke
+    stroke(strokeMira);
+    this._vetorMiraArmaGiratoria.forEach(miraArma =>
+      {
+        fill(color(red(corMira), green(corMira), blue(corMira), opacidadeMiraAtual*255));
+        ellipse(miraArma.x, miraArma.y, raioMiraAtual*2, raioMiraAtual*2);
+
+        //mudar raioMiraAtual e opacidadeMiraAtual
+        raioMiraAtual += qtdMudaTamanhoCadaMira;
+        opacidadeMiraAtual += qtdMudaOpacidadeCadaMira;
+      });
+
+    //soh para dar um efeito
+    const diametroCirculoFinal = 10;
+    const ultimaMiraArma = this._vetorMiraArmaGiratoria[this._vetorMiraArmaGiratoria.length-1];
+    noStroke();
+    fill("red");
+    ellipse(ultimaMiraArma.x, ultimaMiraArma.y, diametroCirculoFinal);
+
+    pop();
   }
 }

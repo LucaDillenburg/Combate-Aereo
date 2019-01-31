@@ -29,6 +29,8 @@ class Timer
     if (infoMudarTempo !== undefined)
     {
       this._infoMudarTempo = infoMudarTempo;
+      this._qtdMudarTempoObj = -(this._infoMudarTempo.estahEmMiliseg?1000:1)/frameRatePadrao;
+
       //seta valor inicial do tempo (tempo total)
       this._infoMudarTempo.obj[this._infoMudarTempo.atr] = tempo;
     }
@@ -46,10 +48,14 @@ class Timer
   // "constantes" para interval (se for true nao faz agora)
   static get ehIntervalFazerAoCriar() { return 1; }
   static get ehIntervalNaoFazerAoCriar() { return 2; }
+  //outros
+  get apenasEmLevelAtual()
+  { return this._apenasEmLevelAtual; }
+  get freq()
+  { return this._freq; }
 
-  get apenasEmLevelAtual() { return this._apenasEmLevelAtual; }
-
-  parar() { this._continuar = false; }
+  parar()
+  { this._continuar = false; }
 
   procDraw()
   //retorna se vai continuar no vetor de Timers
@@ -60,8 +66,7 @@ class Timer
 
     if (this._infoMudarTempo !== undefined)
     //atualiza a variavel de tempo do objeto
-      this._infoMudarTempo.obj[this._infoMudarTempo.atr] -= frameRatePadrao / (this._infoMudarTempo.estahEmMiliseg?1:1000);
-                            //isso acessa a variavel de nome this._infoMudarTempo.atr
+      this._infoMudarTempo.obj[this._infoMudarTempo.atr] += this._qtdMudarTempoObj; //acessa a variavel de nome this._infoMudarTempo.atr
 
     if (this._count >= this._freq)
     {

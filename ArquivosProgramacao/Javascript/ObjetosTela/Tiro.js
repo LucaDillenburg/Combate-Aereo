@@ -12,6 +12,9 @@ class ControladorTiros
     //vetor de tiros
     this._tiros = [];
 
+    //tiros mortos (sao printados depois de todos)
+    this._tirosMortos = [];
+
     this._funcCamadasColTirarTirosEsp = new FuncEmCamadas();
   }
 
@@ -40,10 +43,7 @@ class ControladorTiros
 
   //novo tiro
   adicionarTiroDif(pontoInicial, alteracoesAndarRotacionar, infoTiro)
-  // alteracoesAndarRotacionar: {direcao OU angulo, direcaoTiroAponta} (ver explicacao em AuxControladores)
-    //ps: [alteracoesAndarRotacionar.direcaoTiroAponta] deve ser a direcao que o tiro aponta (para rotaciona ele pra ele ficar apontando pra direcao certa).
-    // se [alteracoesAndarRotacionar.direcaoTiroAponta] for undefined e [alteracoesAndarRotacionar.direcao] nao, [alteracoesAndarRotacionar.direcaoTiroAponta] tera o valor de [alteracoesAndarRotacionar.direcao].
-    // Portanto, se quiser mudar a direcao do tiro andar mas nao quiser que ele seja rotacionado, deixar  [alteracoesAndarRotacionar.direcaoTiroAponta] = null
+  // alteracoesAndarRotacionar: {direcao({x,y} OU Direcao.) OU angulo} e {direcaoAnguloAponta, ehAngulo}
   //os atributos que forem nulos serao substituidos pelos padronizados e os que forem da classe Nulo serao substituidos por null (soh vai ser verificado se eh dessa classe se puder ser nulo)
   {
     const infoTiroPadraoAtual = this.infoTiroPadraoAtual;
@@ -54,14 +54,14 @@ class ControladorTiros
       ClasseAndar.qtdAndarDifMudarDir(infoTiro.infoAndar, alteracoesAndarRotacionar); //pode ter alteracoesAndarRotacionar ainda
     }else
     {
-      //infoTiro: formaGeometrica, corImgMorto, infoAndar, ehDoPers, mortalidade
+      //infoTiro: formaGeometrica, infoImgMorto, infoAndar, ehDoPers, mortalidade
 
       //infoAndar
       ClasseAndar.qtdAndarDif(infoTiro, infoTiroPadraoAtual, alteracoesAndarRotacionar);
 
       //corMorto, mortalidade
-      if (infoTiro.corImgMorto === undefined)
-        infoTiro.corImgMorto = infoTiroPadraoAtual.corImgMorto;
+      if (infoTiro.infoImgMorto === undefined)
+        infoTiro.infoImgMorto = infoTiroPadraoAtual.infoImgMorto;
       if (infoTiro.mortalidade === undefined)
         infoTiro.mortalidade = infoTiroPadraoAtual.mortalidade;
 
@@ -70,36 +70,11 @@ class ControladorTiros
         infoTiro.formaGeometrica = infoTiroPadraoAtual.formaGeometrica;
     }
 
+    //rotacionar tiro
+    AuxControladores.alteracoesRotacionarFormaGeometrica(infoTiro, alteracoesAndarRotacionar);
+
     // isso eh padrao do ControladorTiros
     infoTiro.ehDoPers = this._ehPersPrinc;
-
-    //rotacionar tiro
-    if (alteracoesAndarRotacionar !== undefined)
-    {
-      const vaiRotacionar =
-        (alteracoesAndarRotacionar.direcao!==undefined && alteracoesAndarRotacionar.direcaoTiroAponta!==null)
-        //se mudou direcao andar e vai mudar direcaoTiroAponta por padrao (se nao quiser que mude por padrao deixa-lo igual a null)
-        || alteracoesAndarRotacionar.direcaoTiroAponta!=undefined; //(undefined e null)
-        //se setou direcaoTiroAponta em si
-
-      if (vaiRotacionar)
-      {
-        //colocar valor padrao em direcaoTiroAponta se for undefined mas quiser rotacionar
-        if (alteracoesAndarRotacionar.direcaoTiroAponta===undefined)
-          alteracoesAndarRotacionar.direcaoTiroAponta = alteracoesAndarRotacionar.direcao;
-
-        let anguloRotacaoFinal;
-        switch(alteracoesAndarRotacionar.direcaoTiroAponta)
-        // cima, baixo, direita, esquerda
-        {
-          case Direcao.Cima:  anguloRotacaoFinal = 0; break; //0
-          case Direcao.Baixo:  anguloRotacaoFinal = PI; break; //180
-          case Direcao.Direita:  anguloRotacaoFinal = PI/2; break; //90
-          case Direcao.Esquerda:  anguloRotacaoFinal = -PI/2; break; //-90
-        }
-        infoTiro.formaGeometrica.setRotacao(anguloRotacaoFinal); //nao precisa receber o retorno pois, como mudou soh angulos de direcao, com certeza soh alterou o this (mesmo se for FormaGeometricaSimples)
-      }
-    }
 
     this._adicionarTiro(new Tiro(pontoInicial, infoTiro));
   }
@@ -185,7 +160,7 @@ class ControladorTiros
 
     //concatenar com controladorTirosJogo se tiros eram originalmente do personagem, e com controladorTiros do personagem se nao eram do personagem
     if (this._ehPersPrinc)
-      ControladorJogo.controladoresTirosJogo[0].concatenarTiros(this);
+      ControladorJogo.controladorOutrosTirosNaoPers.concatenarTiros(this);
     else
       ControladorJogo.pers.getControladorTiros(0).concatenarTiros(this);
 
@@ -218,17 +193,26 @@ class ControladorTiros
   }
 
 	//draw
-    //desenha todos os tiros
-	draw()
+	draw() //desenha os tiros vivos
 	{
-    this._tiros.forEach((tiro, index) =>
+    this._tiros.forEach(tiro =>
       {
-        tiro.draw();
-        //se tiro jah morreu (desenhar ele a ultima vez e depois remove-lo do vetor)
-        if (!tiro.vivo)
-          this._removerTiro(index);
+        if (tiro.vivo)
+          tiro.draw();
       });
 	}
+  drawMortos() //desenha os tiros mortos
+  {
+    this._tiros.forEach((tiro, index) =>
+      {
+        if (!tiro.vivo)
+        {
+          const removerDoVetor = tiro.draw();
+          if (removerDoVetor)
+            this._removerTiro(index);
+        }
+      });
+  }
 
   //auxiliar
   _removerTiro(index)
@@ -242,17 +226,17 @@ class ControladorTiros
 //TIRO
 class InfoTiro extends InfoObjetoTela
 {
-  constructor(formaGeometrica, corImgMorto, infoAndar, mortalidade, ehDoPers)
+  constructor(formaGeometrica, infoImgMorto, infoAndar, mortalidade, ehDoPers)
   //ehDoPers: soh vai ser preenchido pelo ControladorTiros
   {
-    super(formaGeometrica, corImgMorto);
+    super(formaGeometrica, infoImgMorto);
     this.infoAndar = infoAndar;
     this.mortalidade = mortalidade;
     this.ehDoPers = ehDoPers;
   }
 
   clone()
-  { return new InfoTiro(this.formaGeometrica, AuxInfo.cloneImgCor(this.corImgMorto), this.infoAndar.clone(), this.mortalidade, this.ehDoPers); }
+  { return new InfoTiro(this.formaGeometrica, this.infoImgMorto.clone(), this.infoAndar.clone(), this.mortalidade, this.ehDoPers); }
 }
 class Tiro extends ObjetoTela
 {
@@ -283,6 +267,8 @@ class Tiro extends ObjetoTela
       // soh os tiros do personagem verificam colisao com inimigos (tem que passar por todos de qualquer jeito nao apenas saber se algum colidiu)
       colidiu = ControladorJogo.controladoresInimigos.reduce((acc, controladorInims) =>
         controladorInims.procTiroCriadoColidirInims(this) || acc, false/*valor inicial*/);
+      colidiu = ControladorJogo.controladorSuportesAereos.suportesAereos.reduce((acc, suporteAereo) =>
+        suporteAereo.procColidirTiroCriado(this) || acc, colidiu/*valor inicial*/);
     }
 
     //verificar colisao com obstaculos (tem que passar por todos de qualquer jeito nao apenas saber se algum colidiu)
@@ -358,8 +344,12 @@ class Tiro extends ObjetoTela
       controladorObsts.verifTiroVaiAndarColideObsts(info, this));
 
     if (this._ehDoPers) //tiros de inimigos nao colidem com inimigos
+    {
       ControladorJogo.controladoresInimigos.forEach(controladorInims =>
         controladorInims.verifTiroVaiAndarColideInims(info, this));
+      ControladorJogo.controladorSuportesAereos.suportesAereos.forEach(suporteAereo =>
+        ClasseAndar.infoQtdAndarNaoColidir(info, suporteAereo, this, true));
+    }
 
     if (this._ehDoPers)
       return this._andarEhPers(info, qtdAndar.x, qtdAndar.y);
@@ -393,8 +383,8 @@ class Tiro extends ObjetoTela
       this._formaGeometrica.y += info.qtdPodeAndarY;
     }
 
-    //soh verifica se tiro saiu agora pois o tiro pode acertar o inimigo fora da tela
-    if (Tela.objSaiuTotalmente(this._formaGeometrica))
+    //soh verifica se continua no vetor agora pois o tiro pode acertar o inimigo fora da tela
+    if (!AuxObjetos.continuaNoVetor(this))
       return false;
 
     if (info.objsColidiram.length > 0) //se colidiu com inimigo ou obstaculo
@@ -440,7 +430,7 @@ class Tiro extends ObjetoTela
     }
 
     //retorna se nao saiu da tela
-    return !Tela.objSaiuTotalmente(this._formaGeometrica);
+    return AuxObjetos.continuaNoVetor(this);
   }
   _qntEntra(qtdAndarX, qtdAndarY, menorWidth, menorHeight)
   // eh proporcional a qtdAndar

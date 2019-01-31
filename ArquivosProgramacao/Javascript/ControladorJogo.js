@@ -1,6 +1,6 @@
 const EstadoJogo = {"NaoComecou":0, "Jogando":1, "Pausado":2, "Morto":3, "Ganhou": 4};
 
-const testando = true;
+const testando = false;
 
 // ControladorJogo eh static class porque sempre soh vai existir 1 e eh mais pratico (pq nao precisar ficar passando os objetoTela necessarios, nem level, estadoJogo e outros getters)
 class ControladorJogo
@@ -16,7 +16,7 @@ class ControladorJogo
     ControladorJogo._estadoJogo = EstadoJogo.NaoComecou;
     //quando personagem mudar estado do jogo (pausar), novo atributo: ControladorJogo._estadoJogoAnterior
 
-    //futuros atributos: ControladorJogo._level, ControladorJogo._colocarLvXTela, ControladorJogo._personagemPrincipal, ControladorJogo._controladoresInimigos, ControladorJogo._controladoresObstaculos, ControladorJogo._controladoresTiros, ControladorJogo._controladorPocaoTela
+    //futuros atributos: ControladorJogo._level, ControladorJogo._colocarLvXTela, ControladorJogo._personagemPrincipal, ControladorJogo._controladoresInimigos, ControladorJogo._controladoresObstaculos, ControladorJogo._controladorOutrosTirosNaoPers, ControladorJogo._controladorSuportesAereos, ControladorJogo._controladorPocaoTela
   }
 
  //GETTER
@@ -32,10 +32,12 @@ class ControladorJogo
   { return ControladorJogo._personagemPrincipal; }
   static get controladoresInimigos()
   { return ControladorJogo._controladoresInimigos; }
+  static get controladorSuportesAereos()
+  { return ControladorJogo._controladorSuportesAereos; }
   static get controladoresObstaculos()
   { return ControladorJogo._controladoresObstaculos; }
-  static get controladoresTirosJogo()
-  { return ControladorJogo._controladoresTiros; }
+  static get controladorOutrosTirosNaoPers()
+  { return ControladorJogo._controladorOutrosTirosNaoPers; }
   static get controladorPocaoTela()
   { return ControladorJogo._controladorPocaoTela; }
   static get oficina()
@@ -54,6 +56,9 @@ class ControladorJogo
     //controlador pocao (1 pra todos os levels)
     ControladorJogo._controladorPocaoTela = new ControladorPocaoTela();
 
+    //controladorOutrosTirosNaoPers: para os tiros dos inimigos e dos suportes aereos que forem retirados do vetor nao sumirem
+    ControladorJogo._controladorOutrosTirosNaoPers = new ControladorTiros(null, false);
+
     //let's start baby...
     ControladorJogo._level = 1;
     ControladorJogo._iniciarLevel();
@@ -66,41 +71,36 @@ class ControladorJogo
     ControladorJogo._criandoLevel = true;
     ControladorJogo._colocarLvXTela = true; // para colocar "Level X" na tela
 
-    //Para tiros de inimigos e tiros da tela nao simplesmente sumirem:
+    //Para tiros de inimigos e suportes aereos do level anterior nao sumirem:
     //concatenar tiros dos inimigos e do jogo em controladorTiros[0] quando for passar de level (antes de deletar os controladoresTirosJogo e controladoresInimigos)
-    const controladorTirosTirosSemDono = new ControladorTiros(null, false);
     //se jah estah no 2o level em diante (antes do 1o level nao tinha nenhum tiro sem dono)
     if (ControladorJogo._level > 1)
     {
-      ControladorJogo._controladoresTiros.forEach(controladorTiros =>
-        controladorTirosTirosSemDono.concatenarTiros(controladorTiros)); // concatenar todos os tiros da tela nesse controlador
-      ControladorJogo._controladoresInimigos.forEach(controladorInims => /*cada um dos controladores*/
+      let concatTirosEmSemDono = objComArmas => /*cada um dos objetos com armas*/
         {
-          controladorInims.inimigos.forEach(inim => /*cada um dos inimigos dentro de cada controladores*/
-            inim.armas.forEach(arma => /*cada uma das armas de cada um dos inimigos dentro de cada controladores*/
-              controladorTirosTirosSemDono.concatenarTiros(arma.controlador)
-              // concatenar todos os tiros dos inimigos nesse controlador
-            ));
-        });
+          objComArmas.armas.forEach(arma => /*cada uma das armas do objeto com armas atual*/
+            ControladorJogo._controladorOutrosTirosNaoPers.concatenarTiros(arma.controlador)
+            // concatenar todos os tiros dessa arma em controladorOutrosTirosNaoPers
+          );
+        }
+
+      ControladorJogo._controladorSuportesAereos.suportesAereos.forEach(concatTirosEmSemDono);
+      ControladorJogo._controladoresInimigos.forEach(controladorInims => /*cada um dos controladores*/
+          controladorInims.inimigos.forEach(concatTirosEmSemDono));
     }
 
     //zerar tudo
     ControladorJogo._controladoresInimigos = [];
     ControladorJogo._controladoresObstaculos = [];
-    ControladorJogo._controladoresTiros = [];
+    ControladorJogo._controladorSuportesAereos = null; //soh os dos inimigos
     delete ControladorJogo._escuridao;
 
-    //mudar : ControladorJogo._controladoresInimigos, ControladorJogo._controladoresObstaculos, ControladorJogo._controladoresTiros
+    //mudar : ControladorJogo._controladoresInimigos, ControladorJogo._controladoresObstaculos, ControladorJogo._controladorSuportesAereos (opcional)
     // ATENCAO: NENHUM DESSES MEMBROS PODEM SER NULOS, POREM PODEM SER UM ARRAY DE ZERO POSICOES
-    //  (exceto ControladorJogo._controladoresTiros que tem que ter no minimo 1 posicao)
 
     //TODO: DEFINIR COMO CADA LEVEL VAI SER
       //1. Um inimigo central que se mexe de um lado para o outro atirando e obstaculos com vida passando da esquerda para a direita (saindo da tela)
       //2. mais inimigos nao essenciais
-
-    //Comum a todos os levels:
-    //primeiro controladorTiros da tela: para tiros de inimigos que morrem
-    ControladorJogo._controladoresTiros[0] = controladorTirosTirosSemDono;
 
     if (ControladorJogo._previaJogo)
     {
@@ -108,47 +108,64 @@ class ControladorJogo
       //obs: quando comecar o segundo level, depois de um certo tempo, mostrar o Sistema de Colisao!
     }else
     {
+      let length;
       switch(ControladorJogo._level)
       {
         case 1:
         case 2:
-        // inimigos
-          //Inimigo Normal Fraco (essencial)
-          const infoInimigo = ArmazenadorInfoObjetos.infoInim("AviaoNormalFraco", null);
-          const infoInimAparecendo = new InfoObjetoTelaAparecendo(false, false, new Ponto(0, -70)); //ObjetoAparecendo
-          ControladorJogo._controladoresInimigos[0] = new ControladorInimigos(0, infoInimigo, true, infoInimAparecendo);
+        {
+          // inimigos
+            //Inimigo Normal Medio (essencial)
+            const infoInimMedio = ArmazenadorInfoObjetos.infoInim("AviaoNormalMedio", {ficarParado: true});
+            const infoInimMedioAparec = new InfoObjetoTelaAparecendo(false, false, new Ponto(0, -70)); //ObjetoAparecendo
+            length = ControladorJogo._controladoresInimigos.push(new ControladorInimigos(0, infoInimMedio, true, infoInimMedioAparec));
+            ControladorJogo._controladoresInimigos[length-1].adicionarInimigo({posicaoX: PosicaoX.Meio, y: 15});
 
-          const qtdAfastadoParede = 20;
-          ControladorJogo._controladoresInimigos[0].adicionarInimigo({posicaoX: PosicaoX.Meio, y: 15});
-          ControladorJogo._controladoresInimigos[0].adicionarInimigo({posicaoX: PosicaoX.ParedeEsquerda, y: 15});
-          ControladorJogo._controladoresInimigos[0].adicionarInimigo({posicaoX: PosicaoX.ParedeDireita, y: 15});
+            //Inimigo Normal Fraco (essencial)
+            const infoInimFraco = ArmazenadorInfoObjetos.infoInim("AviaoNormalFraco");
+            const infoInimFracoAparec = new InfoObjetoTelaAparecendo(false, false, new Ponto(0, -300)); //ObjetoAparecendo
+            length = ControladorJogo._controladoresInimigos.push(new ControladorInimigos(0, infoInimFraco, true, infoInimFracoAparec));
+            const qtdAfastadoParede = 20;
+            ControladorJogo._controladoresInimigos[length-1].adicionarInimigoDif({posicaoX: PosicaoX.ParedeEsquerda, x: qtdAfastadoParede, y: 15},
+              {direcao: Direcao.Direita});
+            ControladorJogo._controladoresInimigos[length-1].adicionarInimigoDif({posicaoX: PosicaoX.ParedeDireita, x: -qtdAfastadoParede, y: 15},
+              {direcao: Direcao.Esquerda});
 
+          //suporte aereo
+            this._controladorSuportesAereos = new ControladorSuportesAereos(new InfoObjetoTelaAparecendo(true, true),
+              new InfoSuporteAereo(
+                new Retangulo(0,0, 30, 250, {fill: "blue"}), new InfoImgMorto([{fill: "black"}]), [new InfoArma(
+                  ArmazenadorInfoObjetos.infoTiro("TiroFraco", false, TipoAndar.Normal, {direcaoAnguloAponta: Direcao.Esquerda, ehAngulo: false}),
+                  10, -1, Direcao.Esquerda, 0, true, 0.2
+                )], 500));
+            this._controladorSuportesAereos.adicionarSuporteAereo({posicaoX: PosicaoX.ParedeDireita, x: -15, y: 100});
 
-        // obstaculos
-          //InfoObstaculo: formaGeometrica, corImgMorto, corImgEspecial, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers
-          let infoObst1 = new InfoObstaculo();
-          infoObst1.formaGeometrica = new Retangulo(undefined,undefined, 25, 200, {fill: "black"});
-          infoObst1.corImgMorto = {fill: "white"};
-          infoObst1.corImgEspecial = {fill: "green"};
-          infoObst1.infoAndar = new InfoAndar(0,0, TipoAndar.NaoSairTelaInvDir);
-          infoObst1.qtdTiraVidaBatePers = 1;
-          infoObst1.qtdTiraVidaNaoConsegueEmpurrarPers = 10;
-          const infoObst1Aparecendo = new InfoObjetoTelaAparecendo(true, true);
-          ControladorJogo._controladoresObstaculos[0] = new ControladorObstaculos(0, infoObst1, infoObst1Aparecendo);
-          ControladorJogo._controladoresObstaculos[0].adicionarObstaculo({posicaoY: PosicaoY.ParedeDireita, posicaoX: PosicaoX.Meio, x: -40, y: 20})
-          ControladorJogo._controladoresObstaculos[0].adicionarObstaculo({posicaoY: PosicaoY.ParedeEsquerda, posicaoX: PosicaoX.Meio, x: 40, y: 20})
+          // obstaculos
+            //InfoObstaculo: formaGeometrica, infoImgMorto, corImgEspecial, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers
+            /*let infoObst1 = new InfoObstaculo();
+            infoObst1.formaGeometrica = new Retangulo(undefined,undefined, 200, 25, {fill: "black"});
+            infoObst1.infoImgMorto = new InfoImgMorto([{fill: "white"}]);
+            infoObst1.corImgEspecial = {fill: "green"};
+            infoObst1.infoAndar = new InfoAndar(0,0, TipoAndar.NaoSairTelaInvDir);
+            infoObst1.qtdTiraVidaBatePers = 1;
+            infoObst1.qtdTiraVidaNaoConsegueEmpurrarPers = 10;
+            const infoObst1Aparecendo = new InfoObjetoTelaAparecendo(true, true);
+            length = ControladorJogo._controladoresObstaculos.push(new ControladorObstaculos(0, infoObst1, infoObst1Aparecendo));
+            ControladorJogo._controladoresObstaculos[length-1].adicionarObstaculo({posicaoX: PosicaoX.Meio, x: -130, posicaoY: PosicaoY.Meio, y: -10});
+            ControladorJogo._controladoresObstaculos[length-1].adicionarObstaculo({posicaoX: PosicaoX.Meio, x: 130, posicaoY: PosicaoY.Meio, y: -10});
+            */
 
-
-        // tiros tela (comecar a partir do index 1)
-          //tiros tela propriamente dito
-          ControladorJogo._controladoresTiros[1] = new ControladorTiros(ArmazenadorInfoObjetos.infoTiro("TiroFraco", false, Direcao.Direita), false);
-
-          break;
+          // suportes aereos
+          //...
+        }
+        break;
 
         case 10:
+        {
           //ganha nave espacial
           ControladorJogo._personagemPrincipal = ControladorJogo._personagemPrincipal.novaNave(ArmazenadorInfoObjetos.infoAviaoMasterPers);
-          break;
+        }
+        break;
 
         //se tiver mais levels colocar aqui, mudar em: ControladorJogo.tempoEstimadoLevel(), ControladorJogo._acabouLevel(), ControladorPocaoTela.pocoesPossiveisFromLevel(...), ControladorPocaoTela.probabilidadeFromLevel(...)
 
@@ -158,16 +175,20 @@ class ControladorJogo
       }
     }
 
+    //para nao ter que ficar verificando se eh undefined toda hora:
+    if (ControladorJogo._controladorSuportesAereos===null)
+      ControladorJogo._controladorSuportesAereos = new ControladorSuportesAereos();
+
     ControladorJogo._criandoLevel = false;
 
     // programar para o "Level X" da tela desaparecer
     new Timer(() => { ControladorJogo._colocarLvXTela = false; }, 3000);
     //adicionar timers do level atual depois que os ObjetosTela criados acabarem de aparecer
-    new Timer(() => { ControladorJogo._adicionarObjetosTmrLv(); }, tempoObjetoAparecerAntesIniciarLv);
+    new Timer(() => { ControladorJogo._adicionarTimersLevel(); }, tempoObjetoAparecerAntesIniciarLv);
 
     return true; //ainda tem mais levels
   }
-  static _adicionarObjetosTmrLv()
+  static _adicionarTimersLevel()
   {
     if (ControladorJogo._previaJogo)
     {
@@ -181,30 +202,23 @@ class ControladorJogo
       switch(ControladorJogo._level)
       {
         case 1:
-          //adicionar tiros horizontais
-          new Timer(() =>
-            {
-              ControladorJogo._controladoresTiros[1].adicionarTiroDif({posicaoX: PosicaoX.ParedeDireita, posicaoY: PosicaoY.Meio},
-                {direcao: Direcao.Esquerda});
-              ControladorJogo._controladoresTiros[1].adicionarTiroDif({posicaoX: PosicaoX.ParedeEsquerda, posicaoY: PosicaoY.Meio},
-                {direcao: Direcao.Direita});
-            }, 5000, Timer.ehIntervalFazerAoCriar); //jah chama esse procedimento agora
-
-          /*//inimigos
-          //criar controlador: Inimigo Segue PersPrincipal
-          const infoInimSegue = ArmazenadorInfoObjetos.infoInim("AviaoNormalFraco", undefined,
+        {
+          //Inimigo Segue PersPrincipal
+          //controlador
+          /*const infoInimSegue = ArmazenadorInfoObjetos.infoInim("AviaoNormalFraco", undefined,
             TipoAndar.SeguirPers, {mostrarVidaSempre: false}, true, {maiorAnguloMudanca: PI/100, porcVelCurva: 0.5});
           const infoInimSegueAparecendo = new InfoObjetoTelaAparecendo(true, true); //ObjetoAparecendo
-          ControladorJogo._controladoresInimigos[1] = new ControladorInimigos(0, infoInimSegue, false, infoInimSegueAparecendo);
-          //criar Timer
+          const lengthInimSeguem = ControladorJogo._controladoresInimigos.push(new ControladorInimigos(0, infoInimSegue, false, infoInimSegueAparecendo));
+          //Timer (adicionar inimigos)
           new Timer(() =>
             {
-              ControladorJogo._controladoresInimigos[1].adicionarInimigo({posicaoX: PosicaoX.ParedeEsquerda, x: 10, posicaoY: PosicaoY.Meio});
-              console.log(ControladorJogo._controladoresInimigos[1]._inimigosSurgindo[ControladorJogo._controladoresInimigos[1]._inimigosSurgindo.length-1].formaGeometrica.clone());
-            }, 5000, Timer.ehIntervalFazerAoCriar); */
-          break;
+              ControladorJogo._controladoresInimigos[lengthInimSeguem-1].adicionarInimigo({posicaoX: PosicaoX.ParedeEsquerda, x: 10, posicaoY: PosicaoY.Meio});
+            }, 50000, Timer.ehIntervalFazerAoCriar); */
+        }
+        break;
 
         case 2:
+        {
           // escuridao
           let infoEscuridao = new InfoEscuridao();
           infoEscuridao.tempoEscurecendo = 800;
@@ -218,7 +232,8 @@ class ControladorJogo
           infoEscuridao.desvioQtdRep = 0;
           infoEscuridao.infosImgsRaios = [];
           ControladorJogo._escuridao = new Escuridao(infoEscuridao);
-          break;
+        }
+        break;
       }
     }
 
@@ -276,12 +291,13 @@ class ControladorJogo
   //andar tiros
   static _andarTiros()
   {
-    //tiros do controlador jogo
-    ControladorJogo._controladoresTiros.forEach(controladorTiro => controladorTiro.andarTiros());
-
     //tiros do personagem
     ControladorJogo._personagemPrincipal.andarTiros();
 
+    //tiros sem dono
+    ControladorJogo._controladorOutrosTirosNaoPers.andarTiros();
+    //tiros dos suportes aereos
+    ControladorJogo._controladorSuportesAereos.suportesAereos.forEach(suporteAereo => suporteAereo.andarTiros());
     //tiros dos inimigos
     ControladorJogo._controladoresInimigos.forEach(controladorInims => controladorInims.andarTirosTodosInim());
   }
@@ -295,34 +311,36 @@ class ControladorJogo
     ControladorJogo._controladoresInimigos.forEach(controladorInims => controladorInims.andarInimigos());
   }
   //atirar automatico
-  static _atirarAutomatico() //automatico
+  static _atirarAutomatico()
   {
     //personagem
-    ControladorJogo._personagemPrincipal.atirar(Direcao.Cima);
+    ControladorJogo._personagemPrincipal.atirar();
 
     //inimigos
     ControladorJogo._controladoresInimigos.forEach(controladorInims => controladorInims.atirarTodosInim());
+    //suportes aereos
+    ControladorJogo._controladorSuportesAereos.suportesAereos.forEach(suporteAereo => suporteAereo.atirar());
   }
 
 
   //FUNCINALIDADES PERSONAGEM
- //andar
-  static andarPers(direcaoX, direcaoY) //setinhas
+  //andar
+  static andarPers(direcaoX, direcaoY) //setinhas ou WASD
   {
     //se estah jogando (jah comecou, nao estah pausado e o personagem nao morreu)
     if (ControladorJogo._estadoJogo === EstadoJogo.Jogando)
       ControladorJogo._personagemPrincipal.andar(direcaoX, direcaoY);
   }
 
- //tiro
-  static persPuxouGatilho() //atirar nao automatico
+  //tiro nao automatico
+  static persPuxouGatilho() //E
   {
     // para o aviao especial... (arma do index zero o personagem que atira manualmente)
     if (ControladorJogo._estadoJogo === EstadoJogo.Jogando && ControladorJogo._personagemPrincipal.ehAviaoMaster)
       ControladorJogo._personagemPrincipal.puxarGatilho(indexArmaNaoAutomaticaAviaoMasterPers);
   }
 
- //POCAO
+  //POCAO
   static ativarPocaoPers() //Q
   {
     //se estah jogando (jah comecou, nao estah pausado e o personagem nao morreu)
@@ -330,7 +348,7 @@ class ControladorJogo
       ControladorJogo._personagemPrincipal.controladorPocoesPegou.usarPocaoAtual();
   }
 
- //pausado/despausado
+  //pausado/despausado
   static mudarPausado() //enter
   {
     // pra pausar, o jogo jah tem que ter comecado
@@ -355,6 +373,39 @@ class ControladorJogo
     ControladorJogo._estadoJogo = EstadoJogo.Pausado;
   }
 
+  //para saber se painel personagem vai ser printado normal ou um pouco opaco
+  static algumObjetoImportanteNesseEspaco(retanguloEspaco)
+  // ObjetosImportantes: PersonagemPrincipal, Pocao, Inimigos (normal ou aparecendo), Obstaculos (normal ou aparecendo)
+  {
+    //PersonagemPrincipal
+    if (Interseccao.interseccaoComoRetangulos(retanguloEspaco, ControladorJogo._personagemPrincipal.formaGeometrica))
+      return true;
+
+    //Pocao
+    if (ControladorJogo._controladorPocaoTela.temObjPocao && Interseccao.interseccaoComoRetangulos(retanguloEspaco, ControladorJogo._controladorPocaoTela.objPocao.formaGeometrica))
+      return true;
+
+    //Inimigos
+    const interseccaoAlgumInim = ControladorJogo._controladoresInimigos.some(controladorInims =>
+      controladorInims.algumInimNesseEspaco(retanguloEspaco));
+    if (interseccaoAlgumInim)
+      return true;
+
+    //SuportesAereos
+    const interseccaoAlgumSuporteAereo = ControladorJogo._controladorSuportesAereos.suportesAereos.some(suporteAereo =>
+      Interseccao.interseccaoComoRetangulos(retanguloEspaco, suporteAereo.formaGeometrica));
+    if (interseccaoAlgumSuporteAereo)
+      return true;
+
+    //Obstaculos
+    const interseccaoAlgumObst = ControladorJogo._controladoresObstaculos.some(controladorObsts =>
+      controladorObsts.algumObstNesseEspaco(retanguloEspaco));
+    if (interseccaoAlgumObst)
+      return true;
+
+    // nao tem nenhum objeto importante nesse espaco
+    return false;
+  }
 
   //draw
   static draw()
@@ -363,30 +414,36 @@ class ControladorJogo
     {
       // TODO : design
       background(255);
-      stroke(0);
-      fill(0);
-      textSize(40);
-      text("Pressione [ESC] para começar a jogar", 50, 50);
+      push();
+        stroke(0);
+        fill(0);
+        textSize(40);
+        text("Pressione [ESC] para começar a jogar", 50, 50);
+      pop();
       return;
     }
     if (ControladorJogo._estadoJogo === EstadoJogo.Pausado) //pausa-se com [ENTER]
     {
       // TODO : design
       //deixa o que estava na tela de fundo mesmo
-      stroke(0);
-      fill(0);
-      textSize(40);
-      text("PAUSADO: Pressione [ENTER] para despausar", 50, 50);
+      push();
+        stroke(0);
+        fill(0);
+        textSize(40);
+        text("PAUSADO: Pressione [ENTER] para despausar", 50, 50);
+      pop();
       return;
     }else
     if (ControladorJogo._estadoJogo === EstadoJogo.Ganhou)
     {
       // TODO : design (falar que ele passou todas as fases ateh ultima fase existente)
       background("green");
-      stroke(0);
-      fill(0);
-      textSize(40);
-      text("VOCE GANHOU!!", 50, 50);
+      push();
+        stroke(0);
+        fill(0);
+        textSize(40);
+        text("VOCE GANHOU!!", 50, 50);
+      pop();
       return;
     }else
     if (ControladorJogo._estadoJogo === EstadoJogo.Morto) //animacao dele morrendo
@@ -429,15 +486,17 @@ class ControladorJogo
     }
 
     //desenha Inimigos e Obstaculos SURGINDO (ObjetosTela surgindo ficam atras dos que jah surgiram)
+    ControladorJogo._controladorSuportesAereos.drawSurgindo();
     for (let i = ControladorJogo._controladoresInimigos.length-1; i >= 0; i--)
       ControladorJogo._controladoresInimigos[i].drawSurgindo();
     for (let i = ControladorJogo._controladoresObstaculos.length-1; i >= 0; i--)
       ControladorJogo._controladoresObstaculos[i].drawSurgindo();
 
     // OBJETOS JAH INTERAGEM COM O MEIO:
-    // Tiros do Jogo
-    for (let i = ControladorJogo._controladoresTiros.length-1; i >= 0; i--)
-      ControladorJogo._controladoresTiros[i].draw();
+    // Tiros sem dono
+    ControladorJogo._controladorOutrosTirosNaoPers.draw();
+    //Suportes Aereos
+    ControladorJogo._controladorSuportesAereos.draw(); // tambem desenha os tiros
     // Inimigos (do ultimo para o primeiro pois o primeiro eh mais importante)
     for (let i = ControladorJogo._controladoresInimigos.length-1; i >= 0; i--)
       ControladorJogo._controladoresInimigos[i].draw(); // tambem desenha os tiros dos inimigos
@@ -450,14 +509,11 @@ class ControladorJogo
     //desenha o personagem e os tiros dele (sua vida e suas pocoes ainda nao)
     ControladorJogo._personagemPrincipal.draw(false);
 
-    //desenha mira do personagem (se tem ArmaGiratoria)
-    if (ControladorJogo.pers.ehAviaoMaster)
-    {
-      const diametro = 8;
-      noStroke();
-      fill("red");
-      ellipse(mouseX, mouseY, diametro);
-    }
+    //desenha os tiros mortos (eles tem que ficar por cima de todos os ObjetosTela)
+    ControladorJogo._controladorOutrosTirosNaoPers.drawMortos(); //sem dono
+    ControladorJogo._controladorSuportesAereos.suportesAereos.forEach(suporteAereo => suporteAereo.drawTirosMortos()); //de Suportes Aereos
+    ControladorJogo._controladoresInimigos.forEach(contrInims => contrInims.drawTirosMortosInims()); //de Inimigos
+    ControladorJogo._personagemPrincipal.drawTirosMortos(); //de PersonagemPrincipal
 
     if (ControladorJogo._escuridao !== undefined)
       ControladorJogo._escuridao.draw();
@@ -468,11 +524,12 @@ class ControladorJogo
 
     if (ControladorJogo._colocarLvXTela)
     {
-      textSize(40);
-      fill(0);
-      textAlign(CENTER, CENTER);
-      text("Level " + ControladorJogo._level, width/2, height/2);
-      textAlign(LEFT, BASELINE);
+      push();
+        textSize(40);
+        fill(0);
+        textAlign(CENTER, CENTER);
+        text("Level " + ControladorJogo._level, width/2, height/2);
+      pop();
     }
 
     if (ControladorJogo._personagemPrincipal.vivo && ControladorJogo._acabouLevel())

@@ -1,225 +1,10 @@
-//CONTROLADOR OBSTACULOS
-class ControladorObstaculos
-{
-  constructor(indexContr, infoObstaculoPadrao, infoObjAparecendoPadrao)
-  {
-    //padrao
-    this._infoObstaculoPadrao = infoObstaculoPadrao.clone();
-
-    //index controlador
-    this._indexContr = indexContr;
-
-    // obstaculos que interagem com o meio
-    this._obstaculos = [];
-    // obstaculos que NAO interagem com o meio (soh sao printados). para ObjetosTelaAparecendo:
-    this._obstaculosSurgindo = []; //fila
-    this._infoObjAparecendoPadrao = infoObjAparecendoPadrao;
-  }
-
-  get infoObstaculoPadrao()
-  { return this._infoObstaculoPadrao; }
-
-  //novo obstaculo
-  adicionarObstaculoDif(pontoInicial, alteracoesAndar, infoObst, infoObjAparecendo)
-  // alteracoesAndar: {direcao} ou {angulo} (ver explicacao em AuxControladores)
-  {
-    if (infoObst === undefined)
-    {
-      infoObst = this._infoObstaculoPadrao.clone(); //tem que fazer clone porque pode inverter qtdAndar
-      ClasseAndar.qtdAndarDifMudarDir(infoObst.infoAndar, alteracoesAndar); //pode ter alteracoesAndar ainda
-    }else
-    {
-      //InfoObstaculo: formaGeometrica, corImgMorto, corImgEspecial, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers, [vida]
-
-      //infoAndar
-      ClasseAndar.qtdAndarDif(infoObst, this._infoObstaculoPadrao, alteracoesAndar);
-
-      //qtdTiraVidaBatePers, qtdTiraVidaNaoConsegueEmpurrarPers, corImgMorto
-      if (infoObst.qtdTiraVidaBatePers === undefined)
-        infoObst.qtdTiraVidaBatePers = this._infoObstaculoPadrao.qtdTiraVidaBatePers;
-      if (infoObst.qtdTiraVidaNaoConsegueEmpurrarPers === undefined)
-        infoObst.qtdTiraVidaNaoConsegueEmpurrarPers = this._infoObstaculoPadrao.qtdTiraVidaNaoConsegueEmpurrarPers;
-      if (infoObst.corImgMorto === undefined)
-        infoObst.corImgMorto = this._infoObstaculoPadrao.corImgMorto;
-
-      //corImgEspecial (pode ser nulo)
-      if (infoObst.corImgEspecial === undefined)
-        infoObst.corImgEspecial = this._infoObstaculoPadrao.corImgEspecial;
-
-      //formaGeometrica
-      if (infoObst.formaGeometrica === undefined)
-        infoObst.formaGeometrica = this._infoObstaculoPadrao.formaGeometrica;
-
-      //[vida]
-      if (infoObst instanceof ObstaculoComVida && infoObst.vida === undefined)
-        infoObst.vida = this._infoObstaculoPadrao.vida;
-    }
-
-    this._adicionarObstaculo(pontoInicial, infoObst, infoObjAparecendo);
-  }
-  adicionarObstaculo(pontoInicial, infoObstaculo, infoObjAparecendo)
-  {
-		if (infoObstaculo === undefined)
-      infoObstaculo = this._infoObstaculoPadrao;
-
-    this._adicionarObstaculo(pontoInicial, infoObstaculo, infoObjAparecendo);
-  }
-  _adicionarObstaculo(pontoInicial, infoObstaculo, infoObjAparecendo)
-  {
-    //mesclar InfoObjAparecendo com InfoObjAparecendoPadrao
-    infoObjAparecendo = AuxControladores.infoObjAparecendoCorreto(infoObjAparecendo, this._infoObjAparecendoPadrao);
-    infoObjAparecendo.formaGeometrica = infoObstaculo.formaGeometrica;
-
-    //fazer ele ir aparecendo na tela aos poucos (opacidade e tamanho): ele nao interage com o meio ainda
-    this._obstaculosSurgindo.unshift(new ObjetoTelaAparecendo(pontoInicial, infoObjAparecendo, () =>
-      {
-        //remover esse obstaculo (o primeiro a ser adicionado sempre vai ser o primeiro a ser retirado pois o tempo que ele vai ficar eh sempre igual ao dos outros que estao la)
-        this._obstaculosSurgindo.pop();
-
-        //adicionar obstaculo que interage com o meio
-        let novoObstaculo;
-        if (infoObstaculo instanceof InfoObstaculoComVida) // se eh obstaculo com vida
-          novoObstaculo = new ObstaculoComVida(pontoInicial, infoObstaculo);
-        else
-          novoObstaculo = new Obstaculo(pontoInicial, infoObstaculo);
-
-        novoObstaculo.procCriou();
-
-        if (ControladorJogo.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.DeixarTempoMaisLento)
-        // PARTE DA EXECUCAO DA POCAO (deixar tempo mais lento do obstaculo que for adicionar)
-          novoObstaculo.classeAndar.mudarTempo(porcentagemDeixarTempoLento);
-        //adicionar novo obstaculo ao final do vetor
-    		this._obstaculos.push(novoObstaculo);
-      }));
-  }
-
-
- //andar
-  //andar objetos
-  andarObstaculos()
-  //os tres ultimos parametros para caso o obstaculo tenha que empurrar o personagem (pers.mudarXY)
-  {
-    this._obstaculos.forEach((obst, index) =>
-      {
-        if (obst.vivo)
-        {
-          //retorna se obstaculo continua no vetor de obstaculos (pode estar morto ou nao)
-          const continuaNoVetor = obst.andar();
-          if (!continuaNoVetor)
-          //nao aparece mais na tela
-            this._removerObst(index);
-        }
-      });
-  }
-
-  //para andar obstaculos
-  qtdAndarSemColidirOutrosObsts(info, obstQuerAndar)
-  //retorna se pode andar sem colidir
-  {
-    this._obstaculos.forEach(obstAtual =>
-      {
-        if (obstAtual !== obstQuerAndar && obstAtual.vivo)
-        //se nao eh o mesmo obst e estah vivo
-          ClasseAndar.infoQtdAndarNaoColidir(info, obstAtual, obstQuerAndar, false);
-      });
-  }
-
-  //para procCriou do obstaculo
-  vaiColidirOutroObst(obstVaiCriar)
-  {
-    return this._obstaculos.some(obstAtual =>
-      obstAtual.vivo && Interseccao.interseccao(obstVaiCriar.formaGeometrica, obstAtual.formaGeometrica));
-    //ps: obstVaiCriar nao estah em nenhum vetor de obstaculo de nenhum controlador ainda, entao nao precisa verificar se eh o obstaculo atual eh o proprio obstVaiCriar
-  }
-
-  //andar personagem (obstaculo barrando personagem)
-  qtdPersPodeAndar(infoQtdMudar)
-  {
-    //ve quanto que personagem pode mudar
-    this._obstaculos.forEach(obst =>
-      {
-        if (obst.vivo)
-          obst.qtdPersPodeAndar(infoQtdMudar);
-      });
-  }
-
-  //colisao com personagem quando cresce (POCAO)
-  procPersCresceu()
-  {
-    this._obstaculos.forEach(obst =>
-      {
-        if (obst.vivo)
-          obst.procVerifColisaoPersEstatico();
-      });
-  }
-
-  //colisao com tiro
-  verifTiroVaiAndarColideObsts(info, tiro)
-  //esses metodos funcionam por passagem por referencia
-  {
-    let inseriu = false;
-    this._obstaculos.forEach(obst =>
-      {
-        if (obst.vivo)
-          inseriu = ClasseAndar.infoQtdAndarNaoColidir(info, obst, tiro, true) || inseriu;
-      });
-    return inseriu;
-  }
-
-  //para quando um tiro for criado (ver se colide com obstaculos)
-  procObstsColidirTiroCriado(tiro)
-  {
-    let colidiu = false;
-    this._obstaculos.forEach(obst =>
-      {
-        if (obst.vivo)
-          colidiu = obst.procColidirTiroCriado(tiro) || colidiu;
-      });
-    return colidiu;
-  }
-
-  //POCAO
-  mudarTempo(porcentagem)
-  {
-    this._obstaculos.forEach(obst =>
-      {
-        if (obst.vivo)
-          obst.classeAndar.mudarTempo(porcentagem);
-      });
-  }
-
-	//draw
-    //desenha todos os obstaculos
-	draw() //soh obstaculos que jah interagem com o meio (nao obstaculosSurgindo)
-	{
-    this._obstaculos.forEach((obst, index) =>
-      {
-        obst.draw();
-
-        //se obstaculo jah morreu (desenhar ele a ultima vez e depois remove-lo do vetor de obstaculos)
-        if (!obst.vivo)
-          this._removerObst(index);
-      });
-	}
-  drawSurgindo() //desenha obstaculos surgindo
-  { this._obstaculosSurgindo.forEach(obstSurgindo => obstSurgindo.draw()); }
-
-  //auxiliar
-  _removerObst(index)
-  {
-    this._obstaculos.splice(index,1);
-    //remover 1 elemento a partir de indexInim
-  }
-}
-
-
 //OBSTACULO
 class InfoObstaculo extends InfoObjetoTela
 {
-  constructor(formaGeometrica, corImgMorto, corImgEspecial, infoAndar, qtdTiraVidaBatePers, qtdTiraVidaNaoConsegueEmpurrarPers)
-  //corImgEspecial pode ser nulo
+  constructor(formaGeometrica, infoImgMorto, corImgEspecial, infoAndar, qtdTiraVidaBatePers, qtdTiraVidaNaoConsegueEmpurrarPers)
+  //corImgEspecial pode ser nulo ou undefined
   {
-    super(formaGeometrica, corImgMorto);
+    super(formaGeometrica, infoImgMorto);
     this.corImgEspecial = corImgEspecial;
     this.infoAndar = infoAndar;
     this.qtdTiraVidaBatePers = qtdTiraVidaBatePers;
@@ -227,7 +12,7 @@ class InfoObstaculo extends InfoObjetoTela
   }
 
   clone()
-  { return new InfoObstaculo(this.formaGeometrica, AuxInfo.cloneImgCor(this.corImgMorto), AuxInfo.cloneImgCor(this.corImgEspecial), this.infoAndar.clone(), this.qtdTiraVidaBatePers, this.qtdTiraVidaNaoConsegueEmpurrarPers); }
+  { return new InfoObstaculo(this.formaGeometrica, this.infoImgMorto.clone(), AuxInfo.cloneImgCor(this.corImgEspecial), this.infoAndar.clone(), this.qtdTiraVidaBatePers, this.qtdTiraVidaNaoConsegueEmpurrarPers); }
 }
 class Obstaculo extends ObjetoTela
 {
@@ -261,9 +46,10 @@ class Obstaculo extends ObjetoTela
     //colisao com tiros dos inimigos (nao tira vida do obstaculo)
     ControladorJogo.controladoresInimigos.forEach(controladorInims =>
       controladorInims.procObjCriadoColidirTirosInims(this));
-    //colisao com tiros da tela (nao tira vida do obstaculo)
-    ControladorJogo.controladoresTirosJogo.forEach(controladorTirosJogo =>
-      controladorTirosJogo.procObjCriadoColideTiros(this, false));
+    //colisao com tiros dos suportesAereos (nao tira vida do obstaculo)
+    ControladorJogo.controladorSuportesAereos.suportesAereos.forEach(suporteAereo => suporteAereo.procObjCriadoColideTiros(this, false));
+    //colisao com tiros sem dono (nao tira vida do obstaculo)
+    ControladorJogo.controladorOutrosTirosNaoPers.procObjCriadoColideTiros(this, false);
 
     //verificar se colidiu com algum obstaculo
     const colidiuObst = ControladorJogo.controladoresObstaculos.some(controladorObsts =>
@@ -276,18 +62,12 @@ class Obstaculo extends ObjetoTela
   //para procCriou obstaculo e aumentar tamanho personagem (eh estatico pois nao nao qtdAndar envolvido)
   procVerifColisaoPersEstatico()
   {
-    if (Interseccao.interseccao(this._formaGeometrica, ControladorJogo.pers.formaGeometrica))
+    const conseguiuEmpurrarSePrec = AuxObjetos.procColisaoEstaticaObstComPers(this);
+    if (!conseguiuEmpurrarSePrec)
     {
-      //verifica qual direcao eh mais facil para o personagem sair de cima do obstaculo
-      const qtdAndar = Interseccao.menorQtdObjColidePararColidir(this._formaGeometrica, ControladorJogo.pers.formaGeometrica);
-      //tenta empurrar personagem para parar de colidir
-      const conseguiuAndarTudo = ControladorJogo.pers.mudarXY(qtdAndar.x, qtdAndar.y);
-      if (!conseguiuAndarTudo)
-      {
-        //obstaculo explode
-        this.morreu(true);
-        this.tirarVidaPersNaoConsegueEmpurrar();
-      }
+      //obstaculo explode
+      this.morreu(true);
+      this.tirarVidaPersNaoConsegueEmpurrar();
     }
   }
 
@@ -435,9 +215,10 @@ class Obstaculo extends ObjetoTela
     //verificar se vai bater em tiros do personagem
     ControladorJogo.pers.procObjVaiAndarColideTiros(this, qtdAndar.x, qtdAndar.y);
 
-    //colide com tiros dos inimigos e tiros da tela
-    ControladorJogo.controladoresTirosJogo.forEach(controladorTirosJogo =>
-      controladorTirosJogo.procObjVaiAndarColideTiros(this, qtdAndar.x, qtdAndar.y, false));
+    //colide com tiros dos inimigos, dos suportesAereos e dos sem dono
+    ControladorJogo.controladorOutrosTirosNaoPers.procObjVaiAndarColideTiros(this, qtdAndar.x, qtdAndar.y, false);
+    ControladorJogo.controladorSuportesAereos.suportesAereos.forEach(suporteAereo =>
+      suporteAereo.procObjVaiAndarColideTiros(this, qtdAndar.x, qtdAndar.y, false));
     ControladorJogo.controladoresInimigos.forEach(controladorInims =>
       controladorInims.procObjAndarColidirTirosInims(this, qtdAndar.x, qtdAndar.y, false));
 
@@ -470,34 +251,10 @@ class Obstaculo extends ObjetoTela
 
     this._especial = esp;
   }
-  draw()
-  {
-    //se estah morto jah estah com cor ou imagem de morto e
-    //se estah especial, jah estah com cor ou imagem de morto
-    super.draw();
-  }
 
  //outros...
   qtdPersPodeAndar(infoQtdMudar)
-  {
-    const qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(this._formaGeometrica, ControladorJogo.pers.formaGeometrica,
-      infoQtdMudar.qtdMudarXPadrao, infoQtdMudar.qtdMudarYPadrao, false);
-
-    //se personagem vai bater em um obstaculo mais perto (pelo menos em alguma direcao) que o outro
-    if ((qtdPodeAndar.x !== infoQtdMudar.qtdMudarXPadrao || qtdPodeAndar.y !== infoQtdMudar.qtdMudarYPadrao) && //se andou menos que alguma direcao em qtdAndarXYPadrao
-      (Math.abs(qtdPodeAndar.x) <= Math.abs(infoQtdMudar.qtdPodeMudarX) || Math.abs(qtdPodeAndar.y) <= Math.abs(infoQtdMudar.qtdPodeMudarY)))
-    {
-      // se esse obstaculo estah mais perto que os outros (nas duas direcoes
-      if (Math.abs(qtdPodeAndar.x) < Math.abs(infoQtdMudar.qtdPodeMudarX) && Math.abs(qtdPodeAndar.y) < Math.abs(infoQtdMudar.qtdPodeMudarY))
-        infoQtdMudar.obstaculosBarram = [];
-      infoQtdMudar.obstaculosBarram.push(this);
-
-      if (Math.abs(qtdPodeAndar.x) < Math.abs(infoQtdMudar.qtdPodeMudarX))
-        infoQtdMudar.qtdPodeMudarX = qtdPodeAndar.x;
-      if (Math.abs(qtdPodeAndar.y) < Math.abs(infoQtdMudar.qtdPodeMudarY))
-        infoQtdMudar.qtdPodeMudarY = qtdPodeAndar.y;
-    }
-  }
+  { AuxObjetos.qtdPersPodeAndar(this, infoQtdMudar); }
 
   procColidirTiroCriado(tiro)
   //retorna se colidiu com tiro
@@ -529,22 +286,21 @@ class Obstaculo extends ObjetoTela
   }
 }
 
+// OBSTACULO COM VIDA
 class InfoObstaculoComVida extends InfoObstaculo
 {
-  constructor(formaGeometrica, corImgMorto, corImgEspecial, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers, vida)
-  //corImgEspecial pode ser nulo
+  constructor(formaGeometrica, infoImgMorto, corImgEspecial, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers, vida)
   {
-    super(formaGeometrica, corImgMorto, corImgEspecial, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers);
+    super(formaGeometrica, infoImgMorto, corImgEspecial, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers);
     this.vida = vida;
   }
 
   clone()
-  { return new InfoObstaculoComVida(this.formaGeometrica, AuxInfo.cloneImgCor(this.corImgMorto), AuxInfo.cloneImgCor(this.corImgEspecial), this.infoAndar.clone(), this.qtdTiraVidaNaoConsegueEmpurrarPers, this.vida); }
+  { return new InfoObstaculoComVida(this.formaGeometrica, this.infoImgMorto.clone(), AuxInfo.cloneImgCor(this.corImgEspecial), this.infoAndar.clone(), this.qtdTiraVidaNaoConsegueEmpurrarPers, this.vida); }
 }
 class ObstaculoComVida extends Obstaculo
 {
   //extends Obstaculo pq funcao igual a do obstaculo (mesmo andar()) e nao vai desenhar vida em varios casos
-
   constructor(pontoInicial, infoObstaculoComVida)
   {
     super(pontoInicial, infoObstaculoComVida);
@@ -567,4 +323,239 @@ class ObstaculoComVida extends Obstaculo
   }
 
   //draw (nao desenha vida)
+}
+
+
+//CONTROLADOR OBSTACULOS
+class ControladorObstaculos
+{
+  constructor(indexContr, infoObstaculoPadrao, infoObjAparecendoPadrao)
+  {
+    //padrao
+    this._infoObstaculoPadrao = infoObstaculoPadrao.clone();
+
+    //index controlador
+    this._indexContr = indexContr;
+
+    // obstaculos que interagem com o meio
+    this._obstaculos = [];
+    // obstaculos que NAO interagem com o meio (soh sao printados). para ObjetosTelaAparecendo:
+    this._obstaculosSurgindo = []; //fila
+    this._infoObjAparecendoPadrao = infoObjAparecendoPadrao;
+  }
+
+  get infoObstaculoPadrao()
+  { return this._infoObstaculoPadrao; }
+
+  //novo obstaculo
+  adicionarObstaculoDif(pontoInicial, alteracoesAndarRotacionar, infoObst, infoObjAparecendo)
+  // alteracoesAndarRotacionar: {direcao({x,y} OU Direcao.) OU angulo} e {direcaoAnguloAponta, ehAngulo}
+  {
+    if (infoObst === undefined)
+    {
+      infoObst = this._infoObstaculoPadrao.clone(); //tem que fazer clone porque pode inverter qtdAndar
+      ClasseAndar.qtdAndarDifMudarDir(infoObst.infoAndar, alteracoesAndarRotacionar); //pode ter alteracoesAndar ainda
+    }else
+    {
+      //InfoObstaculo: formaGeometrica, infoImgMorto, corImgEspecial, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers, [vida]
+
+      //infoAndar
+      ClasseAndar.qtdAndarDif(infoObst, this._infoObstaculoPadrao, alteracoesAndarRotacionar);
+
+      //qtdTiraVidaBatePers, qtdTiraVidaNaoConsegueEmpurrarPers, infoImgMorto
+      if (infoObst.qtdTiraVidaBatePers === undefined)
+        infoObst.qtdTiraVidaBatePers = this._infoObstaculoPadrao.qtdTiraVidaBatePers;
+      if (infoObst.qtdTiraVidaNaoConsegueEmpurrarPers === undefined)
+        infoObst.qtdTiraVidaNaoConsegueEmpurrarPers = this._infoObstaculoPadrao.qtdTiraVidaNaoConsegueEmpurrarPers;
+      if (infoObst.infoImgMorto === undefined)
+        infoObst.infoImgMorto = this._infoObstaculoPadrao.infoImgMorto;
+
+      //corImgEspecial (pode ser nulo)
+      if (infoObst.corImgEspecial === undefined)
+        infoObst.corImgEspecial = this._infoObstaculoPadrao.corImgEspecial;
+
+      //formaGeometrica
+      if (infoObst.formaGeometrica === undefined)
+        infoObst.formaGeometrica = this._infoObstaculoPadrao.formaGeometrica;
+
+      //[vida]
+      if (infoObst instanceof ObstaculoComVida && infoObst.vida === undefined)
+        infoObst.vida = this._infoObstaculoPadrao.vida;
+    }
+
+    //rotacionar obstaculo
+    AuxControladores.alteracoesRotacionarFormaGeometrica(infoObst, alteracoesAndarRotacionar);
+
+    this._adicionarObstaculo(pontoInicial, infoObst, infoObjAparecendo);
+  }
+  adicionarObstaculo(pontoInicial, infoObstaculo, infoObjAparecendo)
+  {
+		if (infoObstaculo === undefined)
+      infoObstaculo = this._infoObstaculoPadrao;
+
+    this._adicionarObstaculo(pontoInicial, infoObstaculo, infoObjAparecendo);
+  }
+  _adicionarObstaculo(pontoInicial, infoObstaculo, infoObjAparecendo)
+  {
+    //mesclar InfoObjAparecendo com InfoObjAparecendoPadrao
+    infoObjAparecendo = AuxControladores.infoObjAparecendoCorreto(infoObjAparecendo, this._infoObjAparecendoPadrao);
+    infoObjAparecendo.formaGeometrica = infoObstaculo.formaGeometrica;
+
+    //fazer ele ir aparecendo na tela aos poucos (opacidade e tamanho): ele nao interage com o meio ainda
+    this._obstaculosSurgindo.unshift(new ObjetoTelaAparecendo(pontoInicial, infoObjAparecendo, TipoObjetos.Obstaculo, () =>
+      {
+        //remover esse obstaculo (o primeiro a ser adicionado sempre vai ser o primeiro a ser retirado pois o tempo que ele vai ficar eh sempre igual ao dos outros que estao la)
+        this._obstaculosSurgindo.pop();
+
+        //adicionar obstaculo que interage com o meio
+        let novoObstaculo;
+        if (infoObstaculo instanceof InfoObstaculoComVida) // se eh obstaculo com vida
+          novoObstaculo = new ObstaculoComVida(pontoInicial, infoObstaculo);
+        else
+          novoObstaculo = new Obstaculo(pontoInicial, infoObstaculo);
+
+        novoObstaculo.procCriou();
+
+        if (ControladorJogo.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.DeixarTempoMaisLento)
+        // PARTE DA EXECUCAO DA POCAO (deixar tempo mais lento do obstaculo que for adicionar)
+          novoObstaculo.classeAndar.mudarTempo(porcentagemDeixarTempoLento);
+        //adicionar novo obstaculo ao final do vetor
+    		this._obstaculos.push(novoObstaculo);
+      }));
+  }
+
+
+ //andar
+  //andar objetos
+  andarObstaculos()
+  //os tres ultimos parametros para caso o obstaculo tenha que empurrar o personagem (pers.mudarXY)
+  {
+    this._obstaculos.forEach((obst, index) =>
+      {
+        if (obst.vivo)
+        {
+          //retorna se obstaculo continua no vetor de obstaculos (pode estar morto ou nao)
+          const continuaNoVetor = obst.andar();
+          if (!continuaNoVetor)
+          //nao aparece mais na tela
+            this._removerObst(index);
+        }
+      });
+  }
+
+  //para andar obstaculos
+  qtdAndarSemColidirOutrosObsts(info, obstQuerAndar)
+  //retorna se pode andar sem colidir
+  {
+    this._obstaculos.forEach(obstAtual =>
+      {
+        if (obstAtual !== obstQuerAndar && obstAtual.vivo)
+        //se nao eh o mesmo obst e estah vivo
+          ClasseAndar.infoQtdAndarNaoColidir(info, obstAtual, obstQuerAndar, false);
+      });
+  }
+
+  //para procCriou do obstaculo
+  vaiColidirOutroObst(obstVaiCriar)
+  {
+    return this._obstaculos.some(obstAtual =>
+      obstAtual.vivo && Interseccao.interseccao(obstVaiCriar.formaGeometrica, obstAtual.formaGeometrica));
+    //ps: obstVaiCriar nao estah em nenhum vetor de obstaculo de nenhum controlador ainda, entao nao precisa verificar se eh o obstaculo atual eh o proprio obstVaiCriar
+  }
+
+  //andar personagem (obstaculo barrando personagem)
+  qtdPersPodeAndar(infoQtdMudar)
+  {
+    //ve quanto que personagem pode mudar
+    this._obstaculos.forEach(obst =>
+      {
+        if (obst.vivo)
+          obst.qtdPersPodeAndar(infoQtdMudar);
+      });
+  }
+
+  //colisao com personagem quando cresce (POCAO)
+  procPersCresceu()
+  {
+    this._obstaculos.forEach(obst =>
+      {
+        if (obst.vivo)
+          obst.procVerifColisaoPersEstatico();
+      });
+  }
+
+  //colisao com tiro
+  verifTiroVaiAndarColideObsts(info, tiro)
+  //esses metodos funcionam por passagem por referencia
+  {
+    let inseriu = false;
+    this._obstaculos.forEach(obst =>
+      {
+        if (obst.vivo)
+          inseriu = ClasseAndar.infoQtdAndarNaoColidir(info, obst, tiro, true) || inseriu;
+      });
+    return inseriu;
+  }
+
+  //para quando um tiro for criado (ver se colide com obstaculos)
+  procObstsColidirTiroCriado(tiro)
+  {
+    let colidiu = false;
+    this._obstaculos.forEach(obst =>
+      {
+        if (obst.vivo)
+          colidiu = obst.procColidirTiroCriado(tiro) || colidiu;
+      });
+    return colidiu;
+  }
+
+  //POCAO
+  mudarTempo(porcentagem)
+  {
+    this._obstaculos.forEach(obst =>
+      {
+        if (obst.vivo)
+          obst.classeAndar.mudarTempo(porcentagem);
+      });
+  }
+
+  //para saber se painel personagem vai ser printado normal ou um pouco opaco
+  algumObstNesseEspaco(formaGeomEspaco)
+  {
+    //Obstaculo
+    const interseccaoObst = this._obstaculos.some(obst =>
+      Interseccao.interseccaoComoRetangulos(formaGeomEspaco, obst.formaGeometrica));
+    if (interseccaoObst)
+      return true;
+
+    //Obstaculo SURGINDO
+    const interseccaoObstSurgindo = this._obstaculosSurgindo.some(obstSurg =>
+      Interseccao.interseccaoComoRetangulos(formaGeomEspaco, obstSurg.formaGeometrica));
+    if (interseccaoObstSurgindo)
+      return true;
+
+    //nao intersectou nenhum obstaculo
+    return false;
+  }
+
+	//draw
+    //desenha todos os obstaculos
+	draw() //soh obstaculos que jah interagem com o meio (nao obstaculosSurgindo)
+	{
+    this._obstaculos.forEach((obst, index) =>
+      {
+        const removerDoVetor = obst.draw();
+        if (removerDoVetor)
+          this._removerObst(index);
+      });
+	}
+  drawSurgindo() //desenha obstaculos surgindo
+  { this._obstaculosSurgindo.forEach(obstSurgindo => obstSurgindo.draw()); }
+
+  //auxiliar
+  _removerObst(index)
+  {
+    this._obstaculos.splice(index,1);
+    //remover 1 elemento a partir de indexInim
+  }
 }

@@ -26,6 +26,9 @@ function setup()
   strokeWeight(tamStroke);
   noCursor();
 
+  //carregar imagens: para otimizar
+  ArmazenadorInfoObjetos.carregarImagens();
+
   //ControladorJogo (estrutura de tudo)
   ControladorJogo.inicializar(previaJogo);
 }

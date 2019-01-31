@@ -54,11 +54,24 @@ class ObjetoTelaSimples //recebe apenas uma classe informacao como parametro
 //normal
 class InfoObjetoTela extends InfoObjetoTelaSimples
 {
-  constructor(formaGeometrica, corImgMorto)
+  constructor(formaGeometrica, infoImgMorto)
   {
     super(formaGeometrica);
-    this.corImgMorto = corImgMorto;
+    this.infoImgMorto = infoImgMorto;
   }
+}
+class InfoImgMorto
+{
+  constructor(vetorImg, qtdVezesPrintarCadaImg=1, infoAdicionarImgSec)
+  //infoAdicionarImgSec: undefined=>substituir a imagem (nao adicionar img secundaria); caso contrario: {porcWidth, porcLadosCentroImg}
+  {
+    this.vetorImg = vetorImg;
+    this.infoAdicionarImgSec = infoAdicionarImgSec;
+    this.qtdVezesPrintarCadaImg = qtdVezesPrintarCadaImg;
+  }
+
+  clone()
+  { return new InfoImgMorto(cloneVetor(this.vetorImg), this.qtdVezesPrintarCadaImg, this.infoAdicionarImgSec); }
 }
 class ObjetoTela extends ObjetoTelaSimples //recebe apenas uma classe informacao como parametro
 {
@@ -66,17 +79,58 @@ class ObjetoTela extends ObjetoTelaSimples //recebe apenas uma classe informacao
   //recebe apenas uma classe informacao como parametro
   {
     super(pontoInicial, infoObjetoTela);
-    this._corImgMorto = infoObjetoTela.corImgMorto;
     this._vivo = true;
+
+    //imagens morto
+    this._vetorImgsMorto = infoObjetoTela.infoImgMorto.vetorImg;
+    this._infoAdicionarImgSec = infoObjetoTela.infoImgMorto.infoAdicionarImgSec;
+    this._qtdVezesPrintarCadaImgMorto = infoObjetoTela.infoImgMorto.qtdVezesPrintarCadaImg;
   }
 
   morreu()
   {
     this._vivo = false;
-    //muda a imagem ou cor para a de morto
-    this._mudarCorImgMorto();
+
+    //mudar imagem
+    this._indexImgMorto = 0;
+    this._colocarImgMortoAtual();
   }
-  //outros metodos
-  _mudarCorImgMorto()
-  { this._formaGeometrica.corImg = this._corImgMorto; }
+  _colocarImgMortoAtual()
+  {
+    this._qtdVezesPrintouImgMortoAtual = 0;
+
+    //muda a imagem ou cor para a de morto
+    const img = this._vetorImgsMorto[this._indexImgMorto];
+    if (this._infoAdicionarImgSec===undefined)
+      this._formaGeometrica.corImg = img;
+    else
+      this._formaGeometrica.adicionarImagemSecundaria(undefined/*para soh dar push no vetor de imgs secundarias*/,
+        img, this._infoAdicionarImgSec.porcWidth, this._infoAdicionarImgSec.porcLadosCentroImg);
+  }
+
+  draw()
+  //retorna se deve retirar objeto do vetor depois de printa-lo
+  {
+    super.draw();
+
+    //se jah estah na ultima posicao, printa a ultima vez e entao retorna true
+    let ret = false;
+    if (!this._vivo && !ret) //se jah morreu e ainda nao vai remover objeto, colocar na proxima imagem morto
+    {
+      this._qtdVezesPrintouImgMortoAtual++;
+
+      if (this._qtdVezesPrintouImgMortoAtual === this._qtdVezesPrintarCadaImgMorto)
+      {
+        if (this._indexImgMorto===this._vetorImgsMorto.length-1)
+        //se jah printou todas as imagens do vetor quantas vezes precisa
+          ret = true;
+        else
+        {
+          this._indexImgMorto++;
+          this._colocarImgMortoAtual();
+        }
+      }
+    }
+    return ret;
+  }
 }

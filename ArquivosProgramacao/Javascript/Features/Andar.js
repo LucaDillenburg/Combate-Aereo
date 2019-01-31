@@ -74,6 +74,7 @@ class ClasseAndar
       if (infoAndar.aceleracao.qntsVezes !== undefined)
       {
         this._aceleracao.qntsVezes = infoAndar.aceleracao.qntsVezes;
+        this._aceleracao.qtdSomarCadaVez = 1; //para funcionar certo quando mudarTempo
         this._aceleracao.qntsVezesCompletas = 0;
       }
     }
@@ -87,7 +88,7 @@ class ClasseAndar
 
     //para limitar a curva de TipoAndar.Seguir...
     if (infoAndar.limitarCurva!==undefined)
-      this._limitarCurva = infoAndar.limitarCurva; //nao precisa clonar porque nao vai mudar isso
+      this._limitarCurva = cloneDicionario(infoAndar.limitarCurva);
   }
 
   get qtdAndarX() { return this._qtdAndarX; }
@@ -266,12 +267,11 @@ class ClasseAndar
       if (this._aceleracao.qntsVezes !== undefined)
       // se vai acelerar/desacelerar um numero contado de vezes
       {
-        this._aceleracao.qntsVezesCompletas++;
+        this._aceleracao.qntsVezesCompletas += this._aceleracao.qtdSomarCadaVez; //para funcionar certo se mudarTempo
 
         //verificar se jah nao acelerar/desacelerar o numero desejado
-        if (this._aceleracao.qntsVezes === this._aceleracao.qntsVezesCompletas)
-          delete this._aceleracao;
-          //a forma da classe passar a considerar como se nao tivesse que acelerar/desacelerar eh this._aceleracao sendo 'undefined'
+        if (this._aceleracao.qntsVezesCompletas >= this._aceleracao.qntsVezes)
+          delete this._aceleracao; //a forma da classe passar a considerar como se nao tivesse que acelerar/desacelerar eh this._aceleracao sendo 'undefined'
       }
     }
 
@@ -434,7 +434,11 @@ class ClasseAndar
         return new Ponto(0,0);
 
       const anguloMudaRota = Angulo.entrePIeMenosPI(ClasseAndar.getAnguloQtdAndar(qtdQuerAndar.x, qtdQuerAndar.y) - this._anguloQtdAndar); //angulo rotacao
-      if (Math.abs(anguloMudaRota) > this._limitarCurva.maiorAnguloMudanca) //angulos rotacao
+
+      const maiorAnguloMudanca = this._limitarCurva.maiorAnguloMudanca * ((hipotenusaQuerAndar < this._hipotenusaPadrao) ?
+        Math.min(this._hipotenusaPadrao/hipotenusaQuerAndar, 1.8) : 1);
+      // se quer andar menos do que pode, o angulo de rotacao vai ser maior (ateh 1.8vezes maior)
+      if (Math.abs(anguloMudaRota) > maiorAnguloMudanca) //angulos rotacao
       //se quer rotacionar mais do que pode
       {
         // rotaciona o maximo que pode no sentido desejado
@@ -615,8 +619,27 @@ class ClasseAndar
   //POCAO
   mudarTempo(porcentagem)
   {
+    //qtdAndar
     this._qtdAndarX *= porcentagem;
     this._qtdAndarY *= porcentagem;
     this._mudarHipotenusaSePrecisa();
+
+    //aceleracao
+    if (this._aceleracao!==undefined)
+    {
+      //valor
+      if (this._aceleracao.ehPorcentagem)
+        this._aceleracao.valor = Math.pow(this._aceleracao.valor, porcentagem);
+      else
+        this._aceleracao.valor *= porcentagem;
+
+      //para parar de acelerar na hora certa
+      if (this._aceleracao.qtdSomarCadaVez!==undefined)
+        this._aceleracao.qtdSomarCadaVez *= porcentagem;
+    }
+
+    //limitarCurva.maiorAnguloMudanca
+    if (this._limitarCurva !== undefined)
+      this._limitarCurva.maiorAnguloMudanca *= porcentagem;
   }
 }

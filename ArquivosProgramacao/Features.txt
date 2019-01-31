@@ -14,3 +14,5 @@ FEATURES DIFERENCIAIS:
  - pode atirar pra qualquer lado, da onde quiser, cada ObjComTiro pode ter mais de um tiro de tipos, frequencias,... diferenciados
  - arma giratoria
  - helices
+
+eu tentei usar o menos possivel de coisas prontas: soh usei p5, javascript array

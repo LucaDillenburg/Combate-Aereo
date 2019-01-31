@@ -19,6 +19,20 @@ class Ponto
     this.y = y;
   }
 
+  //operacoes
+  mais(outro) //ponto
+  { return new Ponto(this.x + outro.x, this.y + outro.y); }
+  menos(outro) //ponto
+  { return new Ponto(this.x - outro.x, this.y - outro.y); }
+  dividido(divisor) //numero
+  { return new Ponto(this.x/divisor, this.y/divisor); }
+  multiplicado(mult) //numero
+  { return new Ponto(this.x*mult, this.y*mult); }
+
+  distancia(ponto)
+  { return Operacoes.hipotenusa(ponto.x - this.x, ponto.y - this.y); }
+
+  //maior ou menor
   static max(p1, p2)
   //mais de baixo (maior Y) e da direita (maior X)
   {
@@ -29,7 +43,6 @@ class Ponto
     // p1.y === p2.y
     return (p1.x > p2.x ? p1 : p2);
   }
-
   static min(p1, p2)
   //mais de cima (menor Y) e da esquerda (menor X)
   {
@@ -41,16 +54,35 @@ class Ponto
     return (p1.x < p2.x ? p1 : p2);
   }
 
-  mais(outro) //ponto
-  { return new Ponto(this.x + outro.x, this.y + outro.y); }
-  menos(outro) //ponto
-  { return new Ponto(this.x - outro.x, this.y - outro.y); }
+  //rotacionar
+  rotacionar(angulo, centroRotacao = new Ponto(0,0))
+  //retorna ponto rotacionado
+  {
+    //Explicacao: para rotacionar um ponto precisa-se:
+      // 1. subtrair o centroRotacao (para deixar o centroRotacao sendo (0,0))
+      // 2. rotacionar (x,y) com como se centroRotacao fosse (0,0)
+        /* ps: a partir das formulas:
+        x' = cos(angulo)*x - sin(angulo)*y
+        y' = sin(angulo)*x + cos(angulo)*y */
+      // 3. somar o centroRotacao antigo (para voltar para a posicao certa)
 
-  dividido(divisor) //numero
-  { return new Ponto(this.x/divisor, this.y/divisor); }
-  multiplicado(mult) //numero
-  { return new Ponto(this.x*mult, this.y*mult); }
+    // 1.
+    let pontoRotacionado = this.menos(centroRotacao);
 
+    // 2.
+    const x = pontoRotacionado.x;
+    const y = pontoRotacionado.y;
+    //ps: pontoRotacionado.x jah vai estar diferente quando for calcular o valor de pontoRotacionado.y
+    pontoRotacionado.x = Math.cos(angulo)*x - Math.sin(angulo)*y;
+    pontoRotacionado.y = Math.sin(angulo)*x + Math.cos(angulo)*y;
+
+    // 3.
+    return pontoRotacionado.mais(centroRotacao);
+  }
+
+  //metodos obrigatorios
+  toString()
+  { return "(" + this.x + "," + this.y + ")"; }
   compareTo(outro)
   // <0 : se this for menor (acima e esquerda)
   // >0 : se this for maior (abaixo e direita)
@@ -70,7 +102,6 @@ class Ponto
     //iguais
     return 0;
   }
-
   equals(outro, exato=true)
   {
     if (this.x === outro.x && this.y === outro.y)
@@ -81,13 +112,6 @@ class Ponto
 
     return Exatidao.ehQuaseExato(this.x, outro.x) && Exatidao.ehQuaseExato(this.y, outro.y);
   }
-
-  distancia(ponto)
-  { return Operacoes.hipotenusa(ponto.x - this.x, ponto.y - this.y); }
-
-  toString()
-  { return "(" + this.x + "," + this.y + ")"; }
-
   clone()
   { return new Ponto(this.x, this.y); }
 }
