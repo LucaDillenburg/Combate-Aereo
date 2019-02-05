@@ -1,12 +1,16 @@
 //Novo metodo RANDOM de um numero a outro
-Math.myrandom = function (min, max)
+Math.myrandom = function (min, max, retornarInteiro=true)
 //inclusive min e exclusive max
 {
   if (min + 1 === max)
   //se eh Math.myrandom(x, x+1), vai retornar x
     return min;
 
-  return Math.floor(Math.random() * (max - min) + min);
+  const randomFloat = Math.random() * (max - min) + min;
+  if (retornarInteiro)
+    return Math.floor(randomFloat);
+  else
+    return randomFloat;
 };
 Math.randomComDesvio = function(valor, desvio)
 {

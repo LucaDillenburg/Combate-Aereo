@@ -16,7 +16,8 @@ const maxRotacionarArmaGiratoriaPers = PI/24;
 const opacidadePainelPersObjsEmBaixo = 0.4;
 class PersonagemPrincipal extends ObjetoComArmas_e_Vida
 {
-  constructor(infoPersonagemPrincipal, pontoInicial = {}, numeroAviao=1)
+  constructor(infoPersonagemPrincipal, pontoInicial = {}, controladorPocoesPegou)
+  //pontoInicial e controladorPocoesPegou eh soh para quando for trocar de Aviao
   {
     super(pontoInicial, infoPersonagemPrincipal);
 
@@ -27,10 +28,18 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
     this.zerarInimigosIntersectados();
 
     //pocoes do pers
-    this._controladorPocoesPegou = new ControladorPocoesPers();
+    if (controladorPocoesPegou === undefined)
+    //primeiro aviao
+      this._controladorPocoesPegou = new ControladorPocoesPers();
+    else
+    //para quando trocar de aviao nao perder as pocoes
+    {
+      this._controladorPocoesPegou = controladorPocoesPegou;
+      this._controladorPocoesPegou.procPersMudouAviao();
+    }
 
     //numero aviao (pra saber qual aviao eh). Comeca em ZERO
-    this._numeroAviao = numeroAviao;
+    this._numeroAviao = infoPersonagemPrincipal.numeroAviao;
 
     if (this.ehAviaoMaster)
       this._vetorMiraArmaGiratoria = [];
@@ -49,7 +58,7 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
     const pontoInicial = new Ponto(this._formaGeometrica.x + qtdMudouEmWidth/2, this._formaGeometrica.y + qtdMudouEmHeight/2);
 
     // cria proxima nave do personagem
-    let persNovaNave = new PersonagemPrincipal(infoPersonagemPrincipal, pontoInicial, this._numeroAviao+1);
+    let persNovaNave = new PersonagemPrincipal(infoPersonagemPrincipal, pontoInicial, this._controladorPocoesPegou);
 
     // adicionar os tiros da nave "antiga" na nova (para tiros do personagem nao desaparecerem simplesmente depois dele mudar de nave)
     this._armas.forEach(arma =>
@@ -63,6 +72,8 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
     // retorna nova
     return persNovaNave;
   }
+  get indexTiroMelhor() //para Pocao
+  { return (this.ehAviaoMaster) ? 1 : 0; }
 
   //mudar qtdAndar e adicionar qtdAndarEspecial
   get qtdAndar() { return this._qtdAndar; }
@@ -298,7 +309,7 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
     this._controladorPocoesPegou.draw();
 
     //retangulos que simbolizam quanto falta para personagem poder atirar com arma nao automatica
-    if (this.ehAviaoMaster)
+    if (this.ehAviaoMaster && this._controladorPocoesPegou.codPocaoSendoUsado!==TipoPocao.PersComMissil)
       this._desenharFreqArmaNaoAutom();
   }
 

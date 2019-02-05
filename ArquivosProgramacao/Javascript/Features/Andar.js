@@ -25,9 +25,10 @@ class InfoAndar
   constructor(qtdAndarX, qtdAndarY, tipoAndar, atehQualXYPodeAndar, aceleracao, limitarCurva, guardarAnguloQtdAndar=false)
   //eh public mesmo porque tem get e set em todos sem verificacao
   //aceleracao: valor, ehPorcentagem, qntsVezes
-  //limitarCurva: {maiorAnguloMudanca, porcVelCurva}
+  //limitarCurva: {maiorAnguloMudanca, porcVelCurva, [primMaiorAngMud]}
     //- maiorAnguloMudanca: maior angulo que pode mudar a rota (para limitar a curva quando for TipoAndar.Seguir...)
     //- porcVelCurva: para ir mais devagar quando for limitado pela curva
+    //- primMaiorAngMud: o maior angulo na primeira execucao do andar
   {
     this.qtdAndarX = qtdAndarX;
     this.qtdAndarY = qtdAndarY;
@@ -39,11 +40,7 @@ class InfoAndar
   }
 
   clone()
-  {
-    const cloneAceleracao = (this.aceleracao===undefined?undefined:{valor: this.aceleracao.valor, ehPorcentagem: this.aceleracao.ehPorcentagem, qntsVezes: this.aceleracao.qntsVezes});
-    const cloneLimitarCurva = (this.limitarCurva===undefined?undefined:{maiorAnguloMudanca: this.limitarCurva.maiorAnguloMudanca, porcVelCurva: this.limitarCurva.porcVelCurva});
-    return new InfoAndar(this.qtdAndarX, this.qtdAndarY, this.tipoAndar, this.atehQualXYPodeAndar, cloneAceleracao, cloneLimitarCurva, this.guardarAnguloQtdAndar);
-  }
+  { return new InfoAndar(this.qtdAndarX, this.qtdAndarY, this.tipoAndar, this.atehQualXYPodeAndar, cloneDicionario(this.aceleracao), cloneDicionario(this.limitarCurva), this.guardarAnguloQtdAndar); }
 
   // metodos diferentes de soh armazenar informacoes
   mudarAnguloQtdAndar(angulo)
@@ -84,19 +81,25 @@ class ClasseAndar
       this._atehQualXYPodeAndar = infoAndar.atehQualXYPodeAndar; //nao precisa clonar porque nao vai mudar isso
 
     if (infoAndar.guardarAnguloQtdAndar || infoAndar.limitarCurva!==undefined/*se for limitar a curva tambem precisa guardar esse angulo*/)
-      this._setAnguloQtdAndar();
+      this._setAnguloQtdAndar(); // o anguloQtdAndar dos objetos comeca com o angulo de rotacao que sua formaGeometrica estah
 
     //para limitar a curva de TipoAndar.Seguir...
     if (infoAndar.limitarCurva!==undefined)
       this._limitarCurva = cloneDicionario(infoAndar.limitarCurva);
   }
 
+  //getters basicos
   get qtdAndarX() { return this._qtdAndarX; }
   get qtdAndarY() { return this._qtdAndarY; }
   get tipoAndar() { return this._tipoAndar; }
 
+  //getters e setters de TiposAndar especificos...
+    //
   get atehQualXYPodeAndar() { return this._atehQualXYPodeAndar; } //nao mudar por aqui (mudar no set)
   set atehQualXYPodeAndar(ponto) { this._atehQualXYPodeAndar = ponto; }
+    //
+  get limitarCurva() { return this._limitarCurva; } //nao mudar por aqui (mudar no set)
+  set limitarCurva(limitarCurva) { this._limitarCurva = limitarCurva; }
 
   //em angulo de rotacao (nao do ciclo trigonometrico)
   get anguloQtdAndar() { return this._anguloQtdAndar; }
@@ -146,7 +149,7 @@ class ClasseAndar
     if (tipo === TipoAndar.SeguirInimMaisProx)
     {
       // se for pra um tiro seguir um inimigo sempre, seguir um dos mais importantes (essenciais)
-      const infoInimSeguir = this._getInfoInimigoMaisProximo(formaGeom, true);
+      const infoInimSeguir = this._getInfoInimigoMaisProximo(formaGeom, false);
       if (infoInimSeguir !== null)
         this._inimSeguir = infoInimSeguir.inimigo;
       else
@@ -435,14 +438,20 @@ class ClasseAndar
 
       const anguloMudaRota = Angulo.entrePIeMenosPI(ClasseAndar.getAnguloQtdAndar(qtdQuerAndar.x, qtdQuerAndar.y) - this._anguloQtdAndar); //angulo rotacao
 
-      const maiorAnguloMudanca = this._limitarCurva.maiorAnguloMudanca * ((hipotenusaQuerAndar < this._hipotenusaPadrao) ?
+      //porque na primeira execucao o maiorAnguloMudanca pode ser diferente:
+      const maiorAnguloMudancaAtual = (this._limitarCurva.primMaiorAngMud!==undefined) ? this._limitarCurva.primMaiorAngMud : this._limitarCurva.maiorAnguloMudanca;
+      if (this._limitarCurva.primMaiorAngMud!==undefined)
+      // se jah fez a primeira vez deleta essa variavel
+        delete this._limitarCurva.primMaiorAngMud;
+
+      const maiorAnguloMudanca = maiorAnguloMudancaAtual * ((hipotenusaQuerAndar < this._hipotenusaPadrao) ?
         Math.min(this._hipotenusaPadrao/hipotenusaQuerAndar, 1.8) : 1);
       // se quer andar menos do que pode, o angulo de rotacao vai ser maior (ateh 1.8vezes maior)
       if (Math.abs(anguloMudaRota) > maiorAnguloMudanca) //angulos rotacao
       //se quer rotacionar mais do que pode
       {
         // rotaciona o maximo que pode no sentido desejado
-        const anguloQtdAndarPossivel = this._anguloQtdAndar + this._limitarCurva.maiorAnguloMudanca*(anguloMudaRota<0?-1:1); //angulo rotacao
+        const anguloQtdAndarPossivel = this._anguloQtdAndar + maiorAnguloMudancaAtual*(anguloMudaRota<0?-1:1); //angulo rotacao
 
         return ClasseAndar.qtdAndarEmAngulo(this._qtdAndarX, this._qtdAndarY, Angulo.angRotacaoParaAngCicloTrig(
           anguloQtdAndarPossivel)).multiplicado(this._limitarCurva.porcVelCurva);
@@ -640,6 +649,10 @@ class ClasseAndar
 
     //limitarCurva.maiorAnguloMudanca
     if (this._limitarCurva !== undefined)
+    {
       this._limitarCurva.maiorAnguloMudanca *= porcentagem;
+      if (this._limitarCurva.primMaiorAngMud!==undefined)
+        this._limitarCurva.primMaiorAngMud *= porcentagem;
+    }
   }
 }

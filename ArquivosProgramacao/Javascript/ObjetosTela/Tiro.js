@@ -1,228 +1,3 @@
-//CONTROLADOR TIROS
-class ControladorTiros
-{
-  constructor(infoTiroPadrao, ehPersPrinc)
-  {
-    //padrao
-    if (infoTiroPadrao !== null)
-    // pode nao ser definido, se no level nao houver controladores de tiros do jogo (porem tem que criar um pelo menos para colocar quando inimigos morrerem)
-      this._infoTiroPadrao = infoTiroPadrao.clone();
-    this._ehPersPrinc = ehPersPrinc;
-
-    //vetor de tiros
-    this._tiros = [];
-
-    //tiros mortos (sao printados depois de todos)
-    this._tirosMortos = [];
-
-    this._funcCamadasColTirarTirosEsp = new FuncEmCamadas();
-  }
-
-  //infoTiroPadrao
-  get infoTiroPadrao()
-  { return this._infoTiroPadrao; }
-
-  colocarInfoTiroEspecial(novoInfoTiro)
-  {
-    this._infoTiroEspecial = novoInfoTiro;
-    this._funcCamadasColTirarTirosEsp.subirCamada();
-  }
-  voltarInfoTiroPadrao()
-  {
-    if (this._funcCamadasColTirarTirosEsp.descerCamada())
-      delete this._infoTiroEspecial;
-  }
-
-  get infoTiroPadraoAtual()
-  {
-    if (this._infoTiroEspecial === undefined)
-      return this._infoTiroPadrao;
-    else
-      return this._infoTiroEspecial;
-  }
-
-  //novo tiro
-  adicionarTiroDif(pontoInicial, alteracoesAndarRotacionar, infoTiro)
-  // alteracoesAndarRotacionar: {direcao({x,y} OU Direcao.) OU angulo} e {direcaoAnguloAponta, ehAngulo}
-  //os atributos que forem nulos serao substituidos pelos padronizados e os que forem da classe Nulo serao substituidos por null (soh vai ser verificado se eh dessa classe se puder ser nulo)
-  {
-    const infoTiroPadraoAtual = this.infoTiroPadraoAtual;
-
-    if (infoTiro === undefined)
-    {
-      infoTiro = infoTiroPadraoAtual.clone(); //tem que fazer clone porque pode inverter qtdAndar
-      ClasseAndar.qtdAndarDifMudarDir(infoTiro.infoAndar, alteracoesAndarRotacionar); //pode ter alteracoesAndarRotacionar ainda
-    }else
-    {
-      //infoTiro: formaGeometrica, infoImgMorto, infoAndar, ehDoPers, mortalidade
-
-      //infoAndar
-      ClasseAndar.qtdAndarDif(infoTiro, infoTiroPadraoAtual, alteracoesAndarRotacionar);
-
-      //corMorto, mortalidade
-      if (infoTiro.infoImgMorto === undefined)
-        infoTiro.infoImgMorto = infoTiroPadraoAtual.infoImgMorto;
-      if (infoTiro.mortalidade === undefined)
-        infoTiro.mortalidade = infoTiroPadraoAtual.mortalidade;
-
-      //formaGeometrica
-      if (infoTiro.formaGeometrica === undefined)
-        infoTiro.formaGeometrica = infoTiroPadraoAtual.formaGeometrica;
-    }
-
-    //rotacionar tiro
-    AuxControladores.alteracoesRotacionarFormaGeometrica(infoTiro, alteracoesAndarRotacionar);
-
-    // isso eh padrao do ControladorTiros
-    infoTiro.ehDoPers = this._ehPersPrinc;
-
-    this._adicionarTiro(new Tiro(pontoInicial, infoTiro));
-  }
-  adicionarTiro(pontoInicial, infoTiro)
-  {
-		if (infoTiro === undefined)
-      infoTiro = this.infoTiroPadraoAtual;
-
-    infoTiro.ehDoPers = this._ehPersPrinc;
-    this._adicionarTiro(new Tiro(pontoInicial, infoTiro));
-  }
-  _adicionarTiro(novoTiro)
-  {
-    novoTiro.procCriou();
-
-    if (!this._ehPersPrinc && ControladorJogo.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.DeixarTempoMaisLento)
-    // soh os tiros da tela ou do personagem vao estar mais devagar
-    // PARTE DA EXECUCAO DA POCAO (deixar tempo mais lento do tiro que for adicionar)
-      novoTiro.classeAndar.mudarTempo(porcentagemDeixarTempoLento);
-
-    //adicionar novo tiro ao final do array
-		this._tiros.push(novoTiro);
-  }
-
-  //mover tiros
-  andarTiros()
-  {
-    this._tiros.forEach((tiro, index) =>
-      {
-        if (tiro.vivo)
-        {
-          //retorna se tiro continua no vetor de tiros (pode estar morto ou nao)
-          const continuaNoVetor = tiro.andar();
-          if (!continuaNoVetor)
-    				this._removerTiro(index);
-        }
-      });
-  }
-
-  //quando personagem, inimigos ou obstaculos se moverem
-  procObjVaiAndarColideTiros(objTelaColide, qtdMudarX, qtdMudarY, podeTirarVidaObjTela)
-  {
-    this._tiros.forEach(tiro =>
-      {
-        if (tiro.vivo)
-          tiro.procColisaoObjVaiAndar(objTelaColide, qtdMudarX, qtdMudarY, podeTirarVidaObjTela);
-      });
-  }
-  procObjCriadoColideTiros(objTelaColide, podeTirarVidaObjTela)
-  {
-    const objTemVida = objTelaColide.vida !== undefined;
-    this._tiros.forEach(tiro =>
-      {
-        if (tiro.vivo)
-          tiro.procColisaoObjCriado(objTelaColide, podeTirarVidaObjTela);
-      });
-  }
-
-  //uso: quando os inimigos morrerem passar os tiros deles para controladoresTirosJogo[0]
-  concatenarTiros(controladorTiros)
-  {
-    //os tiros do outro controlador serao passados para esse (todos os elementos de controladorTiros._tiros serao adicionados ao final de this._push)
-    this._tiros.push(...controladorTiros._tiros);
-  }
-
-  //POCAO
-  virarTirosContraCriador(seguir)
-  //seguir: true = seguir, false = direcao
-  {
-    //transformar todos os tiros em dePers e mudar tipoAndar
-    this._tiros.forEach(tiro =>
-      {
-        if (tiro.vivo)
-        {
-          tiro.inverterDono(); //se era do pers fica sendo da tela, e se nao era do pers fica sendo dele
-
-          if (this._ehPersPrinc)
-            tiro.setTipoAndar(seguir?TipoAndar.SeguirPers:TipoAndar.DirecaoPers);
-          else
-            tiro.setTipoAndar(seguir?TipoAndar.SeguirInimMaisProx:TipoAndar.DirecaoInimMaisProx);
-        }
-      });
-
-    //concatenar com controladorTirosJogo se tiros eram originalmente do personagem, e com controladorTiros do personagem se nao eram do personagem
-    if (this._ehPersPrinc)
-      ControladorJogo.controladorOutrosTirosNaoPers.concatenarTiros(this);
-    else
-      ControladorJogo.pers.getControladorTiros(0).concatenarTiros(this);
-
-    //jah passou os tiros pra outro controladorTiro, entao esvazia esse
-    this._tiros = [];
-  }
-  mudarTempo(porcentagem)
-  {
-    this._tiros.forEach(tiro =>
-      {
-        if (tiro.vivo)
-          tiro.classeAndar.mudarTempo(porcentagem);
-      });
-  }
-  mudarQtdAndarTiros(porcentagem)
-  {
-    this._tiros.forEach(tiro =>
-      {
-        if (tiro.vivo)
-          tiro.classeAndar.mudarQtdAndar(porcentagem);
-      });
-  }
-  mudarMortalidadeTiros(qtdMudar, ehPorcentagem)
-  {
-    this._tiros.forEach(tiro =>
-      {
-        if (tiro.vivo)
-          tiro.mudarMortalidade(qtdMudar, ehPorcentagem);
-      });
-  }
-
-	//draw
-	draw() //desenha os tiros vivos
-	{
-    this._tiros.forEach(tiro =>
-      {
-        if (tiro.vivo)
-          tiro.draw();
-      });
-	}
-  drawMortos() //desenha os tiros mortos
-  {
-    this._tiros.forEach((tiro, index) =>
-      {
-        if (!tiro.vivo)
-        {
-          const removerDoVetor = tiro.draw();
-          if (removerDoVetor)
-            this._removerTiro(index);
-        }
-      });
-  }
-
-  //auxiliar
-  _removerTiro(index)
-  {
-    this._tiros.splice(index,1);
-    //remover 1 elemento a partir de indexInim
-  }
-}
-
-
 //TIRO
 class InfoTiro extends InfoObjetoTela
 {
@@ -293,9 +68,20 @@ class Tiro extends ObjetoTela
     this._classeAndar.setTipoAndar(tipo, this._formaGeometrica);
   }
 
-  inverterDono()
-  //inverte dono (soh para pocao)
-  { this._ehDoPers = !this._ehDoPers; }
+  virarContraCriador(seguir)
+  {
+    //inverte dono
+    this._ehDoPers = !this._ehDoPers;
+
+    //adiciona limitacao curva (sem muita limitacao)
+    this._classeAndar.limitarCurva = {maiorAnguloMudanca: PI/12, porcVelCurva: 0.6};
+
+    //muda tipoAndar
+    if (this._ehDoPers)
+      this.setTipoAndar(seguir?TipoAndar.SeguirInimMaisProx:TipoAndar.DirecaoInimMaisProx);
+    else
+      this.setTipoAndar(seguir?TipoAndar.SeguirPers:TipoAndar.DirecaoPers);
+  }
 
   get mortalidade()
   { return this._mortalidade; }
@@ -507,4 +293,223 @@ class Tiro extends ObjetoTela
 
   tirarVidaObjCmVida(obj)
   { obj.mudarVida(-this._mortalidade); }
+}
+
+
+//CONTROLADOR TIROS
+class ControladorTiros
+{
+  constructor(infoTiroPadrao, ehPersPrinc)
+  {
+    //padrao
+    if (infoTiroPadrao !== null)
+    // pode nao ser definido, se no level nao houver controladores de tiros do jogo (porem tem que criar um pelo menos para colocar quando inimigos morrerem)
+      this._infoTiroPadrao = infoTiroPadrao.clone();
+    this._ehPersPrinc = ehPersPrinc;
+
+    //vetor de tiros
+    this._tiros = [];
+
+    //tiros mortos (sao printados depois de todos)
+    this._tirosMortos = [];
+
+    this._funcCamadasColTirarTirosEsp = new FuncEmCamadas();
+  }
+
+  //infoTiroPadrao
+  get infoTiroPadrao()
+  { return this._infoTiroPadrao; }
+
+  colocarInfoTiroEspecial(novoInfoTiro)
+  {
+    this._infoTiroEspecial = novoInfoTiro;
+    this._funcCamadasColTirarTirosEsp.subirCamada();
+  }
+  voltarInfoTiroPadrao()
+  {
+    if (this._funcCamadasColTirarTirosEsp.descerCamada())
+      delete this._infoTiroEspecial;
+  }
+
+  get infoTiroPadraoAtual()
+  {
+    if (this._infoTiroEspecial === undefined)
+      return this._infoTiroPadrao;
+    else
+      return this._infoTiroEspecial;
+  }
+
+  //novo tiro
+  adicionarTiroDif(pontoInicial, alteracoesAndarRotacionar, infoTiro)
+  // alteracoesAndarRotacionar: {direcao({x,y} OU Direcao.) OU angulo} e {direcaoAnguloAponta, ehAngulo}
+  //os atributos que forem nulos serao substituidos pelos padronizados e os que forem da classe Nulo serao substituidos por null (soh vai ser verificado se eh dessa classe se puder ser nulo)
+  {
+    const infoTiroPadraoAtual = this.infoTiroPadraoAtual;
+
+    if (infoTiro === undefined)
+    {
+      infoTiro = infoTiroPadraoAtual.clone(); //tem que fazer clone porque pode inverter qtdAndar
+      ClasseAndar.qtdAndarDifMudarDir(infoTiro.infoAndar, alteracoesAndarRotacionar); //pode ter alteracoesAndarRotacionar ainda
+    }else
+    {
+      //infoTiro: formaGeometrica, infoImgMorto, infoAndar, ehDoPers, mortalidade
+
+      //infoAndar
+      ClasseAndar.qtdAndarDif(infoTiro, infoTiroPadraoAtual, alteracoesAndarRotacionar);
+
+      //corMorto, mortalidade
+      if (infoTiro.infoImgMorto === undefined)
+        infoTiro.infoImgMorto = infoTiroPadraoAtual.infoImgMorto;
+      if (infoTiro.mortalidade === undefined)
+        infoTiro.mortalidade = infoTiroPadraoAtual.mortalidade;
+
+      //formaGeometrica
+      if (infoTiro.formaGeometrica === undefined)
+        infoTiro.formaGeometrica = infoTiroPadraoAtual.formaGeometrica;
+    }
+
+    //rotacionar tiro
+    AuxControladores.alteracoesRotacionarFormaGeometrica(infoTiro, alteracoesAndarRotacionar);
+
+    // isso eh padrao do ControladorTiros
+    infoTiro.ehDoPers = this._ehPersPrinc;
+
+    this._adicionarTiro(new Tiro(pontoInicial, infoTiro));
+  }
+  adicionarTiro(pontoInicial, infoTiro)
+  {
+		if (infoTiro === undefined)
+      infoTiro = this.infoTiroPadraoAtual;
+
+    infoTiro.ehDoPers = this._ehPersPrinc;
+    this._adicionarTiro(new Tiro(pontoInicial, infoTiro));
+  }
+  _adicionarTiro(novoTiro)
+  {
+    novoTiro.procCriou();
+
+    if (!this._ehPersPrinc && ControladorJogo.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.DeixarTempoMaisLento)
+    // soh os tiros da tela ou do personagem vao estar mais devagar
+    // PARTE DA EXECUCAO DA POCAO (deixar tempo mais lento do tiro que for adicionar)
+      novoTiro.classeAndar.mudarTempo(porcentagemDeixarTempoLento);
+
+    //adicionar novo tiro ao final do array
+		this._tiros.push(novoTiro);
+  }
+
+  //mover tiros
+  andarTiros()
+  {
+    this._tiros.forEach((tiro, index) =>
+      {
+        if (tiro.vivo)
+        {
+          //retorna se tiro continua no vetor de tiros (pode estar morto ou nao)
+          const continuaNoVetor = tiro.andar();
+          if (!continuaNoVetor)
+    				this._removerTiro(index);
+        }
+      });
+  }
+
+  //quando personagem, inimigos ou obstaculos se moverem
+  procObjVaiAndarColideTiros(objTelaColide, qtdMudarX, qtdMudarY, podeTirarVidaObjTela)
+  {
+    this._tiros.forEach(tiro =>
+      {
+        if (tiro.vivo)
+          tiro.procColisaoObjVaiAndar(objTelaColide, qtdMudarX, qtdMudarY, podeTirarVidaObjTela);
+      });
+  }
+  procObjCriadoColideTiros(objTelaColide, podeTirarVidaObjTela)
+  {
+    const objTemVida = objTelaColide.vida !== undefined;
+    this._tiros.forEach(tiro =>
+      {
+        if (tiro.vivo)
+          tiro.procColisaoObjCriado(objTelaColide, podeTirarVidaObjTela);
+      });
+  }
+
+  //uso: quando os inimigos morrerem passar os tiros deles para controladoresTirosJogo[0]
+  concatenarTiros(controladorTiros)
+  {
+    //os tiros do outro controlador serao passados para esse (todos os elementos de controladorTiros._tiros serao adicionados ao final de this._tiros)
+    this._tiros.push(...controladorTiros._tiros);
+  }
+
+  //POCAO
+  virarTirosContraCriador(seguir)
+  //seguir: true = seguir, false = direcao
+  {
+    //transformar todos os tiros em dePers e mudar tipoAndar
+    this._tiros.forEach(tiro =>
+      {
+        if (tiro.vivo)
+          tiro.virarContraCriador(seguir);
+          //se era do pers fica sendo da tela, e se nao era do pers fica sendo dele, comeca a seguir o objeto adversario
+      });
+
+    //concatenar com controladorTirosJogo se tiros eram originalmente do personagem, e com controladorTiros do personagem se nao eram do personagem
+    if (this._ehPersPrinc)
+      ControladorJogo.controladorOutrosTirosNaoPers.concatenarTiros(this);
+    else
+      ControladorJogo.pers.getControladorTiros(0).concatenarTiros(this);
+
+    //jah passou os tiros pra outro controladorTiro, entao esvazia esse
+    this._tiros = [];
+  }
+  mudarTempo(porcentagem)
+  {
+    this._tiros.forEach(tiro =>
+      {
+        if (tiro.vivo)
+          tiro.classeAndar.mudarTempo(porcentagem);
+      });
+  }
+  mudarQtdAndarTiros(porcentagem)
+  {
+    this._tiros.forEach(tiro =>
+      {
+        if (tiro.vivo)
+          tiro.classeAndar.mudarQtdAndar(porcentagem);
+      });
+  }
+  mudarMortalidadeTiros(qtdMudar, ehPorcentagem)
+  {
+    this._tiros.forEach(tiro =>
+      {
+        if (tiro.vivo)
+          tiro.mudarMortalidade(qtdMudar, ehPorcentagem);
+      });
+  }
+
+	//draw
+	draw() //desenha os tiros vivos
+	{
+    this._tiros.forEach(tiro =>
+      {
+        if (tiro.vivo)
+          tiro.draw();
+      });
+	}
+  drawMortos() //desenha os tiros mortos
+  {
+    this._tiros.forEach((tiro, index) =>
+      {
+        if (!tiro.vivo)
+        {
+          const removerDoVetor = tiro.draw();
+          if (removerDoVetor)
+            this._removerTiro(index);
+        }
+      });
+  }
+
+  //auxiliar
+  _removerTiro(index)
+  {
+    this._tiros.splice(index,1);
+    //remover 1 elemento a partir de indexInim
+  }
 }

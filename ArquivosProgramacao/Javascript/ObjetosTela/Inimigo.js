@@ -1,11 +1,11 @@
 //INIMIGO
- //backend
-const tempoMostrarVidaPadrao = 1000;
-const maxRotacionarArmaGiratoriaInim = PI/32;
- //visual:
+  //vida
+const tempoMostrarVidaPadrao = 1100;
 const heightVidaInim = 10;
 const porcWidthVidaInim = 0.25;
 const absWidthVidaInim = 40;
+  //rotacao arma giratoria
+const maxRotacionarArmaGiratoriaInim = maxRotacionarArmaGiratoriaPers * 0.3;
 class InfoInimigo extends InfoObjetoComArmas_e_Vida
 {
   constructor(formaGeometrica, infoImgMorto, vida, corVida, mostrarVidaSempre=true, porcentagemTempoVida, qtdTiraVidaPersQndIntersec, infoAndar, rotacionarInimAnguloAnda=false, infoArmas, qtdHelices, qtdsRotateDifHelices, ehInimEssencial)
@@ -94,7 +94,8 @@ class Inimigo extends ObjetoComArmas_e_Vida
     if (this._rotacionarInimAnguloAnda)
     {
       //rotacionar inim de modo a ele ficar com o angulo de rotacao igual ao angulo que ele vai andar
-      /*NAO MUDAR ISSO!!:*/this._formaGeometrica = this._formaGeometrica.setRotacao(this._classeAndar.anguloQtdAndar);
+      /*NAO MUDAR ISSO!!:*/this._formaGeometrica = this._formaGeometrica.setRotacao(PI + this._classeAndar.anguloQtdAndar);
+      //ps: nao eh apenas o anguloQtdAndar pois a frente do inimigo eh em 180graus
       //ps: "this._formaGeometrica = " para funcionar para FormasGeometricasSimples tambem
     }
 
@@ -253,7 +254,7 @@ class Inimigo extends ObjetoComArmas_e_Vida
     const widthVidaInim = absWidthVidaInim + porcWidthVidaInim*this._vidaMAX;
 
     let xInim, yInim;
-    const anguloRotacionouTotal = this._formaGeometrica.anguloRotacionouTotal - PI;
+    const anguloRotacionouTotal = this._formaGeometrica.anguloRotacionouTotal;
     //ps: em ArmazenadorInfoObjetos sempre rotaciona-se 180graus inicialmente para o inimigo ficar apontado pra baixo
     if (anguloRotacionouTotal !== 0)
     // se inimigo estah rotacionado
@@ -279,6 +280,7 @@ class Inimigo extends ObjetoComArmas_e_Vida
     const tamNoStroke = tamStrokeAtual/2;
     noStroke();
     fill(this._corVida.fill);
+
     rect(xVida + tamNoStroke, yVida + tamNoStroke,
       (widthVidaInim - 2*tamNoStroke)*(this._vida/this._vidaMAX), heightVidaInim - 2*tamNoStroke);
 
@@ -290,13 +292,10 @@ class Inimigo extends ObjetoComArmas_e_Vida
 //CONTROLADOR INIMIGOS
 class ControladorInimigos
 {
-  constructor(indexContr, infoInimigoPadrao, ehDeInimigosEssenciais = false, infoObjAparecendoPadrao)
+  constructor(infoInimigoPadrao, ehDeInimigosEssenciais = false, infoObjAparecendoPadrao)
   {
     //padrao
     this._infoInimigoPadrao = infoInimigoPadrao.clone();
-
-    //index controlador
-    this._indexContr = indexContr;
 
     // inimigos que interagem com o meio
     this._inimigos = [];
@@ -306,6 +305,10 @@ class ControladorInimigos
 
     this._ehDeInimigosEssenciais = ehDeInimigosEssenciais;
   }
+
+  //setter
+  set indexContr(indexContr)
+  { this._indexContr = indexContr; }
 
   //getters basicos
   get infoInimigoPadrao()

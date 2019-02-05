@@ -14,13 +14,15 @@ class InfoObjetoComArmas extends InfoObjetoTela
 }
 class InfoArma
 {
-  constructor(infoTiroPadrao, freqAtirar, indexArmaGiratoria=-1, direcaoSairTiro, porcPraDentroObj=0, ehTiroDuplo=false, porcTiroCentro, atirarDireto=true, funcaoCondicaoAtirar)
-  // porcPraDentroObj e porcTiroCentro devem ser um numero de 0 a 1
-  // se indexArmaGiratoria >= 0, ha varios atributos que nao precisa-se preencher
+  constructor(infoTiroPadrao, freqAtirar, indexArmaGiratoria=-1, direcaoSairTiro, porcPraDentroObj=0, ehTiroDuplo=false, porcTiroCentro, porcComecaAtirar=1, atirarDireto=true, funcaoCondicaoAtirar)
+  //porcComecaAtirar: porcentagem da frequencia. freqFunc serah inicializado com o count = porc*freq
+  //porcTiroCentro: porcentagem da formaGeometrica que seja no meio de onde o tiro deve sair
+  // porcPraDentroObj e porcTiroCentro devem ser um numero de 0 a 1 (porcentagem)
   // funcaoCondicaoAtirar: essa funcao recebe o ObjetoComArmas como parametro e deve retornar true se puder atirar e false se nao puder (soh vai atirar se jah tiver a frequencia necessaria e se essa funcao retornar true)
   {
     this.infoTiroPadrao = infoTiroPadrao;
     this.freqAtirar = freqAtirar;
+    this.porcComecaAtirar = porcComecaAtirar;
 
     this.indexArmaGiratoria = indexArmaGiratoria;
     if (indexArmaGiratoria < 0)
@@ -38,24 +40,24 @@ class InfoArma
   }
 
   clone()
-  { return new InfoArma(this.infoTiroPadrao, this.freqAtirar, this.indexArmaGiratoria, this.direcaoSairTiro, this.porcPraDentroObj, this.ehTiroDuplo, this.porcTiroCentro, this.atirarDireto, this.funcaoCondicaoAtirar); }
+  { return new InfoArma(this.infoTiroPadrao, this.freqAtirar, this.indexArmaGiratoria, this.direcaoSairTiro, this.porcPraDentroObj, this.ehTiroDuplo, this.porcTiroCentro, this.porcComecaAtirar, this.atirarDireto, this.funcaoCondicaoAtirar); }
 
   getConfig()
   {
     if (this.indexArmaGiratoria >= 0) //se eh arma giratoria
       return {
-        atirarDireto: this.atirarDireto,
         indexArmaGiratoria: this.indexArmaGiratoria,
+        atirarDireto: this.atirarDireto,
         funcaoCondicaoAtirar: this.funcaoCondicaoAtirar
       };
     else
       return {
-        atirarDireto: this.atirarDireto,
         indexArmaGiratoria: this.indexArmaGiratoria,
         direcaoSairTiro: this.direcaoSairTiro,
         porcPraDentroObj: this.porcPraDentroObj,
         ehTiroDuplo: this.ehTiroDuplo,
         porcTiroCentro: this.porcTiroCentro,
+        atirarDireto: this.atirarDireto,
         funcaoCondicaoAtirar: this.funcaoCondicaoAtirar
       };
   }
@@ -88,7 +90,9 @@ class ObjetoComArmas extends ObjetoTela
         this._armas[i] = {
           controlador: new ControladorTiros(infoArma.infoTiroPadrao, this instanceof PersonagemPrincipal),
           config: config,
-          freqFunc: new FreqFunction(freqAtirar, freqAtirar-1) // o index comeca logo antes de executar porque nao pode jah atirar sem que o this._armas[i] esteja pronto
+          freqFunc: new FreqFunction(freqAtirar,
+              (infoArma.porcComecaAtirar===1) ? freqAtirar-1 // o index comeca logo antes de executar porque nao pode jah atirar sem que o this._armas[i] esteja pronto
+                : freqAtirar*infoArma.porcComecaAtirar)
         };
         // se nao eh atirarDireto vai ter atributo "podeAtirar" no config
       });
@@ -103,7 +107,7 @@ class ObjetoComArmas extends ObjetoTela
   get qtdControladoresTiros()
   { return this._armas.length; }
   getConfigArma(i=0) //pode mudar as configuracoes por aqui
-  { return this._armas[i].controlador; }
+  { return this._armas[i].config; }
   getFreqFuncAtirar(i=0) //ps: se quiser mudar frequencia mudar aqui (ou this._armas[i].freqFunc.freq)
   { return this._armas[i].freqFunc; }
   get qtdConfigContrTiros() { return this._armas.length; }
@@ -154,12 +158,10 @@ class ObjetoComArmas extends ObjetoTela
       this._atirarArmaGiratoria(arma);
     else
     {
-      //se nao estah rotacionado ou estah rotacionado dentro do padrao (padrao: Inimigo virado pra baixo e Personagem virado pra cima)
-      //fiz dessa maneira (verificando se eh o inimigo normalmente rotacionado com ifs para saber qual eh o angulo de rotacao padrao) para que nao precise rotacionar cada um dos tiros de Inimigos que estao virados pra baixo (isso gastaria muito tempo)
-      const anguloRotacaoPadrao = (this instanceof Inimigo) ? PI : 0;
-      const estahRotacionado = !Exatidao.ehQuaseExato(Math.abs(this._formaGeometrica.anguloRotacionouTotal), anguloRotacaoPadrao);
+      //verifica se nao estah rotacionado (mesmo se nao estah rotacionado o algoritmo de atirar rotacionado daria mas haveria uma perda de tempo desnecessaria)
+      const estahRotacionado = !Exatidao.ehQuaseExato(this._formaGeometrica.anguloRotacionouTotal, 0);
 
-      const pontosIniciais = this._getPontosIniciaisTiro(arma, estahRotacionado, anguloRotacaoPadrao);
+      const pontosIniciais = this._getPontosIniciaisTiro(arma, estahRotacionado);
       //vetor com 1 ou 2 posicoes (se ehTiroDuplo). ps: jah conta o porcPraDentroObj
       //obs: se estah rotacionado vai retornar o vetor de pontos relativo ao centroMassa e sem ter rotacionado-os ainda
 
@@ -167,8 +169,6 @@ class ObjetoComArmas extends ObjetoTela
         pontosIniciais.forEach(pontoInicial => arma.controlador.adicionarTiro(pontoInicial));
       else
       {
-        const anguloRotacionar = this._formaGeometrica.anguloRotacionouTotal - anguloRotacaoPadrao;
-
         //Explicacao: fazer com cada ponto
           //1. clonar formaGeometrica no lugar certo e rotacionar formaGeometrica do tiro com centroRotacao=(0,0)
           //2. tirar relatividade do centroMassa (isto eh, somar centroMassa)
@@ -177,7 +177,7 @@ class ObjetoComArmas extends ObjetoTela
           {
             //1.
             let formaGeomTiro = arma.controlador.infoTiroPadraoAtual.formaGeometrica.clone(pontoInicial.x, pontoInicial.y);
-            formaGeomTiro = formaGeomTiro.rotacionar(anguloRotacionar, new Ponto(0,0));
+            formaGeomTiro = formaGeomTiro.rotacionar(this._formaGeometrica.anguloRotacionouTotal, new Ponto(0,0));
 
             //2.
             formaGeomTiro.x += this._formaGeometrica.centroMassa.x;
@@ -185,14 +185,14 @@ class ObjetoComArmas extends ObjetoTela
 
             //3.
             arma.controlador.adicionarTiroDif(null,
-              {angulo: Angulo.angRotacaoParaAngCicloTrig(this._formaGeometrica.anguloRotacionouTotal)},
+              {angulo: Angulo.angRotacaoParaAngCicloTrig(this._formaGeometrica.anguloRotacionouTotal + Angulo.anguloRotacaoDirecao(arma.config.direcaoSairTiro))},
               //tiro vai andar pra direcao que estah apontado
               {formaGeometrica: formaGeomTiro});
           });
       }
     }
   }
-  _getPontosIniciaisTiro(arma, estahRotacionado, anguloRotacaoPadrao)
+  _getPontosIniciaisTiro(arma, estahRotacionado)
   //se estahRotacionado vai retornar os pontosIniciais relativos ao centroMassa e nao rotacionados
   //caso contrario, vai retornar os pontos iniciais absolutos
   {
@@ -212,23 +212,19 @@ class ObjetoComArmas extends ObjetoTela
       if (estahRotacionado)
       //estah rotacionado
       {
-        //se angulo anguloRotacaoPadrao eh 180graus (para inimigos por exemplo) o distXCentro eh a medida do centro ateh o lado direito e o distY, do centro ateh em baixo
-        const distXCentroAbs = (anguloRotacaoPadrao===PI) ? (this._formaGeometrica.widthSemRotac - this._formaGeometrica.distXCentroAbs) : this._formaGeometrica.distXCentroAbs;
-        const distYCentroAbs = (anguloRotacaoPadrao===PI) ? (this._formaGeometrica.heightSemRotac - this._formaGeometrica.distYCentroAbs) : this._formaGeometrica.distYCentroAbs;
-
         let y;
         if (direcaoSairTiro === Direcao.Cima)
-          y = -distYCentroAbs - infoTiroPadrao.formaGeometrica.height + qntPraDentroObj;
+          y = -this._formaGeometrica.distYCentroAbs - infoTiroPadrao.formaGeometrica.height + qntPraDentroObj;
         else
-          y = (this._formaGeometrica.heightSemRotac - distYCentroAbs)/*y da parede de baixo do retangulo*/
+          y = (this._formaGeometrica.heightSemRotac - this._formaGeometrica.distYCentroAbs)/*y da parede de baixo do retangulo*/
             - qntPraDentroObj;
 
-        const xCentro = this._formaGeometrica.widthSemRotac/2 - distXCentroAbs;
+        const xCentro = this._formaGeometrica.widthSemRotac/2 - this._formaGeometrica.distXCentroAbs;
         if (arma.config.ehTiroDuplo) //se eh tiro duplo
         {
           const distanciaTiroCentro = arma.config.porcTiroCentro * this._formaGeometrica.widthSemRotac;
-          vetorPontos[0] = new Ponto(xCentro - distanciaTiroCentro - infoTiroPadrao.formaGeometrica.width, y);
-          vetorPontos[1] = new Ponto(xCentro + distanciaTiroCentro, y);
+          vetorPontos[0] = new Ponto(xCentro - distanciaTiroCentro - infoTiroPadrao.formaGeometrica.width/2, y);
+          vetorPontos[1] = new Ponto(xCentro + distanciaTiroCentro - infoTiroPadrao.formaGeometrica.width/2, y);
         }else
           vetorPontos[0] = new Ponto(xCentro - infoTiroPadrao.formaGeometrica.width/2, y);
       }else
@@ -243,8 +239,8 @@ class ObjetoComArmas extends ObjetoTela
         if (arma.config.ehTiroDuplo) //se eh tiro duplo
         {
           const distanciaTiroCentro = arma.config.porcTiroCentro * this._formaGeometrica.width;
-          vetorPontos[0] = new Ponto(this._formaGeometrica.x + this._formaGeometrica.width/2 - distanciaTiroCentro - infoTiroPadrao.formaGeometrica.width, y);
-          vetorPontos[1] = new Ponto(this._formaGeometrica.x + this._formaGeometrica.width/2 + distanciaTiroCentro, y);
+          vetorPontos[0] = new Ponto(this._formaGeometrica.x + this._formaGeometrica.width/2 - distanciaTiroCentro - infoTiroPadrao.formaGeometrica.width/2, y);
+          vetorPontos[1] = new Ponto(this._formaGeometrica.x + this._formaGeometrica.width/2 + distanciaTiroCentro - infoTiroPadrao.formaGeometrica.width/2, y);
         }else
           vetorPontos[0] = new Ponto(this._formaGeometrica.x + (this._formaGeometrica.width - infoTiroPadrao.formaGeometrica.width)/2, y);
       }
@@ -255,23 +251,19 @@ class ObjetoComArmas extends ObjetoTela
       if (estahRotacionado)
       //estah rotacionado
       {
-        //se angulo anguloRotacaoPadrao eh 180graus (para inimigos por exemplo) o distXCentro eh a medida do centro ateh o lado direito e o distY, do centro ateh em baixo
-        const distXCentroAbs = (anguloRotacaoPadrao===PI) ? (this._formaGeometrica.widthSemRotac - this._formaGeometrica.distXCentroAbs) : this._formaGeometrica.distXCentroAbs;
-        const distYCentroAbs = (anguloRotacaoPadrao===PI) ? (this._formaGeometrica.heightSemRotac - this._formaGeometrica.distYCentroAbs) : this._formaGeometrica.distYCentroAbs;
-
         let x;
         if (direcaoSairTiro === Direcao.Esquerda)
-          x = -distXCentroAbs - infoTiroPadrao.formaGeometrica.width + qntPraDentroObj;
+          x = -this._formaGeometrica.distXCentroAbs - infoTiroPadrao.formaGeometrica.width + qntPraDentroObj;
         else
-          x = (this._formaGeometrica.widthSemRotac - distXCentroAbs)/*x da parede direita do retangulo*/
+          x = (this._formaGeometrica.widthSemRotac - this._formaGeometrica.distXCentroAbs)/*x da parede direita do retangulo*/
             - qntPraDentroObj;
 
-        const yCentro = this._formaGeometrica.heightSemRotac/2 - distYCentroAbs;
+        const yCentro = this._formaGeometrica.heightSemRotac/2 - this._formaGeometrica.distYCentroAbs;
         if (arma.config.ehTiroDuplo) //se eh tiro duplo
         {
           const distanciaTiroCentro = arma.config.porcTiroCentro * this._formaGeometrica.heightSemRotac;
-          vetorPontos[0] = new Ponto(x, yCentro - distanciaTiroCentro - infoTiroPadrao.formaGeometrica.height);
-          vetorPontos[1] = new Ponto(x, yCentro + distanciaTiroCentro);
+          vetorPontos[0] = new Ponto(x, yCentro - distanciaTiroCentro - infoTiroPadrao.formaGeometrica.height/2);
+          vetorPontos[1] = new Ponto(x, yCentro + distanciaTiroCentro - infoTiroPadrao.formaGeometrica.height/2);
         }else
           vetorPontos[0] = new Ponto(x, yCentro - infoTiroPadrao.formaGeometrica.height/2);
       }else
@@ -286,8 +278,8 @@ class ObjetoComArmas extends ObjetoTela
         if (arma.config.ehTiroDuplo) //se eh tiro duplo
         {
           const distanciaTiroCentro = arma.config.porcTiroCentro * this._formaGeometrica.height;
-          vetorPontos[0] = new Ponto(x, this._formaGeometrica.y + this._formaGeometrica.height/2 - distanciaTiroCentro - infoTiroPadrao.formaGeometrica.height);
-          vetorPontos[1] = new Ponto(x, this._formaGeometrica.y + this._formaGeometrica.height/2 + distanciaTiroCentro);
+          vetorPontos[0] = new Ponto(x, this._formaGeometrica.y + this._formaGeometrica.height/2 - distanciaTiroCentro - infoTiroPadrao.formaGeometrica.height/2);
+          vetorPontos[1] = new Ponto(x, this._formaGeometrica.y + this._formaGeometrica.height/2 + distanciaTiroCentro - infoTiroPadrao.formaGeometrica.height/2);
         }else
           vetorPontos[0] = new Ponto(x, this._formaGeometrica.y + (this._formaGeometrica.height - infoTiroPadrao.formaGeometrica.height)/2);
       }

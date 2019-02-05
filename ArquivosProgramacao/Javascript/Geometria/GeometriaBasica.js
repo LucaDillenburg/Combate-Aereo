@@ -256,29 +256,30 @@ class Angulo
       angulo += 2*PI*((angulo > 0)?-1:1);
     return angulo;
   }
-  static anguloDirecao(direcao, emRadiano=true)
+  static anguloDirecao(direcao) //angulo ciclo trigonometrico
   {
     switch (direcao)
     {
       case Direcao.Direita: return 0;
 
-      case Direcao.Cima:
-        if (emRadiano)
-          return PI/2;
-        else
-          return 90;
+      case Direcao.Cima: return PI/2;
 
-      case Direcao.Esquerda:
-        if (emRadiano)
-          return PI;
-        else
-          return 180;
+      case Direcao.Esquerda: return PI;
 
-      case Direcao.Baixo:
-        if (emRadiano)
-          return 3*PI/2;
-        else
-          return 270;
+      case Direcao.Baixo: return 3*PI/2;
+    }
+  }
+  static anguloRotacaoDirecao(direcao) //anguloRotacao
+  {
+    switch (direcao)
+    {
+      case Direcao.Direita: return PI/2;
+
+      case Direcao.Cima: return 0;
+
+      case Direcao.Esquerda: return -PI/2;
+
+      case Direcao.Baixo: return PI;
     }
   }
 

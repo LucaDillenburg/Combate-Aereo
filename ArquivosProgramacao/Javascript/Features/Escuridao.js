@@ -1,13 +1,21 @@
-const minEscuroAtualRaio = 50; //de 255
+  //probabilidade de desenhar raio
+//se estah totalmente escuro
+const minEscuroAtualRaio = 200; //de 255
 const denominadorChanceRaio = 12;
+//se estah totalmente escuro
+const numeradorChanceRaioTotalEscuro = 1;
+const denominadorChanceRaioTotalEscuro = 1;
+
+  //para deixar um tempo entre cada vez que for desenhar o raio
+const qtdDrawsIntervaloDesenharRaio = 9;
 
 // EXPLICACAO DE NOMENCLATURA
   // Bloco: todas os qtdRepeticoes de escurecer-clarear
   // EscClar: uma repeticao de escurecer-clarear
 class InfoEscuridao
 {
-  constructor(tempoEscurecendo, desvioTempoEscurec, tempoEscuroTotal, desvioEscuroTotal, intervaloEntreEscClarMsmBloco=0, intervalo, desvioIntervalo, qtdRepeticoes, desvioQtdRep, infosImgsRaios)
-  // infosImgsRaios nao pode ser undefined e cada posicao (se houver) precisa ter {img, ponto{x,y}}
+  constructor(tempoEscurecendo, desvioTempoEscurec=0, tempoEscuroTotal, desvioEscuroTotal=0, intervaloEntreEscClarMsmBloco=0, intervalo, desvioIntervalo=0, qtdRepeticoes, desvioQtdRep=0, imgsRaios)
+  // imgsRaios pode ser undefined
   {
     this.tempoEscurecendo = tempoEscurecendo;
     this.desvioTempoEscurec = desvioTempoEscurec;
@@ -18,13 +26,12 @@ class InfoEscuridao
     this.desvioIntervalo = desvioIntervalo;
     this.qtdRepeticoes = qtdRepeticoes;
     this.desvioQtdRep = desvioQtdRep;
-    this.infosImgsRaios = infosImgsRaios;
+    this.imgsRaios = imgsRaios;
   }
 }
 class Escuridao
 {
   constructor(infoEscuridao)
-
   {
     //tempo que demora pra escurecer de 0% a 100%
     this._tempoEscurecendo = infoEscuridao.tempoEscurecendo;
@@ -46,7 +53,14 @@ class Escuridao
     this._desvioQtdRep = infoEscuridao.desvioQtdRep;
 
     //imagens dos raios
-    this._infosImgsRaios = infoEscuridao.infosImgsRaios;
+    if (infoEscuridao.imgsRaios===undefined)
+    {
+      const qtdRaios = 6;
+      this._imgsRaios = [];
+      for (let i = 1; i<=qtdRaios; i++)
+        this._imgsRaios.push(ArmazenadorInfoObjetos.getImagem("Raios/raio"+i));
+    }else
+      this._imgsRaios = infoEscuridao.imgsRaios;
 
     this._programarComecoProxBloco();
   }
@@ -63,7 +77,7 @@ class Escuridao
   _comecarBloco()
   {
     // setar quantas repeticoes vai ter e quantas jah foram
-    this._qtdRepeticoesAtual = Math.randomComDesvio(this._qtdRepeticoes, this._desvioQtdRep);
+    this._qtdRepeticoesAtual = Math.round(Math.randomComDesvio(this._qtdRepeticoes, this._desvioQtdRep)); //ps: tem que colocar floor porque pode ter qtdRepeticoes de 2.5 e desvio de 0.5 por exemplo
     this._vezesEscurecerCompletas = 0;
 
     //comecar primeiro escurecer-clarear
@@ -77,6 +91,8 @@ class Escuridao
     this._qtdEscuroAtual = 0;
 
     this._escurecendo = true; //se for false eh porque esta ficando mais claro
+
+    this._qtdDrawsSemEscurecer = qtdDrawsIntervaloDesenharRaio;
   }
 
   _proximoEscClarMsmBloco()
@@ -101,6 +117,7 @@ class Escuridao
     delete this._qtdEscurecer;
     delete this._qtdEscuroAtual;
     delete this._escurecendo;
+    delete this._qtdDrawsSemEscurecer;
   }
   _acabarBloco()
   {
@@ -134,13 +151,29 @@ class Escuridao
       //DESENHAR
       //background preto
       background(color(0,0,0, this._qtdEscuroAtual)); //this._qtdEscuroAtual eh a opacidade (de 0 a 255)
-      //raios
-      if (this._infosImgsRaios.length > 0 && //se tem alguma imagem de raio
-        this._qtdEscuroAtual >= minEscuroAtualRaio && Probabilidade.chance(1, denominadorChanceRaio))
+      //raio
+      if (this._imgsRaios.length > 0 && //se tem alguma imagem de raio
+        this._qtdDrawsSemEscurecer >= qtdDrawsIntervaloDesenharRaio && //para dar um intervalo entre cada raio
+        //chance:
+        ((this._qtdEscuroAtual >= minEscuroAtualRaio && Probabilidade.chance(1, denominadorChanceRaio))
+        || (this._qtdEscuroAtual >= 255/*maximo*/ && Probabilidade.chance(numeradorChanceRaioTotalEscuro, denominadorChanceRaioTotalEscuro))))
       {
-        image(this._infosImgsRaios[this._indexRaio].img, this._infosImgsRaios[this._indexRaio].ponto.x, this._infosImgsRaios[this._indexRaio].ponto.y);
-        this._indexRaio = (this._indexRaio+1)%this._infosImgsRaios.length; //se for igual qtdInfosImgsRaios voltar para indice zero
-      }
+        const img = this._imgsRaios[Math.myrandom(0, this._imgsRaios.length)];
+
+        //medidas
+        const porcHeightMin = 0.7;
+        const heightCeu = height - heightVidaUsuario;
+        const heightImg = Math.myrandom(heightCeu*porcHeightMin, heightCeu);
+        const widthImg = img.width * heightImg / img.height;
+        //(x,y)
+        const x = Math.myrandom(0, width-widthImg);
+        const y = Math.myrandom(0, heightCeu-heightImg);
+        image(img, x, y, widthImg, heightImg);
+
+        //recomeca a contagem (para dar intervalo entre os raios)
+        this._qtdDrawsSemEscurecer = 0;
+      }else
+        this._qtdDrawsSemEscurecer++;
 
       // VERIFICAR SE VAI COMECAR A CLAREAR DE NOVO OU VAI ESPERAR UM TEMPO PRETO
       if (this._qtdEscuroAtual === 255 && this._escurecendo !== 0)

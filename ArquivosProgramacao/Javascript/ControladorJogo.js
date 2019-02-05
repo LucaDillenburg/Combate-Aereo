@@ -27,6 +27,8 @@ class ControladorJogo
   { return ControladorJogo._criandoLevel; }
   static get level()
   { return ControladorJogo._level; }
+  static get previaJogo()
+  { return ControladorJogo._previaJogo; }
   // ObjetosTela
   static get pers()
   { return ControladorJogo._personagemPrincipal; }
@@ -106,6 +108,60 @@ class ControladorJogo
     {
       //PREVIA JOGO: fazer dois levels (pra poder ver a Oficina)
       //obs: quando comecar o segundo level, depois de um certo tempo, mostrar o Sistema de Colisao!
+      let length;
+      switch(ControladorJogo._level)
+      {
+        case 1:
+        {
+          // inimigos
+            //Aviao Brutao (parado no meio)
+            const infoAviaoBrutao = ArmazenadorInfoObjetos.infoInim("AviaoBrutao", {ficarParado: true});
+            const yAviaoBrutao = 25;
+            const infoAparecAviaoBrutao = new InfoObjetoTelaAparecendo(false, false, new Ponto(0, -(infoAviaoBrutao.formaGeometrica.height + yAviaoBrutao + 40)));
+            length = ControladorJogo._controladoresInimigos.push(new ControladorInimigos(infoAviaoBrutao, true, infoAparecAviaoBrutao));
+            ControladorJogo._controladoresInimigos[length-1].indexContr = length-1;
+            ControladorJogo._controladoresInimigos[length-1].adicionarInimigo({posicaoX: PosicaoX.Meio, y: yAviaoBrutao});
+
+            //Helicoptero Bom (se movimentando um pouco dos lados)
+            const infoHelicopteroBom = ArmazenadorInfoObjetos.infoInim("HelicopteroBom", {ficarParado: true});
+            const infoAparecHelicopteroBom = new InfoObjetoTelaAparecendo(true, true);
+            length = ControladorJogo._controladoresInimigos.push(new ControladorInimigos(infoHelicopteroBom, true, infoAparecHelicopteroBom));
+            ControladorJogo._controladoresInimigos[length-1].indexContr = length-1;
+            const qtdHelicopAfastadoParede = 25;
+            const yHelicop = 28;
+            ControladorJogo._controladoresInimigos[length-1].adicionarInimigo({posicaoX: PosicaoX.ParedeEsquerda, x: qtdHelicopAfastadoParede, y: yHelicop});
+            ControladorJogo._controladoresInimigos[length-1].adicionarInimigo({posicaoX: PosicaoX.ParedeDireita, x: -qtdHelicopAfastadoParede, y: yHelicop});
+        }
+        break;
+
+        case 2:
+        {
+          // inimigos
+            //Aviao Master Inim (parado no meio)
+            const infoAviaoMaster = ArmazenadorInfoObjetos.infoInim("AviaoMaster", {ficarParado: true});
+            const yAviaoMaster = 20;
+            const infoAparecAviaoMaster = new InfoObjetoTelaAparecendo(false, false, new Ponto(0, -(infoAviaoMaster.formaGeometrica.height + yAviaoMaster)));
+            length = ControladorJogo._controladoresInimigos.push(new ControladorInimigos(infoAviaoMaster, true, infoAparecAviaoMaster));
+            ControladorJogo._controladoresInimigos[length-1].indexContr = length-1;
+            ControladorJogo._controladoresInimigos[length-1].adicionarInimigo({posicaoX: PosicaoX.Meio, y: yAviaoMaster});
+
+            //Aviao Bruto SemHel
+            const infoAviaoBruto = ArmazenadorInfoObjetos.infoInim("AviaoBrutoSemHel", {ficarParado: true});
+            const infoAparecAviaoBruto = new InfoObjetoTelaAparecendo(true, true);
+            length = ControladorJogo._controladoresInimigos.push(new ControladorInimigos(infoAviaoBruto, false, infoAparecAviaoBruto));
+            ControladorJogo._controladoresInimigos[length-1].indexContr = length-1;
+            const yAviaoBruto = 150;
+            const qtdAfastadoParede = 40;
+            ControladorJogo._controladoresInimigos[length-1].adicionarInimigo({posicaoX: PosicaoX.ParedeEsquerda, x: qtdAfastadoParede, y: yAviaoBruto});
+            ControladorJogo._controladoresInimigos[length-1].adicionarInimigo({posicaoX: PosicaoX.ParedeDireita, x: -qtdAfastadoParede, y: yAviaoBruto});
+        }
+        break;
+
+        //se tiver mais levels colocar aqui, mudar em: ControladorJogo.tempoEstimadoLevel(), ControladorJogo._acabouLevel(), ControladorPocaoTela.pocoesPossiveisFromLevel(...), ControladorPocaoTela.probabilidadeFromLevel(...)
+
+        default:
+          return false; //acabaram os levels
+      }
     }else
     {
       let length;
@@ -116,47 +172,11 @@ class ControladorJogo
         {
           // inimigos
             //Inimigo Normal Medio (essencial)
-            const infoInimMedio = ArmazenadorInfoObjetos.infoInim("AviaoNormalMedio", {ficarParado: true});
+            const infoInimMedio = ArmazenadorInfoObjetos.infoInim("HelicopteroBom", {ficarParado: true});
             const infoInimMedioAparec = new InfoObjetoTelaAparecendo(false, false, new Ponto(0, -70)); //ObjetoAparecendo
-            length = ControladorJogo._controladoresInimigos.push(new ControladorInimigos(0, infoInimMedio, true, infoInimMedioAparec));
+            length = ControladorJogo._controladoresInimigos.push(new ControladorInimigos(infoInimMedio, true, infoInimMedioAparec));
+            ControladorJogo._controladoresInimigos[length-1].indexContr = length-1;
             ControladorJogo._controladoresInimigos[length-1].adicionarInimigo({posicaoX: PosicaoX.Meio, y: 15});
-
-            //Inimigo Normal Fraco (essencial)
-            const infoInimFraco = ArmazenadorInfoObjetos.infoInim("AviaoNormalFraco");
-            const infoInimFracoAparec = new InfoObjetoTelaAparecendo(false, false, new Ponto(0, -300)); //ObjetoAparecendo
-            length = ControladorJogo._controladoresInimigos.push(new ControladorInimigos(0, infoInimFraco, true, infoInimFracoAparec));
-            const qtdAfastadoParede = 20;
-            ControladorJogo._controladoresInimigos[length-1].adicionarInimigoDif({posicaoX: PosicaoX.ParedeEsquerda, x: qtdAfastadoParede, y: 15},
-              {direcao: Direcao.Direita});
-            ControladorJogo._controladoresInimigos[length-1].adicionarInimigoDif({posicaoX: PosicaoX.ParedeDireita, x: -qtdAfastadoParede, y: 15},
-              {direcao: Direcao.Esquerda});
-
-          //suporte aereo
-            this._controladorSuportesAereos = new ControladorSuportesAereos(new InfoObjetoTelaAparecendo(true, true),
-              new InfoSuporteAereo(
-                new Retangulo(0,0, 30, 250, {fill: "blue"}), new InfoImgMorto([{fill: "black"}]), [new InfoArma(
-                  ArmazenadorInfoObjetos.infoTiro("TiroFraco", false, TipoAndar.Normal, {direcaoAnguloAponta: Direcao.Esquerda, ehAngulo: false}),
-                  10, -1, Direcao.Esquerda, 0, true, 0.2
-                )], 500));
-            this._controladorSuportesAereos.adicionarSuporteAereo({posicaoX: PosicaoX.ParedeDireita, x: -15, y: 100});
-
-          // obstaculos
-            //InfoObstaculo: formaGeometrica, infoImgMorto, corImgEspecial, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers
-            /*let infoObst1 = new InfoObstaculo();
-            infoObst1.formaGeometrica = new Retangulo(undefined,undefined, 200, 25, {fill: "black"});
-            infoObst1.infoImgMorto = new InfoImgMorto([{fill: "white"}]);
-            infoObst1.corImgEspecial = {fill: "green"};
-            infoObst1.infoAndar = new InfoAndar(0,0, TipoAndar.NaoSairTelaInvDir);
-            infoObst1.qtdTiraVidaBatePers = 1;
-            infoObst1.qtdTiraVidaNaoConsegueEmpurrarPers = 10;
-            const infoObst1Aparecendo = new InfoObjetoTelaAparecendo(true, true);
-            length = ControladorJogo._controladoresObstaculos.push(new ControladorObstaculos(0, infoObst1, infoObst1Aparecendo));
-            ControladorJogo._controladoresObstaculos[length-1].adicionarObstaculo({posicaoX: PosicaoX.Meio, x: -130, posicaoY: PosicaoY.Meio, y: -10});
-            ControladorJogo._controladoresObstaculos[length-1].adicionarObstaculo({posicaoX: PosicaoX.Meio, x: 130, posicaoY: PosicaoY.Meio, y: -10});
-            */
-
-          // suportes aereos
-          //...
         }
         break;
 
@@ -193,6 +213,90 @@ class ControladorJogo
     if (ControladorJogo._previaJogo)
     {
       //PREVIA JOGO
+      switch(ControladorJogo._level)
+      {
+        case 1:
+        {
+          // inimigos
+            const infoMostrarVida = {mostrarVidaSempre: false};
+            const tempoAddCadaInimigo = 27000;
+
+            //Aviao Supersonico Rapido (se movimentando)
+              //criar controlador
+            const infoAviaoSupersonico = ArmazenadorInfoObjetos.infoInim("AviaoSupersonicoRapido", undefined, TipoAndar.NaoSairTelaInvTudo, infoMostrarVida);
+            const infoAparecAviaoSupersonico = new InfoObjetoTelaAparecendo(true, true);
+            const lengthSupersonico = ControladorJogo._controladoresInimigos.push(new ControladorInimigos(infoAviaoSupersonico, false, infoAparecAviaoSupersonico));
+            ControladorJogo._controladoresInimigos[lengthSupersonico-1].indexContr = lengthSupersonico-1;
+              //adicionar inimigo
+            new Timer(() => // para esperar um tempo antes de criar o
+            {
+              new Timer(() =>
+                {
+                  const surgirEsquerda = Probabilidade.chance(1,2);
+
+                  const qtdAfastadoParede = 20;
+                  ControladorJogo._controladoresInimigos[lengthSupersonico-1].adicionarInimigo({posicaoX: (surgirEsquerda) ? PosicaoX.ParedeEsquerda : PosicaoX.ParedeDireita,
+                    x: qtdAfastadoParede * (surgirEsquerda)?1:-1, y: 200});
+                }, tempoAddCadaInimigo, Timer.ehIntervalFazerAoCriar);
+            }, tempoAddCadaInimigo * 0.5, false);
+
+            //Aviao Normal Bom Escuro (seguindo pers)
+              //criar controlador
+            const infoAviaoBom = ArmazenadorInfoObjetos.infoInim("AviaoNormalBomEscuro", undefined, TipoAndar.SeguirPers, infoMostrarVida, true/*rotacionar inim*/);
+            const infoAparecAviaoBom = new InfoObjetoTelaAparecendo(true, true);
+            const lengthBom = ControladorJogo._controladoresInimigos.push(new ControladorInimigos(infoAviaoBom, false, infoAparecAviaoBom));
+            ControladorJogo._controladoresInimigos[lengthBom-1].indexContr = lengthBom-1;
+              //adicionar inimigo
+            new Timer(() =>
+              {
+                const surgirEsquerda = Probabilidade.chance(1,2);
+                //ponto inicial
+                const qtdAfastadoParede = 20;
+                const pontoInicial = {posicaoX: (surgirEsquerda) ? PosicaoX.ParedeEsquerda : PosicaoX.ParedeDireita, x: qtdAfastadoParede * (surgirEsquerda)?1:-1, y: 25};
+                //mudar qtdAndar e rotacao
+                const anguloAponta = PI/4 * ((surgirEsquerda)?-1:1);
+                const alteracoesAndarRotacionar = {/*ROTACIONAR:*/direcaoAnguloAponta: anguloAponta, ehAngulo: true,
+                  /*ANDAR:*/angulo: -Angulo.angRotacaoParaAngCicloTrig(PI+anguloAponta)};
+
+                ControladorJogo._controladoresInimigos[lengthBom-1].adicionarInimigoDif(pontoInicial, alteracoesAndarRotacionar);
+              }, tempoAddCadaInimigo, Timer.ehIntervalNaoFazerAoCriar);
+
+          // escuridao
+            let infoEscuridao = new InfoEscuridao();
+              //repeticoes: de 2 a 3
+            infoEscuridao.qtdRepeticoes = 2.5;
+            infoEscuridao.desvioQtdRep = 0.5;
+              //tempo
+            infoEscuridao.tempoEscurecendo = 900;
+            infoEscuridao.tempoEscuroTotal = 200;
+            infoEscuridao.intervaloEntreEscClarMsmBloco = 200; //tempo entre cada escurecer-clarear do mesmo bloco
+            infoEscuridao.intervalo = 10000; //tempo sem escuridao
+              //desvios
+            infoEscuridao.desvioTempoEscurec = 0;
+            infoEscuridao.desvioEscuroTotal = 20;
+            infoEscuridao.desvioIntervalo = 0;
+            ControladorJogo._escuridao = new Escuridao(infoEscuridao);
+        }
+        break;
+
+        case 2:
+        {
+          // inimigos
+            //Aviao Normal Bom Claro
+              //criar controlador
+            const infoAviaoBom = ArmazenadorInfoObjetos.infoInim("AviaoNormalBomClaro", undefined, TipoAndar.SeguirPers,
+              {mostrarVidaSempre: false}, true/*rotacionar inimigo*/);
+            const infoAparecAviaoBom = new InfoObjetoTelaAparecendo(true, true);
+            const lengthBom = ControladorJogo._controladoresInimigos.push(new ControladorInimigos(infoAviaoBom, false, infoAparecAviaoBom));
+            ControladorJogo._controladoresInimigos[lengthBom-1].indexContr = lengthBom-1;
+              //adicionar inimigo
+            new Timer(() =>
+              {
+                ControladorJogo._controladoresInimigos[lengthBom-1].adicionarInimigo({posicaoX: PosicaoX.Meio, y: 265});
+              }, 18000, Timer.ehIntervalNaoFazerAoCriar);
+        }
+        break;
+      }
     }else
     {
       //criar:
@@ -202,22 +306,6 @@ class ControladorJogo
       switch(ControladorJogo._level)
       {
         case 1:
-        {
-          //Inimigo Segue PersPrincipal
-          //controlador
-          /*const infoInimSegue = ArmazenadorInfoObjetos.infoInim("AviaoNormalFraco", undefined,
-            TipoAndar.SeguirPers, {mostrarVidaSempre: false}, true, {maiorAnguloMudanca: PI/100, porcVelCurva: 0.5});
-          const infoInimSegueAparecendo = new InfoObjetoTelaAparecendo(true, true); //ObjetoAparecendo
-          const lengthInimSeguem = ControladorJogo._controladoresInimigos.push(new ControladorInimigos(0, infoInimSegue, false, infoInimSegueAparecendo));
-          //Timer (adicionar inimigos)
-          new Timer(() =>
-            {
-              ControladorJogo._controladoresInimigos[lengthInimSeguem-1].adicionarInimigo({posicaoX: PosicaoX.ParedeEsquerda, x: 10, posicaoY: PosicaoY.Meio});
-            }, 50000, Timer.ehIntervalFazerAoCriar); */
-        }
-        break;
-
-        case 2:
         {
           // escuridao
           let infoEscuridao = new InfoEscuridao();
@@ -230,18 +318,16 @@ class ControladorJogo
           infoEscuridao.desvioIntervalo = 0;
           infoEscuridao.qtdRepeticoes = 2;
           infoEscuridao.desvioQtdRep = 0;
-          infoEscuridao.infosImgsRaios = [];
           ControladorJogo._escuridao = new Escuridao(infoEscuridao);
         }
         break;
       }
     }
 
-    //POCAO
-    //terah no maximo uma pocao por level:
-    //esse metodo vai adicionar a pocao depois de certo tempo (depois de fazer a verificacao de se o level atual
-    //tem pocoes e de ver a chance/%) e jah vai programar para tira-lo caso ele nao seja pego dentro do tempo
-    ControladorJogo._controladorPocaoTela.colocarPocaoEmTempoSeChance(ControladorJogo._level);
+    //POCAO (pode ter mais de uma pocao por level, mas apenas uma na tela de cada vez)
+    //esse metodo vai programar para adicionar quantas pocoes o level permita (se Probabilidade.chance())
+    //e jah vai programar para tira-lo caso ele nao seja pego dentro do tempo
+    ControladorJogo._controladorPocaoTela.programarPocoesLevel();
   }
   //passar de level
   static _passarLevel()
@@ -266,6 +352,9 @@ class ControladorJogo
   static tempoEstimadoLevel(level)
   //retornar tempo em segundos
   {
+    if (ControladorJogo.previaJogo)
+      return 70;
+
     // TODO: ajeitar tempo cada level
     switch (level)
     {

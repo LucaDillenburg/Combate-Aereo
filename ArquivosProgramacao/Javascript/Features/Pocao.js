@@ -49,9 +49,7 @@ const porcentagemSetTam = 0.5;
 const porcentagemSetVelRuim = 0.5;
 const porcentagemDeixarTempoLento = 0.25;
 
-const qtdTiroAndarMaisRapido = 7;
 const porcentagemSetVel = 1.4;
-const qtdTiroMaisMortalidade = 3;
 const porcentagemVelTiroSeVoltarPers = 0.4;
 const porcentagemMortalidadeTiroSeVoltarPers = 0.15;
 
@@ -62,7 +60,8 @@ const qtdGanhaMuitaVida = 12;
 const qtdTiraVidaTodosInim = 70;
 
 const indexArmaMissilPers = 0; //de acordo com "TER EM MENTE.txt"
-const freqMissilPers = 22;
+const freqMissilPers = 14;
+const freqAtirarMaisRapidoMortal = 5;
 
 //POCAO
 class Pocao
@@ -76,11 +75,11 @@ class Pocao
 
   //getters
   get codPocao() { return this._codPocao; }
-  get nome()
-  { return this._informacoesPocao.nome; }
-  get ativadoInstant()
-  { return this._informacoesPocao.ativadoInstant; }
+  get nome() { return this._informacoesPocao.nome; }
+  get ativadoInstant() { return this._informacoesPocao.ativadoInstant; }
   get temDesexecutar() { return this._informacoesPocao.temDesexecutar; }
+  get mudaAviaoPersTemp() //se a pocao muda o aviao do personagem temporariamente (se mexeria em algumas coisas do personagem em pocao.desexecutar())
+  { return this._informacoesPocao.temDesexecutar && this._informacoesPocao.mudaAviaoPersTemp; }
 
   get tempoTotal() { return this._tempoTotal; }
   get tempoRestante() { return this._tempoRestante; }
@@ -93,18 +92,19 @@ class Pocao
     if (strQuer === "imgMorreu")
       return {fill: "orange", stroke: "orange"};
 
-    switch(codPocao) //nao estah na ordem dos levels
+    switch(codPocao)
+    //mudaAviaoPersTemp soh eh obrigatorio se temDesexecutar for true
     {
       case TipoPocao.DiminuirTamanhoPers:
         /* if (strQuer === "img") return ;
         if (strQuer === "imgMorreu") return ; */
-        return {nome: "Poção anão", ativadoInstant: true, temDesexecutar: true};
+        return {nome: "Poção anão", ativadoInstant: false, temDesexecutar: true, mudaAviaoPersTemp: true};
       case TipoPocao.MatarObjetos1Tiro:
-        return {nome: "Poção Fácil de Matar", ativadoInstant: false, temDesexecutar: true};
+        return {nome: "Poção Fácil de Matar", ativadoInstant: false, temDesexecutar: true, mudaAviaoPersTemp: false};
       case TipoPocao.RUIMPersPerdeVel:
-        return {nome: "Poção Space-Mud", ativadoInstant: true, temDesexecutar: true};
+        return {nome: "Poção Space-Mud", ativadoInstant: true, temDesexecutar: true, mudaAviaoPersTemp: true};
       case TipoPocao.TiroPersMaisRapidoMortal:
-        return {nome: "Poção Tiro Master", ativadoInstant: false, temDesexecutar: true};
+        return {nome: "Poção Tiro Master", ativadoInstant: true, temDesexecutar: true, mudaAviaoPersTemp: true};
       case TipoPocao.MatarInimigosNaoEssenc:
         return {nome: "Poção Destruição em Massa", ativadoInstant: true, temDesexecutar: false};
       case TipoPocao.ReverterTirosJogoInimDirInim:
@@ -116,19 +116,19 @@ class Pocao
       case TipoPocao.ReverterTirosJogoInimSeguirInim:
         return {nome: "Poção Fúria contra Inimigos", ativadoInstant: true, temDesexecutar: false};
       case TipoPocao.DeixarTempoMaisLento:
-        return {nome: "Poção Flash", ativadoInstant: true, temDesexecutar: true};
+        return {nome: "Poção Flash", ativadoInstant: false, temDesexecutar: true, mudaAviaoPersTemp: false};
       case TipoPocao.RUIMTirosPersDirEle:
         return {nome: "Poção Feitiço Contra Feiticeiro", ativadoInstant: true, temDesexecutar: false};
       case TipoPocao.GanharMuitaVida:
         return {nome: "Poção os Deuses te Amam", ativadoInstant: false, temDesexecutar: false};
       case TipoPocao.PersMaisRapido:
-        return {nome: "Poção Bolt", ativadoInstant: false, temDesexecutar: true};
+        return {nome: "Poção Bolt", ativadoInstant: false, temDesexecutar: true, mudaAviaoPersTemp: true};
       case TipoPocao.PersComMissil:
-        return {nome: "Poção Míssil", ativadoInstant: true, temDesexecutar: true};
+        return {nome: "Poção Míssil", ativadoInstant: false, temDesexecutar: true, mudaAviaoPersTemp: true};
       case TipoPocao.TirarVidaTodosInim:
-        return {nome: "Poção Ácido Corrosivo", ativadoInstant: true, temDesexecutar: false};
+        return {nome: "Poção Ácido Corrosivo", ativadoInstant: false, temDesexecutar: false};
       case TipoPocao.CongelarInimigos:
-        return {nome: "Poção Freeze", ativadoInstant: true, temDesexecutar: true};
+        return {nome: "Poção Freeze", ativadoInstant: false, temDesexecutar: true, mudaAviaoPersTemp: false};
 
       default:
         throw "Esse codigo pocao nao existe!";
@@ -165,9 +165,6 @@ class Pocao
     formaGeometrica.corImg = Pocao.informacoesPocaoFromCod(this._codPocao, "img");
     return formaGeometrica;
   }
-
-
- //NA TELA PARA PERSONAGEM PERGAR
   getImgMorreu()
   { return Pocao.informacoesPocaoFromCod(this._codPocao, "imgMorreu"); }
 
@@ -183,7 +180,6 @@ class Pocao
 
     return this._informacoesPocao.ativadoInstant;
   }
-
 
   //QUANDO USUARIO JAH PEGOU (se for imediatamente) ou quando ele usar (nao imediatamente)
   executarPocao()
@@ -210,17 +206,14 @@ class Pocao
       case TipoPocao.TiroPersMaisRapidoMortal:
         tempoPocaoResta = 8500;
 
-        const infoTiroPersPadrao = ArmazenadorInfoObjetos.infoTiroPersPadrao();
-        let infoTiroMaisRapido = new InfoTiro(); //formaGeometrica, infoImgMorto, infoAndar, ehDoPers, mortalidade
-        infoTiroMaisRapido.formaGeometrica = new Retangulo(undefined,undefined, 4, 6, {fill: "black", stroke: "black"});
-        infoTiroMaisRapido.infoImgMorto = new InfoImgMorto([{fill: color(30)}]);
-        infoTiroMaisRapido.infoAndar = infoTiroPersPadrao.infoAndar;
-        infoTiroMaisRapido.infoAndar.qtdAndarY -= qtdTiroAndarMaisRapido;
-        infoTiroMaisRapido.mortalidade = infoTiroPersPadrao.mortalidade + qtdTiroMaisMortalidade;
-
-        // TODO: todos os tiros vao ficar bons ou soh um deles? DEPENDE DAS NAVES DO PERSONAGEM
-        // TODO: MUDAR FREQUENCIA TAMBEM? (ver desexecutar tambem)
-        ControladorJogo.pers.getControladorTiros(0).colocarInfoTiroEspecial(infoTiroMaisRapido);
+        //porque depende do aviao do personagem, qual o index que vai ter o tiro bom
+        const indexTiroMelhor = ControladorJogo.pers.indexTiroMelhor;
+        //mudar frequencia
+        const freqFuncAtual = ControladorJogo.pers.getFreqFuncAtirar(indexTiroMelhor);
+        this._frequenciaAtirarAntigo = freqFuncAtual.freq;
+        freqFuncAtual.freq = freqAtirarMaisRapidoMortal;
+        //mudar infoTiro
+        ControladorJogo.pers.getControladorTiros(indexTiroMelhor).colocarInfoTiroEspecial(ArmazenadorInfoObjetos.infoTiro("TiroForte", true));
         break;
 
       case TipoPocao.MatarInimigosNaoEssenc:
@@ -250,8 +243,7 @@ class Pocao
 
       case TipoPocao.DeixarTempoMaisLento:
         tempoPocaoResta = 5000;
-        /* para deixar tempo mais lento
-        aqui:
+        /* para deixar tempo mais lento:
           -> tiros tela. OK
           -> inimigos (incluindo tiros deles, atirar e inimigosSurgindo). OK
           -> obstaculos. OK
@@ -297,20 +289,13 @@ class Pocao
         ControladorJogo.pers.mudarVelocidade(porcentagemSetVel);
         break;
 
-      case TipoPocao.PersComMissil: //maior, mais devagar e segue inimigo
+      case TipoPocao.PersComMissil:
         tempoPocaoResta = 4500;
 
-        let infoTiroMissil = new InfoTiro(); //formaGeometrica, infoImgMorto, infoAndar, ehDoPers, mortalidade
-        infoTiroMissil.formaGeometrica = new Retangulo(undefined,undefined, 8, 10, {fill: "white", stroke: "white"});
-        infoTiroMissil.infoImgMorto = new InfoImgMorto([{fill: color(200), stroke: color(200)}]);
-        infoTiroMissil.infoAndar = new InfoAndar(0, -12, TipoAndar.SeguirInimMaisProx);
-        infoTiroMissil.mortalidade = 20;
-
         //setar novo tiro
-        // TODO: todos os tiros vao ficar com missil ou soh um deles? DEPENDE DAS NAVES DO PERSONAGEM
-        ControladorJogo.pers.getControladorTiros(indexArmaMissilPers).colocarInfoTiroEspecial(infoTiroMissil);
+        ControladorJogo.pers.getControladorTiros(indexArmaMissilPers).colocarInfoTiroEspecial(ArmazenadorInfoObjetos.infoTiro("TiroMissil", true));
 
-        //guardar frequencia e atirarDireto antigo
+        //guardar frequencia e atirarDireto antigo antes de muda-los
         this._informacoesNaoMissil = {freq: ControladorJogo.pers.getFreqFuncAtirar(indexArmaMissilPers).freq,
           atirarDireto: ControladorJogo.pers.getConfigArma(indexArmaMissilPers).atirarDireto};
 
@@ -337,6 +322,10 @@ class Pocao
         throw "Esse codigo pocao nao existe!";
     }
 
+    if (this.mudaAviaoPersTemp)
+    //para mudancas feitas em uma certa nave do personagem nao desexecutar em outra
+      this._numeroAviaoPers = ControladorJogo.pers.numeroAviao;
+
     if (tempoPocaoResta !== null) //se tem que desexecutar depois de um tempo, programa esse Timer (pode ser soh uma acao pontual)
     {
       //programa quando quando vai parar com esse pocao
@@ -350,6 +339,11 @@ class Pocao
   desexecutarPocao()
   // se sohSaberSeTem, eh soh pra saber se tem ou nao desexecutar (nao desexecuta)
   {
+    //para nao desfazer mudancas de outra nave nessa
+    if (this.mudaAviaoPersTemp && this._numeroAviaoPers !== ControladorJogo.pers.numeroAviao)
+    //nao precisa nem tirar a pocao do ControladorPocoesPers porque jah foi tirado pelo personagem quando pers trocou de aviao
+      return;
+
     // SE FOR MUDAR SE UMA POCAO TEM OU NAO DESEXECUTAR COLAR DE NOVO EM "get temDesexecutar()"
     switch(this._codPocao)
     {
@@ -374,8 +368,13 @@ class Pocao
         break;
 
       case TipoPocao.TiroPersMaisRapidoMortal:
-        // TODO: todos os tiros vao ficar bons ou soh um deles? DEPENDE DAS NAVES DO PERSONAGEM
-        ControladorJogo.pers.getControladorTiros(0).voltarInfoTiroPadrao();
+        //porque depende do aviao do personagem qual a arma que vai ter tiro bom
+        const indexTiroMelhor = ControladorJogo.pers.indexTiroMelhor;
+        //mudar frequencia
+        ControladorJogo.pers.getFreqFuncAtirar(indexTiroMelhor).freq = this._frequenciaAtirarAntigo;
+        delete this._frequenciaAtirarAntigo;
+        //mudar info
+        ControladorJogo.pers.getControladorTiros(indexTiroMelhor).voltarInfoTiroPadrao();
         break;
 
       case TipoPocao.PersComMissil:
@@ -428,9 +427,11 @@ class Pocao
         console.trace();
     }
 
+    //para mudancas feitas em uma certa nave do personagem nao desexecutar em outra
+    delete this._numeroAviaoPers;
+
     ControladorJogo.pers.controladorPocoesPegou.acabouUsarPocao(true);
   }
-
 
   //auxiliares
   _reverterTirosContraInimigos(seguir)
@@ -493,6 +494,7 @@ class ObjetoTelaPocao
 const distanciaMinPersPocao = 350; //calculado a distancia entre os centro-de-massas
 const tempoVaiFicarTela = 7000;
 const qtdPocoesUltimosLvs = 5; //se certa probabilidade vai escolher uma pocao dentro os 5 ultimos
+const levelJahTem2Pocoes = 9;
 class ControladorPocaoTela
 {
   constructor()
@@ -500,6 +502,9 @@ class ControladorPocaoTela
     //futuro atributo: this._objPocao (nao precisa gastar memoria agora)
     this._jahProgramouDeixarPocaoTela = false; //se jah criou o Timer para colocar Pocao tela
     this._funcCamadasColTirPocaoTempo = new FuncEmCamadas();
+
+    //quantas pocoes faltam programar
+    this._qtdPocoesFaltaProgramar = 0;
   }
 
   get temObjPocao()
@@ -508,31 +513,66 @@ class ControladorPocaoTela
   { return this._objPocao; }
 
   //antes da pocao ter sido adicionado a tela
-  colocarPocaoEmTempoSeChance(level)
-  //esse metodo vai adicionar uma pocao randomico possivel depois de certo tempo (dependendo de uma probabilidade para colocar ou nao pocoes na tela naquele level) e jah vai programar para tira-lo caso ele nao seja pego dentro do tempo
+  programarPocoesLevel()
+  //ps: soh o ControladorJogo chama esse metodo
+  //programa para adicionar e remover todas as pocoes (tenta fazer com que o numero de maximo de pocoes do level seja adicionado antes do level acabar)
+  {
+    const maxPocoesLevelAtual = ControladorPocaoTela._maxPocoesFromLevel(ControladorJogo.level);
+    if (maxPocoesLevelAtual > this._qtdPocoesFaltaProgramar)
+    //se usuario passou o level anterior mais rapido que o esperado e nao deu tempo de colocar algumas pocoes na tela, e, faltar mais pocoes doq o numero maximo de pocoes desse level, nao substitui
+    {
+      this._qtdPocoesFaltaProgramar = maxPocoesLevelAtual;
+      if (this._jahProgramouDeixarPocaoTela)
+      //se jah deixou programado para colocar uma pocao na tela e ainda nao tirou essa pocao, teria uma pocao a mais nesse level
+        this._qtdPocoesFaltaProgramar--;
+    }
+
+    //dividir o tempo em qtdPocoesFaltaAdd vezes e deixar uma pocao para cada parcela desse tempo
+    this._intervaloCadaPocao = ControladorJogo.tempoEstimadoLevel(ControladorJogo.level)/this._qtdPocoesFaltaProgramar *1000/*para jah ficar em milisegundos*/;
+
+    this._precisaSetarProgramarPocoes = this._jahProgramouDeixarPocaoTela;
+    //se jah deixou programado de colocar uma pocao na tela e ainda nao tirou da tela, tem que esperar ela sair para programar de colocar a proxima pocao
+    //nao tem como jah setar um Timer porque nao se saber quanto tempo falta para a pocao sair da tela
+
+    if (!this._jahProgramouDeixarPocaoTela)
+      this._criarTmrsProgramarPocoes();
+  }
+  _criarTmrsProgramarPocoes()
+  {
+    //programar proximas pocoes
+    for (let i=1; i<this._qtdPocoesFaltaProgramar; i++)
+      new Timer(() => this._programarPocao(), i*this._intervaloCadaPocao); //esse timer nao transcende o level (o outro soh transcende porque jah fez o random pra ver se terah pocao)
+
+    //programar primeira pocao
+    this._programarPocao(); //esse metodo nao vai adicionar uma pocao agora (vai setar o Timer para pocao surgir depois de um determinado tempo)
+  }
+
+  _programarPocao()
+  //programa para adicionar e remover cada uma das pocoes (soh programa para adicionar se Probabilidade.chance())
   {
     if (this._jahProgramouDeixarPocaoTela || //se jah fez um timer para colocar pocao na tela
-     !ControladorPocaoTela._probabilidadeExistirPocaoFromLevel(level)) // cada level tem uma chance de ter pocao diferente (os primeiros levels tem menos, e vai aumentando)
+     !ControladorPocaoTela._probabilidadeExistirPocaoFromLevel(ControladorJogo.level)) // cada level tem uma chance de ter pocao diferente (os primeiros levels tem menos, e vai aumentando)
       return;
 
     // estah programando para colocar poder na tela (soh pode programar para colocar outro quando esse jah tiver sumido)
     this._jahProgramouDeixarPocaoTela = true;
+    this._qtdPocoesFaltaProgramar--;
 
     //random de tempo para colocar na tela e jah setar timer para colocar pocao na tela
-    const qntTempoFaltaPraColocar = Math.myrandom(100, (ControladorJogo.tempoEstimadoLevel(level)-1)*1000 - tempoVaiFicarTela - tempoPocaoAparecerDuranteLv); //no minimo 0.1 segundos e no maximo para acabar um segundo antes do tempo previsto para o level
-    new Timer(() => this._colocarPocaoTela(level),
-      qntTempoFaltaPraColocar, false, false /*pocao transcende o level*/);
+    const qntTempoFaltaPraColocar = Math.myrandom(100, this._intervaloCadaPocao - tempoVaiFicarTela - tempoPocaoAparecerDuranteLv);
+    //no minimo 0.1 segundos e no maximo para acabar um segundo antes do tempo previsto para o level
+    new Timer(() => this._colocarPocaoTela(), qntTempoFaltaPraColocar, false, false/*pocao transcende o level*/);
 
     //programar tira-lo depois de certo tempo
     new Timer(() => this.tirarPocaoTela(),
       tempoVaiFicarTela + qntTempoFaltaPraColocar + tempoPocaoAparecerDuranteLv, false, false /*pocao transcende o level*/);
   }
-  _colocarPocaoTela(level)
+  _colocarPocaoTela()
   {
     this._funcCamadasColTirPocaoTempo.subirCamada();
 
     //pega todos as pocoes disponiveis naquele level
-    const pocoesPossiveis = ControladorPocaoTela._pocoesPossiveisFromLevel(level);
+    const pocoesPossiveis = ControladorPocaoTela._pocoesPossiveisFromLevel(ControladorJogo.level);
 
     //deixar mais provavel pegar pocoes dos ultimos levels (3/5 de chance)
     let qtdPocoesPossiveis;
@@ -586,41 +626,52 @@ class ControladorPocaoTela
   //retorna um vetor com todos os indexes de pocoes possiveis
   {
     let pocoesPossiveis = [];
-    let qtd = 0;
 
-    if (level > 12) level = 12;
-
-    switch(level)
+    if (ControladorJogo.previaJogo)
+    //os mais legais
     {
-      case 12:
-        pocoesPossiveis[qtd++] = TipoPocao.CongelarInimigos;
-      case 11:
-        pocoesPossiveis[qtd++] = TipoPocao.ReverterTirosJogoInimSeguirInim;
-      case 10:
-        pocoesPossiveis[qtd++] = TipoPocao.DeixarTempoMaisLento;
-      case 9:
-        pocoesPossiveis[qtd++] = TipoPocao.RUIMTirosPersDirEle;
-        pocoesPossiveis[qtd++] = TipoPocao.ReverterTirosJogoInimDirInim;
-      case 8:
-        pocoesPossiveis[qtd++] = TipoPocao.TirarVidaTodosInim;
-        pocoesPossiveis[qtd++] = TipoPocao.GanharMuitaVida;
-      case 7:
-        pocoesPossiveis[qtd++] = TipoPocao.MatarInimigosNaoEssenc;
-      case 6:
-        pocoesPossiveis[qtd++] = TipoPocao.RUIMPersPerdeVida;
-        pocoesPossiveis[qtd++] = TipoPocao.MatarObjetos1Tiro;
-      case 5:
-        pocoesPossiveis[qtd++] = TipoPocao.PersComMissil;
-        pocoesPossiveis[qtd++] = TipoPocao.GanharPoucaVida;
-      case 4:
-      case 3:
-        pocoesPossiveis[qtd++] = TipoPocao.RUIMPersPerdeVel;
-        pocoesPossiveis[qtd++] = TipoPocao.PersMaisRapido;
-      case 2:
-      case 1:
-        pocoesPossiveis[qtd++] = TipoPocao.DiminuirTamanhoPers;
-        pocoesPossiveis[qtd++] = TipoPocao.TiroPersMaisRapidoMortal;
-        break;
+      pocoesPossiveis.push(TipoPocao.DeixarTempoMaisLento);
+      pocoesPossiveis.push(TipoPocao.CongelarInimigos);
+      pocoesPossiveis.push(TipoPocao.ReverterTirosJogoInimSeguirInim);
+      pocoesPossiveis.push(TipoPocao.PersComMissil);
+      pocoesPossiveis.push(TipoPocao.MatarObjetos1Tiro);
+      pocoesPossiveis.push(TipoPocao.GanharMuitaVida);
+    }else
+    //por level
+    {
+      if (level > 12) level = 12;
+      switch(level)
+      {
+        case 12:
+          pocoesPossiveis.push(TipoPocao.CongelarInimigos);
+        case 11:
+          pocoesPossiveis.push(TipoPocao.ReverterTirosJogoInimSeguirInim);
+        case 10:
+          pocoesPossiveis.push(TipoPocao.DeixarTempoMaisLento);
+        case 9:
+          pocoesPossiveis.push(TipoPocao.RUIMTirosPersDirEle);
+          pocoesPossiveis.push(TipoPocao.ReverterTirosJogoInimDirInim);
+        case 8:
+          pocoesPossiveis.push(TipoPocao.TirarVidaTodosInim);
+          pocoesPossiveis.push(TipoPocao.GanharMuitaVida);
+        case 7:
+          pocoesPossiveis.push(TipoPocao.MatarInimigosNaoEssenc);
+        case 6:
+          pocoesPossiveis.push(TipoPocao.RUIMPersPerdeVida);
+          pocoesPossiveis.push(TipoPocao.MatarObjetos1Tiro);
+        case 5:
+          pocoesPossiveis.push(TipoPocao.PersComMissil);
+          pocoesPossiveis.push(TipoPocao.GanharPoucaVida);
+        case 4:
+        case 3:
+          pocoesPossiveis.push(TipoPocao.RUIMPersPerdeVel);
+          pocoesPossiveis.push(TipoPocao.PersMaisRapido);
+        case 2:
+        case 1:
+          pocoesPossiveis.push(TipoPocao.DiminuirTamanhoPers);
+          pocoesPossiveis.push(TipoPocao.TiroPersMaisRapidoMortal);
+          break;
+      }
     }
 
     return pocoesPossiveis;
@@ -629,31 +680,31 @@ class ControladorPocaoTela
   //probabilidade
   static _probabilidadeExistirPocaoFromLevel(level)
   {
-    if (level > 13) level = 13; //para entrar no ultimo case
+    if (ControladorJogo.previaJogo)
+      return true;
+
     switch(level)
     {
-      case 13:
-        return true; //100%
-      case 12:
-      case 11:
-        return Probabilidade.chance(9,10); //90%
-      case 10:
-      case 9:
-        return Probabilidade.chance(4,5); //80%
-      case 8:
-      case 7:
+      case 1:
+        return false; //0%
+      case 2:
+      case 3:
+        return Probabilidade.chance(1,2); //50%
+      case 4:
+      case 5:
         return Probabilidade.chance(7,10); //70%
       case 6:
-      case 5:
-      case 4:
-        return Probabilidade.chance(3,5); //60%
-      case 3:
-        return Probabilidade.chance(2,5); //40%
-      case 2:
-        return Probabilidade.chance(3,10); //30%
-      case 1:
-        return Probabilidade.chance(1,5); //20%
+        return Probabilidade.chance(4,5); //80%
+
+      default: //proximo level e os proximos
+        return true; //100%
     }
+  }
+  static _maxPocoesFromLevel(level)
+  {
+    if (ControladorJogo.previaJogo || ControladorJogo.level >= levelJahTem2Pocoes)
+      return 2;
+    return 1;
   }
 
   tirarPocaoTela(tirouPorFaltaTempo = true)
@@ -663,14 +714,19 @@ class ControladorPocaoTela
         return;
     delete this._objPocao;
     this._jahProgramouDeixarPocaoTela = false;
+
+    //para quando comecar o level e ainda tiver uma pocao programada ou na tela do level anterior, o level atual nao ficar com pocoes a menos e nem que haja a possibilidade de surgir duas pocoes ao mesmo tempo
+    if (this._precisaSetarProgramarPocoes===true)
+      this._criarTmrsProgramarPocoes();
+    delete this._precisaSetarProgramarPocoes;
   }
 
   //depois que pocao jah foi adicionado a tela
   verificarPersPegouPocao(qtdAndarX, qtdAndarY)
   {
     if (this._objPocao !== undefined && this._objPocao instanceof ObjetoTelaPocao && //se for ObjetoTelaAparecendo nao interage com o meio
-      !ControladorJogo.pers.controladorPocoesPegou.estahUsandoPocao && //soh pode pegar a pocao se pers nao tiver usando nenhuma no momento
-      this._objPocao.intersectaPers(qtdAndarX, qtdAndarY))
+     !ControladorJogo.pers.controladorPocoesPegou.estahUsandoPocao && //soh pode pegar a pocao se pers nao tiver usando nenhuma no momento
+     this._objPocao.intersectaPers(qtdAndarX, qtdAndarY))
       this._objPocao.morreu(); //ainda nao tira da tela (soh quando desenhar a ultima vez)
   }
 
@@ -910,6 +966,14 @@ class ControladorPocoesPers
 
     // mudarY das pocoes
     this._pocoesPers.forEach(pocaoPers => pocaoPers.arrumarLugar(instrucao, pocaoRemovidaTinhaDesexecutar));
+  }
+
+  procPersMudouAviao()
+  //para quando trocar de aviao, nao continuar com uma pocao que mudaAviaoPersTemp=true sendo executada as pocoes
+  {
+    if (this.estahUsandoPocao && this._pocoesPers[0].pocao.mudaAviaoPersTemp)
+    //se a primeira pocao estiver sendo usada e for desfazer alteracoes no novo aviao do personagem, remove-la
+      this.acabouUsarPocao(true);
   }
 
   //desenhar todos as pocoes

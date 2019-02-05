@@ -1,4 +1,13 @@
 /* INFORMACOES DE PERSONAGEM, INIMIGOS E OBSTACULOS */
+//Para mudar o tamanho de todos de um tipo de uma soh vez
+  //tiros, inimigos e personagem
+const porcTamTudo = 1.1;
+  //tiros
+const porcTamTiro = 1.3 * porcTamTudo;
+  //inimigos
+const porcTamInim = 1 * porcTamTudo;
+  //personagem
+const porcTamPers = 1.2 * porcTamTudo;
 class ArmazenadorInfoObjetos
 {
  //PERSONAGEM PRINCIPAL
@@ -7,17 +16,18 @@ class ArmazenadorInfoObjetos
     let infoPersonagemPrincipal = new InfoPersonagemPrincipal();
 
     //formaGeometricas
-    const tamanho = 80;
+    const tamanho = 60 * porcTamPers;
     infoPersonagemPrincipal.formaGeometrica = new FormaGeometricaComposta(undefined,undefined,
       [
         new Retangulo(0*tamanho,0.145*tamanho, 1*tamanho, 0.25*tamanho),
         new Retangulo(0.4125*tamanho,0*tamanho, 0.185*tamanho, 0.795*tamanho),
         new Quadrilatero(new Ponto(0.255, 0.76).multiplicado(tamanho), new Ponto(0.435, 0.555).multiplicado(tamanho), new Ponto(0.5625, 0.545).multiplicado(tamanho), new Ponto(0.735, 0.755).multiplicado(tamanho)),
       ],
-      ArmazenadorInfoObjetos.getImagem("AviaoOriginalPers"));
+      ArmazenadorInfoObjetos.getImagem("Personagem/AviaoOriginal"));
     infoPersonagemPrincipal.infoImgMorto = new InfoImgMorto([{fill: "black"}]);
     infoPersonagemPrincipal.vida = vida(1);
     infoPersonagemPrincipal.qtdAndar = velocidade(1);
+    infoPersonagemPrincipal.numeroAviao = 1;
 
     // atirar do pers
     let infoArma = new InfoArma();
@@ -36,7 +46,7 @@ class ArmazenadorInfoObjetos
     let infoPersonagemPrincipal = new InfoPersonagemPrincipal();
 
     //formaGeometricas
-    const tamanho = 120;
+    const tamanho = 95 * porcTamPers;
     infoPersonagemPrincipal.formaGeometrica = new FormaGeometricaComposta(undefined,undefined,
       [
         new Retangulo(0*tamanho,0.2838235294117647*tamanho, 1*tamanho, 0.13970588235294118*tamanho),
@@ -44,19 +54,20 @@ class ArmazenadorInfoObjetos
         new Retangulo(0.2838235294117647*tamanho,0.625*tamanho, 0.4323529411764706*tamanho, 0.11323529411764706*tamanho),
         new Retangulo(0.27941176470588236*tamanho,0.15294117647058825*tamanho, 0.4441176470588235*tamanho, 0.32941176470588235*tamanho),
       ],
-      ArmazenadorInfoObjetos.getImagem("AviaoBrutoPers"));
+      ArmazenadorInfoObjetos.getImagem("Personagem/AviaoBruto"));
     infoPersonagemPrincipal.infoImgMorto = new InfoImgMorto([{fill: "black"}]);
     infoPersonagemPrincipal.vida = vida(1.5);
     infoPersonagemPrincipal.qtdAndar = velocidade(1.25);
+    infoPersonagemPrincipal.numeroAviao = 2;
 
     // atirar do pers
     let infoArma = new InfoArma();
     infoArma.infoTiroPadrao = ArmazenadorInfoObjetos.infoTiro("TiroMedio", true);
     infoArma.freqAtirar = 4;
     infoArma.direcaoSairTiro = Direcao.Cima;
-    infoArma.porcPraDentroObj = 0.214;
+    infoArma.porcPraDentroObj = 0.255;
     infoArma.ehTiroDuplo = true;
-    infoArma.porcTiroCentro = 0.1655;
+    infoArma.porcTiroCentro = 0.174;
 
     infoPersonagemPrincipal.infoArmas = [infoArma];
 
@@ -67,43 +78,41 @@ class ArmazenadorInfoObjetos
     let infoPersonagemPrincipal = new InfoPersonagemPrincipal();
 
     //formaGeometricas
-    const tamanho = 55;
-    const porcentagemImagem = 1;
+    const tamanho = 45 * porcTamPers;
     infoPersonagemPrincipal.formaGeometrica = new FormaGeometricaComposta(undefined,undefined,
       [
         new Retangulo(0*tamanho,0.7623762376237624*tamanho, 1*tamanho, 0.557920792079208*tamanho),
         new Retangulo(0.36039603960396044*tamanho,0*tamanho, 0.27722772277227725*tamanho, 1.5282178217821782*tamanho),
         new Retangulo(0.2599009900990099*tamanho,1.5282178217821782*tamanho, 0.46782178217821785*tamanho, 0.20445544554455447*tamanho),
       ],
-      ArmazenadorInfoObjetos.getImagem("AviaoMasterPers"), porcentagemImagem);
+      ArmazenadorInfoObjetos.getImagem("Personagem/AviaoMaster"));
     infoPersonagemPrincipal.infoImgMorto = new InfoImgMorto([{fill: "black"}]);
     infoPersonagemPrincipal.vida = vida(3);
     infoPersonagemPrincipal.qtdAndar = velocidade(1.65);
+    infoPersonagemPrincipal.numeroAviao = numeroAviaoMasterPers;
 
-    // atirar do pers:
+    //INFO ARMAS:
 
-    //tiros dos lados (nao automatico)
-    //infoTiroPadrao, freqAtirar, indexArmaGiratoria=-1, direcaoSairTiro, porcPraDentroObj=0, ehTiroDuplo=false, porcTiroCentro, atirarDireto=true
+      //tiros dos lados (nao automatico): soh vai atirar se quando o usuario apertar o gatilho e a frequencia estiver correta e se ha algum inimigo vivo na tela
     let infoArmasLateral = new InfoArma();
     infoArmasLateral.infoTiroPadrao = ArmazenadorInfoObjetos.infoTiro("TiroMissil", true, TipoAndar.SeguirInimMaisProx);
     infoArmasLateral.direcaoSairTiro = Direcao.Cima;
-    infoArmasLateral.porcPraDentroObj = 0.214;
+    infoArmasLateral.porcPraDentroObj = 0.52;
     infoArmasLateral.ehTiroDuplo = true;
-    infoArmasLateral.porcTiroCentro = 0.1655;
-    // soh vai atirar se quando o usuario apertar o gatilho e a frequencia estiver correta e se ha algum inimigo vivo na tela
-    infoArmasLateral.freqAtirar = 60;
+    infoArmasLateral.porcTiroCentro = 0.44;
+    infoArmasLateral.freqAtirar = 45;
     infoArmasLateral.atirarDireto = false;
     infoArmasLateral.funcaoCondicaoAtirar = () =>
-        ControladorJogo.controladoresInimigos.some(controladorInims => controladorInims.algumInimVivo());
+      ControladorJogo.controladoresInimigos.some(controladorInims => controladorInims.algumInimVivo());
 
-    //arma giratoria
+      //arma giratoria
     const indexArmaGiratoria = 0;
     //adicionar armaGiratoria
     infoPersonagemPrincipal.formaGeometrica.adicionarImagemSecundaria("armaGiratoria"+indexArmaGiratoria,
-      ArmazenadorInfoObjetos.getImagem("ArmaGiratoria"), 0.85, new Ponto(0.5, 0.7));
+      ArmazenadorInfoObjetos.getImagem("Acessorios/ArmaGiratoria"), 0.85, new Ponto(0.5, 0.71));
     //infoConfigArmaGiratoria
     let infoArmaGiratoria = new InfoArma();
-    infoArmaGiratoria.infoTiroPadrao = ArmazenadorInfoObjetos.infoTiro("TiroMedio", true);
+    infoArmaGiratoria.infoTiroPadrao = ArmazenadorInfoObjetos.infoTiro("TiroForte", true);
     infoArmaGiratoria.freqAtirar = 5;
     infoArmaGiratoria.indexArmaGiratoria = indexArmaGiratoria;
 
@@ -115,9 +124,14 @@ class ArmazenadorInfoObjetos
  //INIMIGOS
   /*
   TipoInimigos:
-    - AviaoNormalFraco
-    - AviaoNormalMedio
+    - AviaoMaster
+    - AviaoBrutao
+    - AviaoBrutoSemHel
     - HelicopteroBom
+    - AviaoSupersonicoForte
+    - AviaoSupersonicoRapido
+    - AviaoNormalBomEscuro
+    - AviaoNormalBomClaro
   */
   static infoInim(nomeInim, alteracoesAndarRotacionar, tipoAndar=TipoAndar.NaoSairTelaInvTudo, infoMostrarVida,
     rotacionarInimAnguloAnda=false, limitarCurvaInim, corVida={stroke: color(200, 0, 0), fill: "red"})
@@ -129,26 +143,286 @@ class ArmazenadorInfoObjetos
     let qtdHelices=0, qtdsRotateDifHelices; //para helicopteros
     switch(nomeInim)
     {
-      case "AviaoNormalFraco":
+      case "AviaoMaster":
       {
-        //formaGeometrica
-        const tamanho = 90;
+        const tamanho = 230 * porcTamInim;
         formaGeometrica = new FormaGeometricaComposta(undefined,undefined,
           [
-            new Retangulo(0*tamanho,0.23288888888888887*tamanho, 1*tamanho, 0.2256111111111111*tamanho),
-            new Retangulo(0.43302777777777773*tamanho,0*tamanho, 0.13463888888888886*tamanho, 0.7714444444444444*tamanho),
-            new Retangulo(0.31840277777777776*tamanho,0.7714444444444444*tamanho, 0.35843055555555553*tamanho, 0.13827777777777778*tamanho),
+            new Retangulo(0.3764705882352941*tamanho,0*tamanho, 0.24705882352941178*tamanho, 0.673611111111111*tamanho),
+            new Retangulo(0*tamanho,0.4102941176470588*tamanho, 1*tamanho, 0.17941176470588235*tamanho),
+            new Quadrilatero(new Ponto(0.3588235294117647, 0.23823529411764705).multiplicado(tamanho), new Ponto(0.6352941176470588, 0.22647058823529412).multiplicado(tamanho), new Ponto(1, 0.4102941176470588).multiplicado(tamanho), new Ponto(0, 0.4117647058823529).multiplicado(tamanho)),
+            new Retangulo(0.27941176470588236*tamanho,0.013235294117647059*tamanho, 0.43970588235294117*tamanho, 0.09264705882352942*tamanho),
           ]);
 
         //caracteristicas
-        nivelVida = 0.4;
-        nivelMortalIntersec = 0.5;
+        nivelVida = 8;
+        nivelMortalIntersec = 2.5;
+        nivelVelocidade = 0.3;
+
+        //INFO ARMAS
+        {
+          const freqTirosNormais = 60;
+
+          //FILEIRA 1 (mais pra dentro do inimigo)
+          const porcDentrArmasFileira1 = 0.176; //fileira1: armas mais reservadas/mais pra dentro do inimigo
+          const porcComecaAtirarFil1 = 0.5;
+          const infoTiroMedio = ArmazenadorInfoObjetos.infoTiro("TiroMedio", false);
+          {
+            //armas laterais 1 (mais perto do centro)
+            let infoArmaLateral1 = new InfoArma();
+            infoArmaLateral1.infoTiroPadrao = infoTiroMedio;
+            infoArmaLateral1.freqAtirar = freqTirosNormais;
+            infoArmaLateral1.porcComecaAtirar = porcComecaAtirarFil1;
+            infoArmaLateral1.direcaoSairTiro = Direcao.Baixo;
+            infoArmaLateral1.porcPraDentroObj = porcDentrArmasFileira1;
+            infoArmaLateral1.ehTiroDuplo = true;
+            infoArmaLateral1.porcTiroCentro = 0.127;
+            infoArmas.push(infoArmaLateral1);
+            //4
+            let infoArmaLateral4 = new InfoArma();
+            infoArmaLateral4.infoTiroPadrao = infoTiroMedio;
+            infoArmaLateral4.freqAtirar = freqTirosNormais;
+            infoArmaLateral4.porcComecaAtirar = porcComecaAtirarFil1;
+            infoArmaLateral4.direcaoSairTiro = Direcao.Baixo;
+            infoArmaLateral4.porcPraDentroObj = porcDentrArmasFileira1;
+            infoArmaLateral4.ehTiroDuplo = freqTirosNormais;
+            infoArmaLateral4.porcTiroCentro = 0.2217;
+            infoArmas.push(infoArmaLateral4);
+            //5
+            let infoArmaLateral5 = new InfoArma();
+            infoArmaLateral5.infoTiroPadrao = infoTiroMedio;
+            infoArmaLateral5.freqAtirar = freqTirosNormais;
+            infoArmaLateral5.porcComecaAtirar = porcComecaAtirarFil1;
+            infoArmaLateral5.direcaoSairTiro = Direcao.Baixo;
+            infoArmaLateral5.porcPraDentroObj = porcDentrArmasFileira1;
+            infoArmaLateral5.ehTiroDuplo = true;
+            infoArmaLateral5.porcTiroCentro = 0.356;
+            infoArmas.push(infoArmaLateral5);
+            //8 (mais longe do centro)
+            let infoArmaLateral8 = new InfoArma();
+            infoArmaLateral8.infoTiroPadrao = infoTiroMedio;
+            infoArmaLateral8.freqAtirar = freqTirosNormais;
+            infoArmaLateral8.porcComecaAtirar = porcComecaAtirarFil1;
+            infoArmaLateral8.direcaoSairTiro = Direcao.Baixo;
+            infoArmaLateral8.porcPraDentroObj = porcDentrArmasFileira1;
+            infoArmaLateral8.ehTiroDuplo = true;
+            infoArmaLateral8.porcTiroCentro = 0.4721;
+            infoArmas.push(infoArmaLateral8);
+          }
+
+          //FILEIRA 2 (mais pra fora do inimigo)
+          const porcDentrArmasFileira2 = 0.14; //fileira2: armas menos reservadas/mais pra fora do inimigo
+          const infoTiroForte = ArmazenadorInfoObjetos.infoTiro("TiroForte", false);
+          {
+            //2
+            let infoArmaLateral2 = new InfoArma();
+            infoArmaLateral2.infoTiroPadrao = infoTiroForte;
+            infoArmaLateral2.freqAtirar = freqTirosNormais;
+            infoArmaLateral2.direcaoSairTiro = Direcao.Baixo;
+            infoArmaLateral2.porcPraDentroObj = porcDentrArmasFileira2;
+            infoArmaLateral2.ehTiroDuplo = true;
+            infoArmaLateral2.porcTiroCentro = 0.159;
+            infoArmas.push(infoArmaLateral2);
+            //3
+            let infoArmaLateral3 = new InfoArma();
+            infoArmaLateral3.infoTiroPadrao = infoTiroForte;
+            infoArmaLateral3.freqAtirar = freqTirosNormais;
+            infoArmaLateral3.direcaoSairTiro = Direcao.Baixo;
+            infoArmaLateral3.porcPraDentroObj = porcDentrArmasFileira2;
+            infoArmaLateral3.ehTiroDuplo = true;
+            infoArmaLateral3.porcTiroCentro = 0.1913;
+            infoArmas.push(infoArmaLateral3);
+          }
+
+          //MISSEIS
+          const freqAtirarMisseis = 150;
+          const porcDentrArmasFileiraMissil = 0.19;
+          const porcComecaAtirarMisseis = 0.7;
+          const infoTiroMissil = ArmazenadorInfoObjetos.infoTiro("TiroMissilPior", false);
+          {
+            //6
+            let infoArmaLateral6 = new InfoArma();
+            infoArmaLateral6.infoTiroPadrao = infoTiroMissil;
+            infoArmaLateral6.freqAtirar = freqAtirarMisseis;
+            infoArmaLateral6.porcComecaAtirar = porcComecaAtirarMisseis;
+            infoArmaLateral6.direcaoSairTiro = Direcao.Baixo;
+            infoArmaLateral6.porcPraDentroObj = porcDentrArmasFileiraMissil;
+            infoArmaLateral6.ehTiroDuplo = true;
+            infoArmaLateral6.porcTiroCentro = 0.39;
+            infoArmas.push(infoArmaLateral6);
+            //7
+            let infoArmaLateral7 = new InfoArma();
+            infoArmaLateral7.infoTiroPadrao = infoTiroMissil;
+            infoArmaLateral7.freqAtirar = freqAtirarMisseis;
+            infoArmaLateral7.porcComecaAtirar = porcComecaAtirarMisseis;
+            infoArmaLateral7.direcaoSairTiro = Direcao.Baixo;
+            infoArmaLateral7.porcPraDentroObj = porcDentrArmasFileiraMissil;
+            infoArmaLateral7.ehTiroDuplo = true;
+            infoArmaLateral7.porcTiroCentro = 0.43;
+            infoArmas.push(infoArmaLateral7);
+          }
+
+          //ARMA GIRATORIA
+          const indexArmaGiratoria = 0;
+          {
+            //adicionar armaGiratoria
+            const chaveArmaGiratoria = "armaGiratoria"+indexArmaGiratoria;
+            formaGeometrica.adicionarImagemSecundaria(chaveArmaGiratoria,
+              ArmazenadorInfoObjetos.getImagem("Acessorios/ArmaGiratoria"), 0.35, new Ponto(0.5, 0.3));
+            formaGeometrica.rotacionarImagemSecundaria(chaveArmaGiratoria, PI); //para armaGiratoria comecar apontada para baixo
+            //infoConfigArmaGiratoria
+            let infoArmaGiratoria = new InfoArma();
+            infoArmaGiratoria.infoTiroPadrao = ArmazenadorInfoObjetos.infoTiro("TiroForte", true);
+            infoArmaGiratoria.freqAtirar = 8;
+            infoArmaGiratoria.indexArmaGiratoria = indexArmaGiratoria;
+            infoArmas.push(infoArmaGiratoria);
+          }
+        }
+      }
+      break;
+
+      case "AviaoBrutao":
+      {
+        //formaGeometrica
+        const tamanho = 170 * porcTamInim;
+        formaGeometrica = new FormaGeometricaComposta(undefined,undefined,
+          [
+            new Retangulo(0.46176470588235297*tamanho,0*tamanho, 0.075*tamanho, 0.6339622641509434*tamanho),
+            new Retangulo(0*tamanho,0.31029411764705883*tamanho, 1*tamanho, 0.1411764705882353*tamanho),
+            new Retangulo(0.21911764705882353*tamanho,0.451470588234*tamanho, 0.5617647058823529*tamanho, 0.09558823529541177*tamanho),
+            new Retangulo(0.32941176470588235*tamanho,0.016176470588235296*tamanho, 0.3382352941176471*tamanho, 0.12058823529411765*tamanho),
+          ]);
+
+        //caracteristicas
+        nivelVida = 4.5;
+        nivelMortalIntersec = 2;
+        nivelVelocidade = 1.2;
+
+        //INFO ARMAS
+        //tiros laterais
+        const infoTirosLaterais = ArmazenadorInfoObjetos.infoTiro("TiroForte", false);
+        const freqTiroLaterais = 10;
+        //armas laterais 1 (mais perto do centro)
+        let infoArmaLateral1 = new InfoArma();
+        infoArmaLateral1.infoTiroPadrao = infoTirosLaterais;
+        infoArmaLateral1.freqAtirar = freqTiroLaterais;
+        infoArmaLateral1.direcaoSairTiro = Direcao.Baixo;
+        infoArmaLateral1.porcPraDentroObj = 0.19;
+        infoArmaLateral1.ehTiroDuplo = true;
+        infoArmaLateral1.porcTiroCentro = 0.125;
+        infoArmas.push(infoArmaLateral1);
+        //armas laterais 2 (mais longe do centro)
+        let infoArmaLateral2 = new InfoArma();
+        infoArmaLateral2.infoTiroPadrao = infoTirosLaterais;
+        infoArmaLateral2.freqAtirar = freqTiroLaterais;
+        infoArmaLateral2.direcaoSairTiro = Direcao.Baixo;
+        infoArmaLateral2.porcPraDentroObj = 0.22;
+        infoArmaLateral2.ehTiroDuplo = true;
+        infoArmaLateral2.porcTiroCentro = 0.255;
+        infoArmas.push(infoArmaLateral2);
+      }
+      break;
+
+      case "AviaoBrutoSemHel":
+      {
+        const tamanho = 108 * porcTamInim;
+        formaGeometrica = new FormaGeometricaComposta(undefined,undefined,
+          [
+            new Retangulo(0.44558490566037734*tamanho,0*tamanho, 0.10830188679245283*tamanho, 0.7735849056603773*tamanho),
+            new Retangulo(0*tamanho,0.3078867924528302*tamanho, 1*tamanho, 0.14079245283018868*tamanho),
+            new Retangulo(0.3140754716981132*tamanho,0.012377358490566037*tamanho, 0.36977358490566037*tamanho, 0.12222641509433961*tamanho),
+            new Retangulo(0.38369811320754715*tamanho,0.17637735849056602*tamanho, 0.22743396226415094*tamanho, 0.12532075471698112*tamanho),
+          ]);
+
+        //caracteristicas
+        nivelVida = 1.7;
+        nivelMortalIntersec = 2;
+        nivelVelocidade = 1.2;
+
+        //infoArmas (missil)
+        let infoArma = new InfoArma();
+        infoArma.infoTiroPadrao = ArmazenadorInfoObjetos.infoTiro("TiroMissilPior", false);
+        infoArma.freqAtirar = 45;
+        infoArma.direcaoSairTiro = Direcao.Baixo;
+        infoArma.porcPraDentroObj = 0.38;
+        infoArma.ehTiroDuplo = true;
+        infoArma.porcTiroCentro = 0.142
+        infoArmas.push(infoArma);
+      }
+      break;
+
+      case "HelicopteroBom":
+      {
+        const tamanho = 40 * porcTamInim;
+        formaGeometrica = new FormaGeometricaComposta(undefined,undefined,
+          [
+            new Retangulo(0.34216326530612245*tamanho,0*tamanho, 0.3174285714285714*tamanho, 2.061224489795918*tamanho),
+            new Retangulo(0*tamanho,1.0718367346938775*tamanho, 1*tamanho, 0.39163265306122447*tamanho),
+            new Retangulo(0.2555918367346939*tamanho,0.4204897959183673*tamanho, 0.4823265306122449*tamanho, 0.16489795918367345*tamanho),
+          ]);
+
+        //helice
+        qtdHelices = 1;
+        formaGeometrica.adicionarImagemSecundaria("helice0", ArmazenadorInfoObjetos.getImagem("Acessorios/HeliceRobusta"), 1.4, new Ponto(0.5, 0.62));
+
+        //caracteristicas
+        nivelVida = 1.2;
+        nivelMortalIntersec = 1.6;
         nivelVelocidade = 0.6;
+
+        //INFO ARMAS
+        /*//arma central
+        let infoArmaCentro = new InfoArma();
+        infoArmaCentro.infoTiroPadrao = ArmazenadorInfoObjetos.infoTiro("TiroForte", false);
+        infoArmaCentro.freqAtirar = 30;
+        infoArmaCentro.direcaoSairTiro = Direcao.Baixo;
+        infoArmaCentro.porcPraDentroObj = 0;
+        infoArmaCentro.ehTiroDuplo = false;
+        infoArmas.push(infoArmaCentro); */
+        //tiros laterais
+        const infoTirosLaterais = ArmazenadorInfoObjetos.infoTiro("TiroMedio", false);
+        const freqTiroLaterais = 15;
+        const porcPraDentroTirosLaterais = 0.346;
+        //armas laterais 1 (mais perto do centro)
+        let infoArmaLateral1 = new InfoArma();
+        infoArmaLateral1.infoTiroPadrao = infoTirosLaterais;
+        infoArmaLateral1.freqAtirar = freqTiroLaterais;
+        infoArmaLateral1.direcaoSairTiro = Direcao.Baixo;
+        infoArmaLateral1.porcPraDentroObj = porcPraDentroTirosLaterais;
+        infoArmaLateral1.ehTiroDuplo = true;
+        infoArmaLateral1.porcTiroCentro = 0.34;
+        infoArmas.push(infoArmaLateral1);
+        //armas laterais 2 (mais longe do centro)
+        let infoArmaLateral2 = new InfoArma();
+        infoArmaLateral2.infoTiroPadrao = infoTirosLaterais;
+        infoArmaLateral2.freqAtirar = freqTiroLaterais;
+        infoArmaLateral2.direcaoSairTiro = Direcao.Baixo;
+        infoArmaLateral2.porcPraDentroObj = porcPraDentroTirosLaterais;
+        infoArmaLateral2.ehTiroDuplo = true;
+        infoArmaLateral2.porcTiroCentro = 0.42;
+        infoArmas.push(infoArmaLateral2);
+      }
+      break;
+
+      case "AviaoSupersonicoForte":
+      {
+        const tamanho = 53 * porcTamInim;
+        formaGeometrica = new FormaGeometricaComposta(undefined,undefined,
+          [
+            new Triangulo(new Ponto(0, 0.27931372549019606).multiplicado(tamanho), new Ponto(1, 0.2901960784313726).multiplicado(tamanho), new Ponto(0.49333333333333335, 1.4364705882352942).multiplicado(tamanho)),
+            new Retangulo(0.4280392156862745*tamanho,0*tamanho, 0.1450980392156863*tamanho, 1.8137254901960784*tamanho),
+            new Retangulo(0.1342156862745098*tamanho,0.018137254901960786*tamanho, 0.7327450980392157*tamanho, 0.28294117647058825*tamanho),
+          ]);
+
+        //caracteristicas
+        nivelVida = 1.3;
+        nivelMortalIntersec = 1.5;
+        nivelVelocidade = 1.52;
 
         //infoArmas
         let infoArma = new InfoArma();
-        infoArma.infoTiroPadrao = ArmazenadorInfoObjetos.infoTiro("TiroFraco", false);
-        infoArma.freqAtirar = 14;
+        infoArma.infoTiroPadrao = ArmazenadorInfoObjetos.infoTiro("TiroLaser", false);
+        infoArma.freqAtirar = 11;
         infoArma.direcaoSairTiro = Direcao.Baixo;
         infoArma.porcPraDentroObj = 0;
         infoArma.ehTiroDuplo = false;
@@ -156,86 +430,90 @@ class ArmazenadorInfoObjetos
       }
       break;
 
-      case "AviaoNormalMedio":
+      case "AviaoSupersonicoRapido":
       {
-        //formaGeometrica
-        const tamanho = 90;
-        formaGeometrica = new FormaGeometricaComposta(undefined,undefined,
-         [
-           new Retangulo(0*tamanho,0.19083969465648856*tamanho, 1*tamanho, 0.17557251908396945*tamanho),
-           new Quadrilatero(new Ponto(0.37659033078880405, 0).multiplicado(tamanho), new Ponto(0.6055979643765903, 0.010178117048346057).multiplicado(tamanho), new Ponto(0.5241730279898219, 0.7786259541984732).multiplicado(tamanho), new Ponto(0.4681933842239186, 0.7735368956743003).multiplicado(tamanho)),
-           new Retangulo(0.2875318066157761*tamanho,0.6437659033078881*tamanho, 0.4198473282442748*tamanho, 0.10687022900763359*tamanho),
-         ]);
-
-       //caracteristicas
-       nivelVida = 0.6;
-       nivelMortalIntersec = 0.7;
-       nivelVelocidade = 0.75;
-
-       //infoArmas
-       let infoArma = new InfoArma();
-       infoArma.infoTiroPadrao = ArmazenadorInfoObjetos.infoTiro("TiroFraco", false);
-       infoArma.freqAtirar = 12;
-       infoArma.direcaoSairTiro = Direcao.Baixo;
-       infoArma.porcPraDentroObj = 0;
-       infoArma.ehTiroDuplo = false;
-       infoArmas.push(infoArma);
-      }
-      break;
-
-      case "HelicopteroBom":
-      {
-        //formaGeometrica
-        const tamanho = 50;
+        const tamanho = 54 * porcTamInim;
         formaGeometrica = new FormaGeometricaComposta(undefined,undefined,
           [
-          new Retangulo(0.34216326530612245*tamanho,0*tamanho, 0.3133061224489796*tamanho, 2.061224489795918*tamanho),
-          new Retangulo(0*tamanho,0.5895102040816326*tamanho, 1*tamanho, 0.3957551020408163*tamanho),
-          new Retangulo(0.2473469387755102*tamanho,1.4511020408163264*tamanho, 0.4988163265306122*tamanho, 0.1813877551020408*tamanho),
+            new Quadrilatero(new Ponto(0, 0.5515876288659795).multiplicado(tamanho), new Ponto(1, 0.5515876288659795).multiplicado(tamanho), new Ponto(0.6644123711340206, 0.9496082474226805).multiplicado(tamanho), new Ponto(0.3322061855670103, 0.9527422680412372).multiplicado(tamanho)),
+            new Retangulo(0.37921649484536085*tamanho,0*tamanho, 0.241319587628866*tamanho, 1.5670103092783505*tamanho),
+            new Retangulo(0.18804123711340207*tamanho,0.2162474226804124*tamanho, 0.6236701030927835*tamanho, 0.2287835051546392*tamanho),
           ]);
-        //adicionar helice
-        qtdHelices = 1;
-        formaGeometrica.adicionarImagemSecundaria("helice0",
-          "Imagens/HeliceRobusta.png", 1, new Ponto(0.5, 0.7));
 
         //caracteristicas
-        nivelVida = 1.7;
-        nivelMortalIntersec = 1.3;
-        nivelVelocidade = 0.7;
+        nivelVida = 0.75;
+        nivelMortalIntersec = 1;
+        nivelVelocidade = 1.72;
 
-        //INFO ARMA
-        //tiros frente
-        let infoArmaFrente = new InfoArma();
-        infoArmaFrente.infoTiroPadrao = ArmazenadorInfoObjetos.infoTiro("TiroFraco", false);
-        infoArmaFrente.freqAtirar = 12;
-        infoArmaFrente.direcaoSairTiro = Direcao.Baixo;
-        infoArmaFrente.porcPraDentroObj = 0;
-        infoArmaFrente.ehTiroDuplo = false;
-        infoArmas.push(infoArmaFrente);
-        //tiros lado perto centro
-        let infoArmaLadosPerto = new InfoArma();
-        infoArmaLadosPerto.infoTiroPadrao = ArmazenadorInfoObjetos.infoTiro("TiroMedio", false);
-        infoArmaLadosPerto.freqAtirar = 8;
-        infoArmaLadosPerto.direcaoSairTiro = Direcao.Baixo;
-        infoArmaLadosPerto.porcPraDentroObj = 0.25;
-        infoArmaLadosPerto.ehTiroDuplo = true;
-        infoArmaLadosPerto.porcTiroCentro = 0.40;
-        infoArmas.push(infoArmaLadosPerto);
-        //tiros lado longe centro
-        let infoArmaLadosLonge = new InfoArma();
-        infoArmaLadosLonge.infoTiroPadrao = ArmazenadorInfoObjetos.infoTiro("TiroMedio", false);
-        infoArmaLadosLonge.freqAtirar = 8;
-        infoArmaLadosLonge.direcaoSairTiro = Direcao.Baixo;
-        infoArmaLadosLonge.porcPraDentroObj = 0.25;
-        infoArmaLadosLonge.ehTiroDuplo = true;
-        infoArmaLadosLonge.porcTiroCentro = 0.43;
-        infoArmas.push(infoArmaLadosLonge);
+        //infoArmas
+        let infoArma = new InfoArma();
+        infoArma.infoTiroPadrao = ArmazenadorInfoObjetos.infoTiro("TiroLaser", false);
+        infoArma.freqAtirar = 11;
+        infoArma.direcaoSairTiro = Direcao.Baixo;
+        infoArma.porcPraDentroObj = 0;
+        infoArma.ehTiroDuplo = false;
+        infoArmas.push(infoArma);
       }
       break;
+
+      case "AviaoNormalBomEscuro":
+      {
+        const tamanho = 80 * porcTamInim;
+        formaGeometrica = new FormaGeometricaComposta(undefined,undefined,
+          [
+            new Retangulo(0.42922155688622754*tamanho,0*tamanho, 0.1391616766467066*tamanho, 0.8383233532934131*tamanho),
+            new Retangulo(0*tamanho,0.41413173652694607*tamanho, 1*tamanho, 0.1861077844311377*tamanho),
+            new Retangulo(0.3118562874251497*tamanho,0.020119760479041914*tamanho, 0.37892215568862275*tamanho, 0.10562874251497005*tamanho),
+          ]);
+
+        //caracteristicas
+        nivelVida = 0.65;
+        nivelMortalIntersec = 0.7;
+        nivelVelocidade = 0.6;
+
+        //infoArmas
+        let infoArma = new InfoArma();
+        infoArma.infoTiroPadrao = ArmazenadorInfoObjetos.infoTiro("TiroMedio", false);
+        infoArma.freqAtirar = 11;
+        infoArma.direcaoSairTiro = Direcao.Baixo;
+        infoArma.porcPraDentroObj = 0;
+        infoArma.ehTiroDuplo = false;
+        infoArmas.push(infoArma);
+      }
+      break;
+
+      case "AviaoNormalBomClaro":
+      {
+        const tamanho = 82 * porcTamInim;
+        formaGeometrica = new FormaGeometricaComposta(undefined,undefined,
+          [
+            new Retangulo(0*tamanho,0.33088235294117646*tamanho, 1*tamanho, 0.19558823529411765*tamanho),
+            new Retangulo(0.43823529411764706*tamanho,0*tamanho, 0.12352941176470589*tamanho, 0.7267080745341615*tamanho),
+            new Retangulo(0.2926470588235294*tamanho,0.03676470588235294*tamanho, 0.41323529411764703*tamanho, 0.10294117647058823*tamanho),
+          ]);
+
+        //caracteristicas
+        nivelVida = 0.6;
+        nivelMortalIntersec = 0.7;
+        nivelVelocidade = 0.65;
+
+        //infoArmas
+        let infoArma = new InfoArma();
+        infoArma.infoTiroPadrao = ArmazenadorInfoObjetos.infoTiro("TiroMedio", false);
+        infoArma.freqAtirar = 12;
+        infoArma.direcaoSairTiro = Direcao.Baixo;
+        infoArma.porcPraDentroObj = 0;
+        infoArma.ehTiroDuplo = false;
+        infoArmas.push(infoArma);
+      }
+      break;
+
+      default:
+        throw "Esse inimigo nao existe!";
     }
 
     let infoInim = new InfoInimigo();
-    formaGeometrica.corImg = ArmazenadorInfoObjetos.getImagem(nomeInim+"Inim"); //adicionar imagem a formaGeometrica
+    formaGeometrica.corImg = ArmazenadorInfoObjetos.getImagem("Inimigos/" + nomeInim); //adicionar imagem a formaGeometrica
     infoInim.formaGeometrica = formaGeometrica;
     infoInim.rotacionarInimAnguloAnda = rotacionarInimAnguloAnda; // se true, os inimigos vao rotacionar automaticamente, apontando pra onde estao andando (exemplo de USO: inimigos seguindo personagem)
     infoInim.qtdHelices = qtdHelices;
@@ -265,7 +543,6 @@ class ArmazenadorInfoObjetos
     }
 
     //rotacionar inimigo
-    infoInim.formaGeometrica.rotacionar(PI); // todas as imagens de Avioes e Tiros sao apontando pra cima, mas a posicao inicial de Aviao de inimigo eh virado pra baixo (entao rotaciona-lo para deixar assim)
     AuxControladores.alteracoesRotacionarFormaGeometrica(infoInim, alteracoesAndarRotacionar);
 
     return infoInim;
@@ -276,7 +553,13 @@ class ArmazenadorInfoObjetos
   TiposTiros:
     - TiroFraco
     - TiroMedio
+    - TiroForte
+
+    - TiroLaser
+
     - TiroMissil
+    - TiroMissilPior
+    - TiroMissilDirecao
   */
   static infoTiro(nomeTiro, ehDoPers, tipoAndar = TipoAndar.Normal, alteracoesAndarRotacionar)
   // alteracoesAndarRotacionar: {direcaoAnguloAponta, ehAngulo} (com isso jah vai andar na direcao desejada tambem)
@@ -284,33 +567,72 @@ class ArmazenadorInfoObjetos
   {
     let formaGeometrica, nivelMortalidade, nivelVelocidade;
     let limitarCurva; //apenas para misseis {maiorAnguloMudanca, porcVelCurva}
+    const porcTiroPersMaisForte = 1.65;
     switch (nomeTiro)
     {
+      //TIROS NORMAIS
       case "TiroFraco":
       {
-        const tamanho = 6.7;
+        const tamanho = 3 * porcTamTiro;
+        formaGeometrica = new Retangulo(undefined,undefined, 1*tamanho, 3.5*tamanho);
+        nivelMortalidade = 0.55; //do inimigo no pers
+        nivelVelocidade = 1.5;
+      }
+      break;
+      case "TiroMedio":
+      {
+        const tamanho = 4 * porcTamTiro;
         formaGeometrica = new Retangulo(undefined,undefined, 1*tamanho, 2.142857142857143*tamanho);
-        nivelMortalidade = {pers: 1.5, inim: 1};
+        nivelMortalidade = 0.9; //do inimigo no pers
         nivelVelocidade = 1.8;
       }
       break;
-
-      case "TiroMedio":
+      case "TiroForte":
       {
-        const tamanho = 7.2;
+        const tamanho = 5 * porcTamTiro;
         formaGeometrica = new Retangulo(undefined,undefined, 1*tamanho, 1.8571428571428572*tamanho);
-        nivelMortalidade = {pers: 2.5, inim: 1.7};
+        nivelMortalidade = 1.4; //do inimigo no pers
         nivelVelocidade = 2.1;
       }
       break;
 
+      //TIROS A LASER/TECNOLOGICOS
+      case "TiroLaser":
+      {
+        const tamanho = 3 * porcTamTiro;
+        formaGeometrica = new Retangulo(undefined,undefined, 1*tamanho, 4.571428571428571*tamanho);
+        nivelMortalidade = 1.4; //do inimigo no pers
+        nivelVelocidade = 2.4;
+      }
+      break;
+
+      //TIROS SEGUEM
       case "TiroMissil":
       {
-        const tamanho = 9;
+        const tamanho = 6.75 * porcTamTiro;
         formaGeometrica = new Retangulo(undefined,undefined, 1*tamanho, 2.142857142857143*tamanho);
-        nivelMortalidade = {pers: 10, inim: 7};
+        nivelMortalidade = 6; //do inimigo no pers
         nivelVelocidade = 1.6;
         limitarCurva = {maiorAnguloMudanca: PI/23, porcVelCurva: 0.5};
+        tipoAndar = (ehDoPers) ? TipoAndar.SeguirInimMaisProx : TipoAndar.SeguirPers;
+      }
+      break;
+      case "TiroMissilDirecao":
+      {
+        const tamanho = 7 * porcTamTiro;
+        formaGeometrica = new Retangulo(undefined,undefined, 1*tamanho, 2.4375*tamanho);
+        nivelMortalidade = 5; //do inimigo no pers
+        nivelVelocidade = 1.6;
+        tipoAndar = (ehDoPers) ? TipoAndar.DirecaoInimMaisProx : TipoAndar.DirecaoPers;
+      }
+      break;
+      case "TiroMissilPior":
+      {
+        const tamanho = 7 * porcTamTiro;
+        formaGeometrica = new Retangulo(undefined,undefined, 1*tamanho, 2.857142857142857*tamanho);
+        nivelMortalidade = 5; //do inimigo no pers
+        nivelVelocidade = 1.4;
+        limitarCurva = {maiorAnguloMudanca: PI/72, porcVelCurva: 0.95, primMaiorAngMud: PI*0.45};
         tipoAndar = (ehDoPers) ? TipoAndar.SeguirInimMaisProx : TipoAndar.SeguirPers;
       }
       break;
@@ -319,17 +641,17 @@ class ArmazenadorInfoObjetos
     // para dar a ideia de tiro mesmo (sai mais rapido e depois mantem uma velocidade praticamente constante)
     let aceleracao;
     if (tipoAndar !== TipoAndar.SeguirPers && tipoAndar !== TipoAndar.SeguirInimMaisProx)
-      aceleracao = {valor: 0.6, ehPorcentagem: true, qntsVezes: 1};
+      aceleracao = {valor: 0.7, ehPorcentagem: true, qntsVezes: 2};
     else
-      aceleracao = {valor: 0.4, ehPorcentagem: true, qntsVezes: 2};
+      aceleracao = {valor: 0.9, ehPorcentagem: true, qntsVezes: 1};
     nivelVelocidade /= Math.pow(aceleracao.valor, aceleracao.qntsVezes);
 
     let infoTiro = new InfoTiro();
     infoTiro.infoImgMorto = new InfoImgMorto([{fill: "black"}]);
-    infoTiro.mortalidade = mortalidadeTiro((ehDoPers)?nivelMortalidade.pers:nivelMortalidade.inim);
+    infoTiro.mortalidade = mortalidadeTiro(nivelMortalidade * (ehDoPers) ? porcTiroPersMaisForte : 1);
 
     //formaGeometrica
-    formaGeometrica.corImg = ArmazenadorInfoObjetos.getImagem(nomeTiro);
+    formaGeometrica.corImg = ArmazenadorInfoObjetos.getImagem("Tiros/" + nomeTiro);
     infoTiro.formaGeometrica = formaGeometrica;
 
     //rotacionar imagem formaGeometrica
@@ -364,32 +686,63 @@ class ArmazenadorInfoObjetos
     let vetParteCaminhos = [];
 
     //personagem
-    vetParteCaminhos.push("AviaoOriginalPers");
-    vetParteCaminhos.push("AviaoBrutoPers");
-    vetParteCaminhos.push("AviaoMasterPers");
+    vetParteCaminhos.push("Personagem/AviaoOriginal");
+    vetParteCaminhos.push("Personagem/AviaoBruto");
+    vetParteCaminhos.push("Personagem/AviaoMaster");
 
     //inimigos
-    vetParteCaminhos.push("AviaoNormalFracoInim");
-    vetParteCaminhos.push("AviaoNormalMedioInim");
-    vetParteCaminhos.push("HelicopteroBomInim");
+    vetParteCaminhos.push("Inimigos/AviaoMaster");
+    vetParteCaminhos.push("Inimigos/AviaoBrutao");
+    vetParteCaminhos.push("Inimigos/AviaoBrutoSemHel");
+    vetParteCaminhos.push("Inimigos/HelicopteroBom");
+    vetParteCaminhos.push("Inimigos/AviaoSupersonicoForte");
+    vetParteCaminhos.push("Inimigos/AviaoSupersonicoRapido");
+    vetParteCaminhos.push("Inimigos/AviaoNormalBomEscuro");
+    vetParteCaminhos.push("Inimigos/AviaoNormalBomClaro");
 
     //tiros
-    vetParteCaminhos.push("TiroFraco");
-    vetParteCaminhos.push("TiroMedio");
-    vetParteCaminhos.push("TiroMissil");
+    vetParteCaminhos.push("Tiros/TiroFraco");
+    vetParteCaminhos.push("Tiros/TiroMedio");
+    vetParteCaminhos.push("Tiros/TiroForte");
+    vetParteCaminhos.push("Tiros/TiroLaser");
+    vetParteCaminhos.push("Tiros/TiroMissil");
+    vetParteCaminhos.push("Tiros/TiroMissilPior");
+    vetParteCaminhos.push("Tiros/TiroMissilDirecao");
 
-    //outros/"acessorios"
-    vetParteCaminhos.push("ArmaGiratoria");
-    vetParteCaminhos.push("HeliceRobusta");
+    //acessorios
+    vetParteCaminhos.push("Acessorios/ArmaGiratoria");
+    vetParteCaminhos.push("Acessorios/HeliceRobusta");
+
+    //raios
+    vetParteCaminhos.push("Raios/raio1");
+    vetParteCaminhos.push("Raios/raio2");
+    vetParteCaminhos.push("Raios/raio3");
+    vetParteCaminhos.push("Raios/raio4");
+    vetParteCaminhos.push("Raios/raio5");
+    vetParteCaminhos.push("Raios/raio6");
 
     //colocar no vetor static (chave = parte do caminho diferente, valor = o caminho completo)
     ArmazenadorInfoObjetos.vetorImgs = [];
     vetParteCaminhos.forEach(parteCaminhoImg =>
-      ArmazenadorInfoObjetos.vetorImgs[parteCaminhoImg] = loadImage("Imagens/"+parteCaminhoImg+".png")
+      ArmazenadorInfoObjetos.adicionarImgNoVetor(parteCaminhoImg)
     );
   }
   static getImagem(parteCaminhoImg)
-  { return ArmazenadorInfoObjetos.vetorImgs[parteCaminhoImg]; }
+  {
+    const img = ArmazenadorInfoObjetos.vetorImgs[parteCaminhoImg];
+    if (img !== undefined)
+      return img;
+    else
+    {
+      console.error("Adicionar \"" + parteCaminhoImg + "\" a ArmazenadorInfoObjetos.carregarImagens()");
+      ArmazenadorInfoObjetos.adicionarImgNoVetor(parteCaminhoImg);
+      return ArmazenadorInfoObjetos.vetorImgs[parteCaminhoImg];
+    }
+  }
+  static adicionarImgNoVetor(parteCaminhoImg)
+  {
+    ArmazenadorInfoObjetos.vetorImgs[parteCaminhoImg] = loadImage("ArquivosProgramacao/Imagens/"+parteCaminhoImg+".png");
+  }
 }
 
   //ATRIBUTOS...
@@ -410,6 +763,6 @@ function mortalidadeTiro(nivel)
 { return nivel*mortalidadeTiroPadrao; }
 
 //mortalidadeIntersecInim
-const mortalidadeIntersecInimPadrao = vidaPadrao/120;
+const mortalidadeIntersecInimPadrao = vidaPadrao/20;
 function mortalidadeIntersecInim(nivel)
 { return nivel*mortalidadeIntersecInimPadrao; }

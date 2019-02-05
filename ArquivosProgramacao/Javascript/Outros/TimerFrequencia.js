@@ -3,6 +3,7 @@
 class Timer
 {
   constructor(funcao, tempo, ehInterval=false, apenasEmLevelAtual=true, infoMudarTempo)
+  //ehInterval: boolean, Timer.ehIntervalFazerAoCriar ou Timer.ehIntervalNaoFazerAoCriar
   //tempo em milisegundo
   //infoMudarTempo: obj, atr (que a variavel onde tempo restante estah), estahEmMiliseg (se variavel estah em milisegundos)
   {

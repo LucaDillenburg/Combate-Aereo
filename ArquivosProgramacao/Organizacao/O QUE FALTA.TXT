@@ -1,0 +1,107 @@
+Criacao de Levels:
+- Fazer para tiros, inimigos e personagens:
+  .Recortar imagens
+  .Fazer formasGeometricas
+  .adicionar: infoArmas, armasGiratorias, helices
+  .mudar Pocao baseado nessas alteracoes
+
+- FAZER PREVIA DO JOGO!!
+ .pensar em como o level vai ser (em todos os diferenciais: Helicoptero, ArmasGiratorias, Missil, inimigos em TipoAndar.Direcao, inimigos pequenos com a vida desaparecendo, Oficina, Escurecer,...)
+ .implementar: 2 levels
+
+ Novas features:
+ - opcao para ter mais de uma pocao por level, porem apenas uma de cada vez (adicionar ControladorPocaoTela.qtdPocoesDesejadoLevel)
+
+Modificacoes:
+- quando trocar de aviao, continuar com as pocoes (soh remover a primeira pocao se ela estiver sendo usada e for desfazer alteracoes no novo aviao do personagem)
+- fazer com que porcTiroCentro seja no meio de onde o tiro deve sair (para quando mudar o tiro ou o personagem de tamanho, o tiro continue saindo do lugar certo)
+
+outros:
+- Solucionado: se o PersonagemPrincipal mudasse de Aviao durante uma Pocao que mexe no Aviao dele, quando fosse desexecutar daria pau
+- em Escuridao, deixar X draws de espaco para printar o raio
+- mudar ArmazenadorInfoObjetos e ObjetosComTiros (atirarEspecifico e getPontos): inimigos jah vem de ponta cabeca
+- Arrumado: ObjetoComArmas rotacionado estah atirando para a direcao errada (tiro com qtdAndar errado)
+- Arrumado: Pocao.Missil
+
+Modificacoes estruturais:
+Geometria:
+Design:
+Otimizacao:
+
+---------------------------------------------------------------------------------------------
+
+FAZER AGORA:
+
+- mudar sistema de atehQualXYPodeAndar (fazer que objeto soh pode andar X para um lado e X para o outro, Y para um lado e Y para o outro - ps: nao com pontos absolutos e nem andando de uma parede do ceu ateh esse ponto e voltando). Colocar parametro de MAIS INFORMACOES em InfoAndar
+- verificar colisao dos tiros quando ObjetoColide eh FormaGeometricaComposta (problema no ultimo qtdAndar?)
+- deixar canvas sempre com width/height igual
+- fazer sistema para printar quantas coisas diferentes quiser em draw do ControladorJogo: sempre printar ao final
+(ps: fazer class ConjuntoDraws)
+
+- falta adicionar obstaculos e SuportesAereos
+- pensar em quais sao os diferenciais: escrever quais sao os diferenciais/coisas dificeis
+
+- Problema: ObjetosTelaAparecendo com Pocao DeixarTempoMaisLento nao estah funcionando
+- acabar com TipoPocao.ReverterTirosJogoInimDirInim?
+- Otimizar: tentar tirar Exatidao.ehQuaseExato(...)
+- ver se tem que clonar Info ou nao (acho que nao precisa clonar quando for passar InfoX por parametro porque no proprio construtor ele clona o que precisa (tem coisas que nao precisam ser clonadas))
+
+Coisas Importantes - DESIGN
+- Design: background inicio do jogo, fonte, pause, ganhou (reduzir tempo enquanto inimigos se explodem, PersonagemPrincipal vai crescendo e animacao de explosao atras)
+- colocar imagens em pocoes
+- tirar fundo das imagens e printar ObjComTiros depois dos tiros em si
+- mostrar controles no pause e no inicio do jogo
+- nao sumir com os objetos da tela quando o level acabar
+
+Coisas Importantes - backend:
+- tirar getters e setters desnecessarios
+- Mover e fazer tais procedimentos antes de printa-los na tela?
+- deixar tamanho dos objetos proporcional a tela, e a velocidade proporcional ao frameRatePadrao
+- fazer funcao para andar (andar no contorno da funcao no grafico)
+- pensar um pouco na colisao de obstaculos (para onde eles vao quando colidem)
+- podemos saber se um ponto estah dentro de um quadrilatero (ou soh paralelogramo?) se estiver entre as retas de cima e de baixo e da direita e da esquerda (qual maneira eh mair rapida??)
+- fazer colisao entre inimigos e suportesAereos com obstaculo:
+  .se for TipoAndar = inverte direcao, inverter direcao
+  .se for TipoAndar = normal/direcao, parar?
+  .se for TipoAndar = Seguir, contornar
+- em Interseccao.vaiTerInterseccao(...) de formasComplexas e formasCompostas estao sendo criados paralelogramos desnecessarios (sobre parte da forma e de outros paralelogramos). pensar numa maneira de acabar com isso
+- transicao de objAparecendo para Inimigo e Obstaculo estah piscando (alem de que as vezes alguns objetos estao sendo printados mais vezes doq deveriam)
+
+// CRIAR LEVELS
+- criar static gets para todos os Inimigos, SuportesAereos e Obstaculos
+- pensar em como vai ser os levels
+- implementar levels no ControladorJogo
+
+- pesquisar: //AQUI
+- ver comentarios //TODO
+- usar cloneDicionario, pesquisar "{"
+- Otimizacao: tentar nao dar delete em vertices e arestas e sim mudar seus valores (ver oq eh mais rapido, mudar cada vertice e aresta ou refazer)
+- fazer esquema para tiros sairem muito rapido, desacelerarem e depois ficarem constante
+
+- deixar todos os angulos como do ciclo trigonometrico??
+- mudar nome de PersonagemPrincipal (nao eh um personagem e tem soh 1 dele) e "pers" => AviaoUsuario
+- mudar centroMassa para centro e fazer alteracoes cabiveis
+- mudar "nave" para outra coisa
+- Quando o canvas perde o foco, pausa-lo (teoricamente ta certo mas evento nao fire)
+
+- Geometria: ORGANIZAR EXPLICACOES: COLOCAR NO GIT EXPLICACOES DO PAPEL (DEIXAR BONITINHA) + MUDAR NOME DOS ARQUIVOS DO PAINT E DEIXAR MAIS BONITINHO TAMBEM
+
+---------   ATEH AQUI EH ESSENCIAL...   ---------
+--------- nao essencial daqui pra baixo ---------
+
+
+- mudar corImg para img em ObjetoTela
+- esquema pra desenhar caminho de inimigos/obstaculos?? (outro .html?) ps: pensar em diferenca do width e height de cada execucao. Ver outros jogos do tipo...
+- Obstaculo.especial: corImg vira vetor de imgs, tira mais vida
+
+Geometria:
+- fazer FormaGeometrica para circulo com interseccao e procedimento em Interseccao
+
+Otimizar mais o codigo
+
+Totalmente Superfluos:
+- quando objetos com vida perderem vida abaixar a vida gradativamente (mudarVida gradativamente)
+- arrumar andar do personagem (quando jah tem duas teclas pressionadas quando uma terceira eh pressionada, o evento nao eh fired)
+- e colisao de inimigo com inimigo e obstaculo ??
+- opcao para mudar tamanho obstaculo??
+- colocar som??
