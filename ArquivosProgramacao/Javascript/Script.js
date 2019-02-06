@@ -6,19 +6,13 @@ window.addEventListener("keyup", keyUp);
 const tamStroke = 1.5;
 const frameRatePadrao = 40;
 
-//tamanho canvas
-const minimoWidthTela = 600;
-const minimoHeightTela = 520;
-const pxlsSobrandoTela = 20;
-
 
 // The statements in the setup() function executes once when the program begins
 function setup()
 {
-  //cria canvas com tamanho minimo (se o tamanho da tela atual for pequeno, cria maior)
-  const widthCanvas = Math.max(window.innerWidth, minimoWidthTela) - pxlsSobrandoTela;
-  const heightCanvas = Math.max(window.innerHeight, minimoHeightTela) - pxlsSobrandoTela;
-  createCanvas(widthCanvas, heightCanvas);
+  //cria canvas com tamanho minimo e sempre com as mesmas proporcoes (se o tamanho da tela atual for pequeno, cria maior)
+  const medidasCanvas = getMedidasCanvas();
+  createCanvas(medidasCanvas.width, medidasCanvas.height);
 
   //setar outras propriedades do canvas
   background(0);
@@ -31,6 +25,29 @@ function setup()
 
   //ControladorJogo (estrutura de tudo)
   ControladorJogo.inicializar(previaJogo);
+}
+//tamanho canvas
+const proporcaoWidtHeight = 1.3;
+const minimoWidthTela = 600;
+const pxlsSobrandoTela = 20;
+function getMedidasCanvas()
+{
+  //calcular width a partir da medida do width disponivel
+  const widthCanvas1 = Math.max(window.innerWidth, minimoWidthTela) - pxlsSobrandoTela;
+
+  //calcular width a partir do height
+  const heightCanvas2 = window.innerHeight - pxlsSobrandoTela;
+  //Regra de 3: [widthCanvas2] estah para [heightCanvas2] assim como [proporcaoWidtHeight] estah para 1
+  const widthCanvas2 = heightCanvas2 * proporcaoWidtHeight;
+
+  if (widthCanvas2 < widthCanvas1 && widthCanvas1 >= minimoWidthTela)
+    return {width: widthCanvas2, height: heightCanvas2}
+  else
+  {
+    //calcular height a partir de widthCanvas1
+    //Regra de 3: [widthCanvas1] estah para [heightCanvas1] assim como [proporcaoWidtHeight] estah para 1
+    return {width: widthCanvas1, height: widthCanvas1/proporcaoWidtHeight};
+  }
 }
 
 // The statements in draw() are executed until the program is stopped. Each statement is executed in sequence and after the last line is read, the first line is executed again.

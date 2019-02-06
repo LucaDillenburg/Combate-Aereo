@@ -1,6 +1,6 @@
 const EstadoJogo = {"NaoComecou":0, "Jogando":1, "Pausado":2, "Morto":3, "Ganhou": 4};
 
-const testando = false;
+const testando = true;
 
 // ControladorJogo eh static class porque sempre soh vai existir 1 e eh mais pratico (pq nao precisar ficar passando os objetoTela necessarios, nem level, estadoJogo e outros getters)
 class ControladorJogo
@@ -15,8 +15,6 @@ class ControladorJogo
 
     ControladorJogo._estadoJogo = EstadoJogo.NaoComecou;
     //quando personagem mudar estado do jogo (pausar), novo atributo: ControladorJogo._estadoJogoAnterior
-
-    //futuros atributos: ControladorJogo._level, ControladorJogo._colocarLvXTela, ControladorJogo._personagemPrincipal, ControladorJogo._controladoresInimigos, ControladorJogo._controladoresObstaculos, ControladorJogo._controladorOutrosTirosNaoPers, ControladorJogo._controladorSuportesAereos, ControladorJogo._controladorPocaoTela
   }
 
  //GETTER
@@ -29,6 +27,8 @@ class ControladorJogo
   { return ControladorJogo._level; }
   static get previaJogo()
   { return ControladorJogo._previaJogo; }
+  static get conjuntoDrawsEspeciais()
+  { return ControladorJogo._conjuntoDrawsEspeciais; }
   // ObjetosTela
   static get pers()
   { return ControladorJogo._personagemPrincipal; }
@@ -48,6 +48,12 @@ class ControladorJogo
   //inicializacao
   static comecarJogo()
   {
+    //para setar tamanho dos objetos corretamente e ser proporcional ao width
+    ArmazenadorInfoObjetos.inicializar();
+
+    //para draws especiais
+    ControladorJogo._conjuntoDrawsEspeciais = new ConjuntoDrawsEspeciaisJogo();
+
     //personagem original
     if (ControladorJogo._previaJogo) //se eh a previa
       ControladorJogo._personagemPrincipal = new PersonagemPrincipal(ArmazenadorInfoObjetos.infoAviaoMasterPers);
@@ -71,7 +77,6 @@ class ControladorJogo
   // retorna se ainda tem levels
   {
     ControladorJogo._criandoLevel = true;
-    ControladorJogo._colocarLvXTela = true; // para colocar "Level X" na tela
 
     //Para tiros de inimigos e suportes aereos do level anterior nao sumirem:
     //concatenar tiros dos inimigos e do jogo em controladorTiros[0] quando for passar de level (antes de deletar os controladoresTirosJogo e controladoresInimigos)
@@ -123,14 +128,18 @@ class ControladorJogo
             ControladorJogo._controladoresInimigos[length-1].adicionarInimigo({posicaoX: PosicaoX.Meio, y: yAviaoBrutao});
 
             //Helicoptero Bom (se movimentando um pouco dos lados)
-            const infoHelicopteroBom = ArmazenadorInfoObjetos.infoInim("HelicopteroBom", {ficarParado: true});
+            const porcWidthRetHelicopAndar = 0.25;
+            const infoHelicopteroBom = ArmazenadorInfoObjetos.infoInim("HelicopteroBom", undefined/*alteracoesAndarRotacionar*/,
+              {retangulo: {x: -porcWidthRetHelicopAndar/2, width: porcWidthRetHelicopAndar}});
             const infoAparecHelicopteroBom = new InfoObjetoTelaAparecendo(true, true);
             length = ControladorJogo._controladoresInimigos.push(new ControladorInimigos(infoHelicopteroBom, true, infoAparecHelicopteroBom));
             ControladorJogo._controladoresInimigos[length-1].indexContr = length-1;
-            const qtdHelicopAfastadoParede = 25;
+            const qtdHelicopAfastadoParede = (porcWidthRetHelicopAndar/2)*width + 20;
             const yHelicop = 28;
-            ControladorJogo._controladoresInimigos[length-1].adicionarInimigo({posicaoX: PosicaoX.ParedeEsquerda, x: qtdHelicopAfastadoParede, y: yHelicop});
-            ControladorJogo._controladoresInimigos[length-1].adicionarInimigo({posicaoX: PosicaoX.ParedeDireita, x: -qtdHelicopAfastadoParede, y: yHelicop});
+            ControladorJogo._controladoresInimigos[length-1].adicionarInimigoDif({posicaoX: PosicaoX.ParedeEsquerda, x: qtdHelicopAfastadoParede, y: yHelicop},
+              {direcao: Direcao.Direita});
+            ControladorJogo._controladoresInimigos[length-1].adicionarInimigoDif({posicaoX: PosicaoX.ParedeDireita, x: -qtdHelicopAfastadoParede, y: yHelicop},
+              {direcao: Direcao.Esquerda});
         }
         break;
 
@@ -146,14 +155,18 @@ class ControladorJogo
             ControladorJogo._controladoresInimigos[length-1].adicionarInimigo({posicaoX: PosicaoX.Meio, y: yAviaoMaster});
 
             //Aviao Bruto SemHel
-            const infoAviaoBruto = ArmazenadorInfoObjetos.infoInim("AviaoBrutoSemHel", {ficarParado: true});
+            const infoAviaoBruto = ArmazenadorInfoObjetos.infoInim("AviaoBrutoSemHel", undefined/*alteracoesAndarRotacionar*/,
+              );
             const infoAparecAviaoBruto = new InfoObjetoTelaAparecendo(true, true);
             length = ControladorJogo._controladoresInimigos.push(new ControladorInimigos(infoAviaoBruto, false, infoAparecAviaoBruto));
             ControladorJogo._controladoresInimigos[length-1].indexContr = length-1;
             const yAviaoBruto = 150;
             const qtdAfastadoParede = 40;
-            ControladorJogo._controladoresInimigos[length-1].adicionarInimigo({posicaoX: PosicaoX.ParedeEsquerda, x: qtdAfastadoParede, y: yAviaoBruto});
-            ControladorJogo._controladoresInimigos[length-1].adicionarInimigo({posicaoX: PosicaoX.ParedeDireita, x: -qtdAfastadoParede, y: yAviaoBruto});
+            const porcWidthRetBrutoAndar = 0.4;
+            ControladorJogo._controladoresInimigos[length-1].adicionarInimigoDif({posicaoX: PosicaoX.ParedeEsquerda, x: qtdAfastadoParede, y: yAviaoBruto},
+              {direcao: Direcao.Direita}, {infoAndar: {outrasInformacoes: {retangulo: {x: 0, width: porcWidthRetBrutoAndar}}}});
+            ControladorJogo._controladoresInimigos[length-1].adicionarInimigoDif({posicaoX: PosicaoX.ParedeDireita, x: -qtdAfastadoParede, y: yAviaoBruto},
+              {direcao: Direcao.Esquerda}, {infoAndar: {outrasInformacoes: {retangulo: {x: -porcWidthRetBrutoAndar, width: porcWidthRetBrutoAndar}}}});
         }
         break;
 
@@ -202,7 +215,17 @@ class ControladorJogo
     ControladorJogo._criandoLevel = false;
 
     // programar para o "Level X" da tela desaparecer
-    new Timer(() => { ControladorJogo._colocarLvXTela = false; }, 3000);
+    //programar para colocar "Level X" na tela
+    ControladorJogo._conjuntoDrawsEspeciais.adicionarMetodoDraw(() =>
+      {
+        push();
+          textSize(40);
+          fill(0);
+          textAlign(CENTER, CENTER);
+          text("Level " + ControladorJogo._level, width/2, (height - heightVidaUsuario)/2);
+        pop();
+      }, 3000);
+
     //adicionar timers do level atual depois que os ObjetosTela criados acabarem de aparecer
     new Timer(() => { ControladorJogo._adicionarTimersLevel(); }, tempoObjetoAparecerAntesIniciarLv);
 
@@ -223,7 +246,8 @@ class ControladorJogo
 
             //Aviao Supersonico Rapido (se movimentando)
               //criar controlador
-            const infoAviaoSupersonico = ArmazenadorInfoObjetos.infoInim("AviaoSupersonicoRapido", undefined, TipoAndar.NaoSairTelaInvTudo, infoMostrarVida);
+            const infoAviaoSupersonico = ArmazenadorInfoObjetos.infoInim("AviaoSupersonicoRapido", undefined/*alteracoesAndarRotacionar*/, undefined/*outrasInformacoesAndar*/,
+              TipoAndar.PermanecerEmRetangulo/*permanecer dentro da tela, pois nao tem nenhuma*/, infoMostrarVida);
             const infoAparecAviaoSupersonico = new InfoObjetoTelaAparecendo(true, true);
             const lengthSupersonico = ControladorJogo._controladoresInimigos.push(new ControladorInimigos(infoAviaoSupersonico, false, infoAparecAviaoSupersonico));
             ControladorJogo._controladoresInimigos[lengthSupersonico-1].indexContr = lengthSupersonico-1;
@@ -242,7 +266,8 @@ class ControladorJogo
 
             //Aviao Normal Bom Escuro (seguindo pers)
               //criar controlador
-            const infoAviaoBom = ArmazenadorInfoObjetos.infoInim("AviaoNormalBomEscuro", undefined, TipoAndar.SeguirPers, infoMostrarVida, true/*rotacionar inim*/);
+            const infoAviaoBom = ArmazenadorInfoObjetos.infoInim("AviaoNormalBomEscuro", undefined/*alteracoesAndarRotacionar*/, undefined/*outrasInformacoesAndar*/,
+              TipoAndar.SeguirPers, infoMostrarVida);
             const infoAparecAviaoBom = new InfoObjetoTelaAparecendo(true, true);
             const lengthBom = ControladorJogo._controladoresInimigos.push(new ControladorInimigos(infoAviaoBom, false, infoAparecAviaoBom));
             ControladorJogo._controladoresInimigos[lengthBom-1].indexContr = lengthBom-1;
@@ -284,8 +309,8 @@ class ControladorJogo
           // inimigos
             //Aviao Normal Bom Claro
               //criar controlador
-            const infoAviaoBom = ArmazenadorInfoObjetos.infoInim("AviaoNormalBomClaro", undefined, TipoAndar.SeguirPers,
-              {mostrarVidaSempre: false}, true/*rotacionar inimigo*/);
+            const infoAviaoBom = ArmazenadorInfoObjetos.infoInim("AviaoNormalBomClaro", undefined/*alteracoesAndarRotacionar*/, undefined/*outrasInformacoesAndar*/,
+              TipoAndar.SeguirPers, {mostrarVidaSempre: false});
             const infoAparecAviaoBom = new InfoObjetoTelaAparecendo(true, true);
             const lengthBom = ControladorJogo._controladoresInimigos.push(new ControladorInimigos(infoAviaoBom, false, infoAparecAviaoBom));
             ControladorJogo._controladoresInimigos[lengthBom-1].indexContr = lengthBom-1;
@@ -336,6 +361,7 @@ class ControladorJogo
     ControladorJogo._level++; //passa de level
 
     ConjuntoTimers.excluirTimersDoLevel(); //finaliza timers antigos atrelacados ao level e os exclui
+    ControladorJogo._conjuntoDrawsEspeciais.procPassouLevel(); //remove funcoes draw que nao transcendem o level
 
     const aindaTemLevel = ControladorJogo._iniciarLevel(); //proximo level
     if (aindaTemLevel===false) return true; // pers ganhou
@@ -611,15 +637,8 @@ class ControladorJogo
     //desenha a vida e as pocoes do personagem
     ControladorJogo._personagemPrincipal.draw(true);
 
-    if (ControladorJogo._colocarLvXTela)
-    {
-      push();
-        textSize(40);
-        fill(0);
-        textAlign(CENTER, CENTER);
-        text("Level " + ControladorJogo._level, width/2, height/2);
-      pop();
-    }
+    //desenha draws especiais (informacoes em texto normalmente)
+    ControladorJogo._conjuntoDrawsEspeciais.draw();
 
     if (ControladorJogo._personagemPrincipal.vivo && ControladorJogo._acabouLevel())
     {
@@ -644,6 +663,81 @@ class ControladorJogo
     }
 
     return false;
+  }
+}
+
+class ConjuntoDrawsEspeciaisJogo
+{
+  constructor()
+  {
+    //atributos basicos/importantes
+    this._infoMetodosDraw = [];
+    this._count = 0;
+
+    //outros atributos
+    this._qtdTranscendeLevel = 0;
+  }
+
+  adicionarMetodoDraw(funcaoDraw, tempoDraw, transcendeLevel=false)
+  //tempoDraw: em segundos
+  {
+    this._count++;
+    this._infoMetodosDraw.push({chavePrim: this._count, metodo: funcaoDraw, transcendeLevel: transcendeLevel});
+
+    //para otimizar procPassouLevel
+    if (transcendeLevel) this._qtdTranscendeLevel++;
+
+    if (tempoDraw !== undefined)
+    //se tempoDraw nao eh undefined, tem que se programar para remover esse elemento depois de tempoDraw milisegundos
+    {
+      const chavePrim = this._count;
+      new Timer(() =>
+        {
+          this._infoMetodosDraw.some((infoMetodoDraw, index) =>
+            {
+              if (infoMetodoDraw.chavePrim === chavePrim)
+              {
+                //remove esse elemento
+                this._infoMetodosDraw.splice(index, 1);
+
+                //para otimizar procPassouLevel
+                if (infoMetodoDraw.transcendeLevel) this._qtdTranscendeLevel--;
+
+                return true;
+              }
+              return false;
+            });
+        }, tempoDraw);
+    }
+  }
+
+  procPassouLevel()
+  {
+    //se todos transcendem o level, nao precisa remover nada
+    if (this._qtdTranscendeLevel === this._infoMetodosDraw.length)
+    {} else
+
+    //se nenhum transcende o level, precisa deletar todos
+    if (this._qtdTranscendeLevel === 0)
+    { this._infoMetodosDraw = []; }
+
+    else
+    //precisa remover alguns (todos os que nao transcendem o level)
+    {
+      this._infoMetodosDraw.forEach((infoMetodoDraw, index) =>
+        {
+          if (!infoMetodoDraw.transcendeLevel)
+          //se nao transcende level, remove esse elemento
+            this._infoMetodosDraw.splice(index, 1);
+        });
+      this._qtdTranscendeLevel = this._infoMetodosDraw.length;
+      //todos os que sobraram transcendem o level
+    }
+  }
+
+  draw()
+  {
+    this._infoMetodosDraw.forEach(infoMetodoDraw => infoMetodoDraw.metodo());
   }
 }
 

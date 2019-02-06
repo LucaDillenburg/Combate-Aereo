@@ -1,15 +1,26 @@
 /* INFORMACOES DE PERSONAGEM, INIMIGOS E OBSTACULOS */
 //Para mudar o tamanho de todos de um tipo de uma soh vez
-  //tiros, inimigos e personagem
-const porcTamTudo = 1.1;
-  //tiros
-const porcTamTiro = 1.3 * porcTamTudo;
-  //inimigos
-const porcTamInim = 1 * porcTamTudo;
-  //personagem
-const porcTamPers = 1.2 * porcTamTudo;
+let porcTamTudo, porcTamTiro, porcTamInim, porcTamPers;
 class ArmazenadorInfoObjetos
 {
+  static inicializar()
+  {
+    //setar valores das variaveis que funcionarao como constantes (nao pode usar const em si porque a variavel "width" ainda nao estah criada quando vai se prosessar as constantes)
+      //tiros, inimigos e personagem
+    porcTamTudo = width/830; //nao pode usar width porque o canvas ainda noa foi criado (entao usa-se o valor que serah amputado em width)
+      //tiros
+    porcTamTiro = 1.3 * porcTamTudo;
+      //inimigos
+    porcTamInim = 1 * porcTamTudo;
+      //personagem
+    porcTamPers = 1.2 * porcTamTudo;
+
+    //deixar essas variaveis imutaveis
+    Object.freeze(porcTamTudo);
+    Object.freeze(porcTamTiro);
+    Object.freeze(porcTamInim);
+    Object.freeze(porcTamPers);
+  }
  //PERSONAGEM PRINCIPAL
   static get infoAviaoOriginalPers()
   {
@@ -133,11 +144,12 @@ class ArmazenadorInfoObjetos
     - AviaoNormalBomEscuro
     - AviaoNormalBomClaro
   */
-  static infoInim(nomeInim, alteracoesAndarRotacionar, tipoAndar=TipoAndar.NaoSairTelaInvTudo, infoMostrarVida,
-    rotacionarInimAnguloAnda=false, limitarCurvaInim, corVida={stroke: color(200, 0, 0), fill: "red"})
-  // infoMostrarVida: mostrarVidaSempre, porcentagemTempoVida
+  static infoInim(nomeInim, alteracoesAndarRotacionar, outrasInformacoesAndar, tipoAndar=TipoAndar.PermanecerEmRetangulo, infoMostrarVida,
+    rotacionarInimAnguloAnda, corVida={stroke: color(200, 0, 0), fill: "red"})
   // alteracoesAndarRotacionar: {direcao({x,y} OU Direcao.) OU angulo OU ficarParado} e {direcaoAnguloAponta, ehAngulo}
-  // limitarCurvaInim: {maiorAnguloMudanca, porcVelCurva}
+  // outrasInformacoesAndar: ver InfoAndar
+  // rotacionarInimAnguloAnda: se for TipoAndar.SeguirPers ou TipoAndar.DirecaoPers, o padrao eh true; caso contrario, o padrao eh false
+  // infoMostrarVida: mostrarVidaSempre, porcentagemTempoVida
   {
     let formaGeometrica, nivelVida, nivelMortalIntersec, nivelVelocidade, infoArmas=[];
     let qtdHelices=0, qtdsRotateDifHelices; //para helicopteros
@@ -262,7 +274,7 @@ class ArmazenadorInfoObjetos
             infoArmas.push(infoArmaLateral7);
           }
 
-          //ARMA GIRATORIA
+          //ARMA GIRATORIA (TiroBomba)
           const indexArmaGiratoria = 0;
           {
             //adicionar armaGiratoria
@@ -272,8 +284,8 @@ class ArmazenadorInfoObjetos
             formaGeometrica.rotacionarImagemSecundaria(chaveArmaGiratoria, PI); //para armaGiratoria comecar apontada para baixo
             //infoConfigArmaGiratoria
             let infoArmaGiratoria = new InfoArma();
-            infoArmaGiratoria.infoTiroPadrao = ArmazenadorInfoObjetos.infoTiro("TiroForte", true);
-            infoArmaGiratoria.freqAtirar = 8;
+            infoArmaGiratoria.infoTiroPadrao = ArmazenadorInfoObjetos.infoTiro("TiroBomba", false);
+            infoArmaGiratoria.freqAtirar = 22;
             infoArmaGiratoria.indexArmaGiratoria = indexArmaGiratoria;
             infoArmas.push(infoArmaGiratoria);
           }
@@ -512,6 +524,9 @@ class ArmazenadorInfoObjetos
         throw "Esse inimigo nao existe!";
     }
 
+    if (rotacionarInimAnguloAnda === undefined)
+      rotacionarInimAnguloAnda = (tipoAndar === TipoAndar.SeguirPers || tipoAndar === TipoAndar.DirecaoPers);
+
     let infoInim = new InfoInimigo();
     formaGeometrica.corImg = ArmazenadorInfoObjetos.getImagem("Inimigos/" + nomeInim); //adicionar imagem a formaGeometrica
     infoInim.formaGeometrica = formaGeometrica;
@@ -535,8 +550,13 @@ class ArmazenadorInfoObjetos
     else
     {
       infoInim.infoAndar = new InfoAndar(velocidade(nivelVelocidade), 0, tipoAndar); //colocar todo o qtdAndar no eixo X
+
+      //guardar angulo (para rotacionar inim)
       infoInim.infoAndar.guardarAnguloQtdAndar = rotacionarInimAnguloAnda; //se for rotacionar o inimigo, precisa guardar o anguloQtdRotacionar
-      infoInim.infoAndar.limitarCurva = limitarCurvaInim;
+
+      //outrasInformacoes
+      if (outrasInformacoesAndar !== undefined)
+        infoInim.infoAndar.outrasInformacoes = outrasInformacoesAndar;
 
       //modificacoes gracas a alteracoesAndar
       ClasseAndar.qtdAndarDifMudarDir(infoInim.infoAndar, alteracoesAndarRotacionar);
@@ -596,7 +616,7 @@ class ArmazenadorInfoObjetos
       }
       break;
 
-      //TIROS A LASER/TECNOLOGICOS
+      //OUTROS TIROS ESPECIAIS
       case "TiroLaser":
       {
         const tamanho = 3 * porcTamTiro;
@@ -605,31 +625,30 @@ class ArmazenadorInfoObjetos
         nivelVelocidade = 2.4;
       }
       break;
+      case "TiroBomba":
+      {
+        const tamanho = 10 * porcTamTiro;
+        formaGeometrica = new Retangulo(undefined,undefined, 1*tamanho, 2.142857142857143*tamanho);
+        nivelMortalidade = 20; //do inimigo no pers
+        nivelVelocidade = 1.8;
+      }
+      break;
 
       //TIROS SEGUEM
       case "TiroMissil":
       {
-        const tamanho = 6.75 * porcTamTiro;
-        formaGeometrica = new Retangulo(undefined,undefined, 1*tamanho, 2.142857142857143*tamanho);
+        const tamanho = 7 * porcTamTiro;
+        formaGeometrica = new Retangulo(undefined,undefined, 1*tamanho, 2.857142857142857*tamanho);
         nivelMortalidade = 6; //do inimigo no pers
         nivelVelocidade = 1.6;
         limitarCurva = {maiorAnguloMudanca: PI/23, porcVelCurva: 0.5};
         tipoAndar = (ehDoPers) ? TipoAndar.SeguirInimMaisProx : TipoAndar.SeguirPers;
       }
       break;
-      case "TiroMissilDirecao":
-      {
-        const tamanho = 7 * porcTamTiro;
-        formaGeometrica = new Retangulo(undefined,undefined, 1*tamanho, 2.4375*tamanho);
-        nivelMortalidade = 5; //do inimigo no pers
-        nivelVelocidade = 1.6;
-        tipoAndar = (ehDoPers) ? TipoAndar.DirecaoInimMaisProx : TipoAndar.DirecaoPers;
-      }
-      break;
       case "TiroMissilPior":
       {
         const tamanho = 7 * porcTamTiro;
-        formaGeometrica = new Retangulo(undefined,undefined, 1*tamanho, 2.857142857142857*tamanho);
+        formaGeometrica = new Retangulo(undefined,undefined, 1*tamanho, 2.4375*tamanho);
         nivelMortalidade = 5; //do inimigo no pers
         nivelVelocidade = 1.4;
         limitarCurva = {maiorAnguloMudanca: PI/72, porcVelCurva: 0.95, primMaiorAngMud: PI*0.45};
@@ -664,7 +683,7 @@ class ArmazenadorInfoObjetos
     infoTiro.infoAndar = new InfoAndar(0, velocidade(nivelVelocidade), tipoAndar);
     infoTiro.infoAndar.aceleracao = aceleracao;
     infoTiro.infoAndar.guardarAnguloQtdAndar = true; // os tiros vao rotacionar automaticamente se nao andarem totalmente retos
-    infoTiro.infoAndar.limitarCurva = limitarCurva; //para misseis
+    infoTiro.infoAndar.outrasInformacoes = {limitarCurva: limitarCurva}; //para misseis
     if (alteracoesAndarRotacionar.direcao===undefined && alteracoesAndarRotacionar.angulo===undefined)
     {
       // colocar as direcoes e sentidos do rotacionar dos tiros
@@ -705,9 +724,9 @@ class ArmazenadorInfoObjetos
     vetParteCaminhos.push("Tiros/TiroMedio");
     vetParteCaminhos.push("Tiros/TiroForte");
     vetParteCaminhos.push("Tiros/TiroLaser");
+    vetParteCaminhos.push("Tiros/TiroBomba");
     vetParteCaminhos.push("Tiros/TiroMissil");
     vetParteCaminhos.push("Tiros/TiroMissilPior");
-    vetParteCaminhos.push("Tiros/TiroMissilDirecao");
 
     //acessorios
     vetParteCaminhos.push("Acessorios/ArmaGiratoria");
@@ -758,11 +777,11 @@ function vida(nivel)
 { return nivel*vidaPadrao; }
 
 //mortalidadeTiro
-const mortalidadeTiroPadrao = vidaPadrao/100;
+const mortalidadeTiroPadrao = 2.5;
 function mortalidadeTiro(nivel)
 { return nivel*mortalidadeTiroPadrao; }
 
 //mortalidadeIntersecInim
-const mortalidadeIntersecInimPadrao = vidaPadrao/20;
+const mortalidadeIntersecInimPadrao = 3;
 function mortalidadeIntersecInim(nivel)
 { return nivel*mortalidadeIntersecInimPadrao; }

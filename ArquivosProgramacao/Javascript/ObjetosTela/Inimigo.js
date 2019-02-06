@@ -328,31 +328,11 @@ class ControladorInimigos
       ClasseAndar.qtdAndarDifMudarDir(infoInimigo.infoAndar, alteracoesAndarRotacionar); //pode ter alteracoesAndar ainda
     }else
     {
-      //InfoInimigo: formaGeometrica, infoImgMorto, vida, corVida, mostrarVidaSempre, porcentagemTempoVida, qtdTiraVidaPersQndIntersec, infoAndar, infoArmas
-
       //infoAndar
       ClasseAndar.qtdAndarDif(infoInimigo, this._infoInimigoPadrao, alteracoesAndarRotacionar);
 
-      if (infoInimigo.infoImgMorto === undefined)
-        infoInimigo.infoImgMorto = this._infoInimigoPadrao.infoImgMorto;
-      if (infoInimigo.vida === undefined)
-        infoInimigo.vida = this._infoInimigoPadrao.vida;
-      if (infoInimigo.corVida === undefined)
-        infoInimigo.corVida = this._infoInimigoPadrao.corVida;
-      if (infoInimigo.mostrarVidaSempre === undefined)
-        infoInimigo.mostrarVidaSempre = this._infoInimigoPadrao.mostrarVidaSempre;
-      if (infoInimigo.qtdTiraVidaPersQndIntersec === undefined)
-        infoInimigo.qtdTiraVidaPersQndIntersec = this._infoInimigoPadrao.qtdTiraVidaPersQndIntersec;
-      if (infoInimigo.infoArmas === undefined)
-        infoInimigo.infoArmas = this._infoInimigoPadrao.infoArmas;
-
-      //porcentagemTempoVida (pode ser nulo)
-      if (infoInimigo.porcentagemTempoVida === undefined)
-        infoInimigo.porcentagemTempoVida = this._infoInimigoPadrao.porcentagemTempoVida;
-
-      //formaGeometrica
-      if (infoInimigo.formaGeometrica === undefined)
-        infoInimigo.formaGeometrica = this._infoInimigoPadrao.formaGeometrica;
+      //merge dos outros atributos
+      mergeInfoNovoComPadrao(infoInimigo, this._infoInimigoPadrao);
     }
 
     //rotacionar inimigo

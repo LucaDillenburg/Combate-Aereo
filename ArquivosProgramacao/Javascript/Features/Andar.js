@@ -2,45 +2,58 @@ const TipoAndar = {
     "Normal":1,
 
     //sair tela
-    "NaoSairTelaInvTudo":2, //inverte as duas direcoes mesmo que soh fosse sair em uma
-    "NaoSairTelaInvDir":3, //inverte soh a direcao que ia sair da tela
-
-    //passar por XY
-    "NaoPassarXYNemSairTelaInvTudo":4, //inverte as duas direcoes se fosse passar por um determinado XY (se for sair tela tambem inverte as duas direcoes)
-    "NaoPassarXYNemSairTelaInvDir":5, //inverte soh a direcao que fosse passar pelo determinado XY (se for sair tela inverte soh a direcao que for sair)
-    "NaoPassarXYPodeSairTelaInvTudo":6, //inverte as duas direcoes se fosse passar por um determinado XY (deixa sair da tela)
-    "NaoPassarXYPodeSairTelaInvDir":7, //inverte soh a direcao que fosse passar pelo determinado XY (deixa sair da tela)
+    "PermanecerEmRetangulo": 2,
+    //tem opcao para inverter o qtdAndar das duas direcoes ou soh de uma
+    //o retangulo pode ser o ceu inteiro ou nao
 
     //seguir
-    "SeguirPers": 8,
-    "SeguirInimMaisProx": 9,
+    "SeguirPers": 3,
+    "SeguirInimMaisProx": 4,
 
     //direcao
-    "DirecaoPers": 10,
-    "DirecaoInimMaisProx":11
+    "DirecaoPers": 5,
+    "DirecaoInimMaisProx": 6
   };
 
 class InfoAndar
 {
-  constructor(qtdAndarX, qtdAndarY, tipoAndar, atehQualXYPodeAndar, aceleracao, limitarCurva, guardarAnguloQtdAndar=false)
+  constructor(qtdAndarX, qtdAndarY, tipoAndar, outrasInformacoes={}, aceleracao, guardarAnguloQtdAndar=false)
   //eh public mesmo porque tem get e set em todos sem verificacao
   //aceleracao: valor, ehPorcentagem, qntsVezes
-  //limitarCurva: {maiorAnguloMudanca, porcVelCurva, [primMaiorAngMud]}
-    //- maiorAnguloMudanca: maior angulo que pode mudar a rota (para limitar a curva quando for TipoAndar.Seguir...)
-    //- porcVelCurva: para ir mais devagar quando for limitado pela curva
-    //- primMaiorAngMud: o maior angulo na primeira execucao do andar
+  //outrasInformacoes:
+    //para TipoAndar.Seguir... e TipoAndar.Direcao...:
+      //outrasInformacoes.limitarCurva: {maiorAnguloMudanca, porcVelCurva, [primMaiorAngMud]}
+        //- maiorAnguloMudanca: maior angulo que pode mudar a rota (para limitar a curva quando for TipoAndar.Seguir...)
+        //- porcVelCurva: para ir mais devagar quando for limitado pela curva
+        //- primMaiorAngMud: o maior angulo na primeira execucao do andar
+    //para TipoAndar.PermanecerEmRetangulo:
+      //outrasInformacoes.retangulo: se for undefined, o retangulo serah o ceu inteiro; caso nao seja ({x,y,width,height}), o retangulo deve ser relativo ao centroMassa(como de retangulo) da formaGeometrica e todos os dados devem ser porcentagens de width e height
+        //ps: Nesse ultimo caso, se width ou height forem undefined ou NaN nao serah verificado se estah dentro do retangulo nessa direcao
+        //ps2: toma-se como pressuposto de que a formaGeometrica estah dentro do retangulo no inicio da execucao
+      //outrasInformacoes.inverterAmbasDirecoes: se for true, sempre que bater em qualquer uma das paredes do retangulo inverte o qtdAndar em todas as direcoes; se for false, inverte soh a direcao que bateu (padrao eh InverterAmbas)
   {
+    //informacoes basicas
     this.qtdAndarX = qtdAndarX;
     this.qtdAndarY = qtdAndarY;
     this.tipoAndar = tipoAndar;
-    this.atehQualXYPodeAndar = atehQualXYPodeAndar;
+
+    //outras informacoes do tipoAndar
+    this.outrasInformacoes = outrasInformacoes;
+
+    //mais informacoes
     this.aceleracao = aceleracao;
-    this.limitarCurva = limitarCurva;
     this.guardarAnguloQtdAndar = guardarAnguloQtdAndar;
   }
 
   clone()
-  { return new InfoAndar(this.qtdAndarX, this.qtdAndarY, this.tipoAndar, this.atehQualXYPodeAndar, cloneDicionario(this.aceleracao), cloneDicionario(this.limitarCurva), this.guardarAnguloQtdAndar); }
+  {
+    let cloneOutrasInfo = cloneDicionario(this.outrasInformacoes);
+    if (cloneOutrasInfo !== undefined)
+      cloneOutrasInfo.limitarCurva = cloneDicionario(cloneOutrasInfo.limitarCurva);
+
+    return new InfoAndar(this.qtdAndarX, this.qtdAndarY, this.tipoAndar, cloneOutrasInfo,
+      cloneDicionario(this.aceleracao), this.guardarAnguloQtdAndar);
+  }
 
   // metodos diferentes de soh armazenar informacoes
   mudarAnguloQtdAndar(angulo)
@@ -54,7 +67,6 @@ class InfoAndar
 }
 const porcentQrEntrar = 0.05; //quanto maior esse numero, mais efetivo
 class ClasseAndar
-//qtdAndarX, qtdAndarY, tipoAndar, [atehQualXYPodeAndar], [ultimoQtdAndar e [inimSeguir]]
 {
   constructor(infoAndar, formaGeom)
   //infoAndar nao precisa estar clonado (ele mesmo "clona")
@@ -62,8 +74,6 @@ class ClasseAndar
   {
     this._qtdAndarX = infoAndar.qtdAndarX;
     this._qtdAndarY = infoAndar.qtdAndarY;
-
-    this.setTipoAndar(infoAndar.tipoAndar, formaGeom);
 
     if (infoAndar.aceleracao !== undefined && infoAndar.aceleracao.qntsVezes !== 0)
     {
@@ -76,16 +86,11 @@ class ClasseAndar
       }
     }
 
-    if (infoAndar.atehQualXYPodeAndar !== undefined)
-    //soh precisa se for INVERTER_..._NAO_PASSAR_XY
-      this._atehQualXYPodeAndar = infoAndar.atehQualXYPodeAndar; //nao precisa clonar porque nao vai mudar isso
-
-    if (infoAndar.guardarAnguloQtdAndar || infoAndar.limitarCurva!==undefined/*se for limitar a curva tambem precisa guardar esse angulo*/)
+    if (infoAndar.guardarAnguloQtdAndar || infoAndar.outrasInformacoes.limitarCurva!==undefined/*se for limitar a curva tambem precisa guardar esse angulo*/)
       this._setAnguloQtdAndar(); // o anguloQtdAndar dos objetos comeca com o angulo de rotacao que sua formaGeometrica estah
 
-    //para limitar a curva de TipoAndar.Seguir...
-    if (infoAndar.limitarCurva!==undefined)
-      this._limitarCurva = cloneDicionario(infoAndar.limitarCurva);
+    //TipoAndar e outrasInformacoes
+    this.setTipoAndar(infoAndar.tipoAndar, formaGeom, infoAndar.outrasInformacoes);
   }
 
   //getters basicos
@@ -93,38 +98,7 @@ class ClasseAndar
   get qtdAndarY() { return this._qtdAndarY; }
   get tipoAndar() { return this._tipoAndar; }
 
-  //getters e setters de TiposAndar especificos...
-    //
-  get atehQualXYPodeAndar() { return this._atehQualXYPodeAndar; } //nao mudar por aqui (mudar no set)
-  set atehQualXYPodeAndar(ponto) { this._atehQualXYPodeAndar = ponto; }
-    //
-  get limitarCurva() { return this._limitarCurva; } //nao mudar por aqui (mudar no set)
-  set limitarCurva(limitarCurva) { this._limitarCurva = limitarCurva; }
-
-  //em angulo de rotacao (nao do ciclo trigonometrico)
-  get anguloQtdAndar() { return this._anguloQtdAndar; }
-  _setAnguloQtdAndar(qtdAndarX = this._qtdAndarX, qtdAndarY = this._qtdAndarY)
-  {
-    //se nao andou nada e this._anguloQtdAndar ainda jah foi inicializado, deixa como estah
-    if (this._anguloQtdAndar===undefined || qtdAndarX!==0 || qtdAndarX!==0)
-      this._anguloQtdAndar = ClasseAndar.getAnguloQtdAndar(qtdAndarX, qtdAndarY); /*angulo de -PI a +PI*/
-  }
-  static getAnguloQtdAndar(qtdAndarX, qtdAndarY)
-  { return Math.atan2(qtdAndarX, qtdAndarY*-1); }
-
-  //em angulo do ciclo trigonometrico
-  static qtdAndarEmAngulo(qtdAndarX, qtdAndarY, angulo)
-  {
-    //Explicacao:
-      //- O qtdAndarX e qtdAndarY vao mudar, porem a hipotenusa que esses dois qtdAndar formam deve continuar a mesma.
-      //- Portanto, odemos construir um triangulo no Ciclo Trigonometrico com esse angulo, hipotenusaPadrao como hipotenusa e raio do circulo e qtdAndarX e qtdAndarY como respectivos cateto adjacente (sobre o eixo X) e cateto oposto (sobre o eixo Y).
-      //- Entao basta resolver os valores de qtdAndarX e qtdAndarY usando Seno e Cosseno...
-
-    const hipotenusaPadrao = Operacoes.hipotenusa(qtdAndarX, qtdAndarY);
-    return new Ponto(Math.cos(angulo)*hipotenusaPadrao, Math.sin(angulo)*hipotenusaPadrao);
-  }
-
-  //setters
+  //setters basicos
   set qtdAndarX(qtdAndarX)
   {
     this._qtdAndarX = qtdAndarX;
@@ -140,13 +114,38 @@ class ClasseAndar
     this.qtdAndarX = this._qtdAndarX*porcentagem;
     this.qtdAndarY = this._qtdAndarY*porcentagem;
   }
-  setTipoAndar(tipo, formaGeom)
+  setTipoAndar(tipoAndar, formaGeom, outrasInformacoes)
   //formaGeom eh de quem vai andar
   {
+    //inserir outrasInformacoes (se nao for undefined)
+    if (outrasInformacoes !== undefined)
+    {
+      if (tipoAndar === TipoAndar.PermanecerEmRetangulo)
+      //para TipoAndar.PermanecerEmRetangulo
+      {
+        if (outrasInformacoes.retangulo !== undefined)
+        //para limitar o espaco onde pode ir (pode ser undefined)
+        {
+          this._retangulo = {};
+          this._retangulo.x = outrasInformacoes.retangulo.x*width + (formaGeom.x + formaGeom.width/2);
+          this._retangulo.y = outrasInformacoes.retangulo.y*height + (formaGeom.y + formaGeom.height/2);
+          this._retangulo.width = outrasInformacoes.retangulo.width * width;
+          this._retangulo.height = outrasInformacoes.retangulo.height * height;
+        }
+
+        this._inverterAmbasDirecoes = outrasInformacoes.inverterAmbasDirecoes!==false/*true ou undefined*/;
+      }
+
+      //para limitar a curva de TipoAndar.Seguir... e TipoAndar.Direcao... (nao necessario em nenhum dos dois)
+      if (outrasInformacoes.limitarCurva!==undefined)
+        this._limitarCurva = cloneDicionario(outrasInformacoes.limitarCurva);
+    }
+    //daqui pra frente eh setTipoAndar somente...
+
     this._tipoAndar = null;
 
-    //se tipo eh para seguir inimigo mais proximo, tem que procurar inimigo mais proximo
-    if (tipo === TipoAndar.SeguirInimMaisProx)
+    //se tipoAndar eh para seguir inimigo mais proximo, tem que procurar inimigo mais proximo
+    if (tipoAndar === TipoAndar.SeguirInimMaisProx)
     {
       // se for pra um tiro seguir um inimigo sempre, seguir um dos mais importantes (essenciais)
       const infoInimSeguir = this._getInfoInimigoMaisProximo(formaGeom, false);
@@ -156,7 +155,7 @@ class ClasseAndar
         this._tipoAndar = TipoAndar.Normal;
     } //sem else mesmo, porque seguir inim mais proximo tambem vai adicionar ultimo qtdAndar
 
-    if (tipo === TipoAndar.SeguirPers || tipo === TipoAndar.SeguirInimMaisProx)
+    if (tipoAndar === TipoAndar.SeguirPers || tipoAndar === TipoAndar.SeguirInimMaisProx)
       this._ultimoQtdAndar = {x: this._qtdAndarX, y: this._qtdAndarY};
     else
     {
@@ -165,10 +164,10 @@ class ClasseAndar
       if (this._hipotenusaPadrao !== undefined)
         delete this._hipotenusaPadrao;
 
-      if (tipo === TipoAndar.DirecaoPers)
+      if (tipoAndar === TipoAndar.DirecaoPers)
         this._setarQtdAndarTipoDirecao(formaGeom, ControladorJogo.pers);
       else
-      if (tipo === TipoAndar.DirecaoInimMaisProx)
+      if (tipoAndar === TipoAndar.DirecaoInimMaisProx)
       {
         //retorna inimigo mais proximo em .inimigo e qtd quer andar em .qtdQrAndar
         const infoInimSeguir = this._getInfoInimigoMaisProximo(formaGeom);
@@ -180,9 +179,9 @@ class ClasseAndar
       }
     }
 
-    if (this._tipoAndar === null) this._tipoAndar = tipo;
+    if (this._tipoAndar === null) this._tipoAndar = tipoAndar;
 
-    // se o tipo precisa de hipotenusa padrao vai colocar
+    // se o tipoAndar precisa de hipotenusa padrao vai colocar
     if (this._tipoTemHipotenusaPadrao())
       this._colocarHipotenusaPadrao();
   }
@@ -225,6 +224,33 @@ class ClasseAndar
 
     //vai andar sempre isso
     this.setTipoAndar(TipoAndar.Normal, formaGeomVaiAndar); //tira hipotenusaPadrao
+  }
+
+  //getters e setters de TiposAndar especificos...
+  get limitarCurva() { return this._limitarCurva; } //nao mudar por aqui (mudar no set)
+  set limitarCurva(limitarCurva) { this._limitarCurva = limitarCurva; }
+
+  //em angulo de rotacao (nao do ciclo trigonometrico)
+  get anguloQtdAndar() { return this._anguloQtdAndar; }
+  _setAnguloQtdAndar(qtdAndarX = this._qtdAndarX, qtdAndarY = this._qtdAndarY)
+  {
+    //se nao andou nada e this._anguloQtdAndar ainda jah foi inicializado, deixa como estah
+    if (this._anguloQtdAndar===undefined || qtdAndarX!==0 || qtdAndarX!==0)
+      this._anguloQtdAndar = ClasseAndar.getAnguloQtdAndar(qtdAndarX, qtdAndarY); /*angulo de -PI a +PI*/
+  }
+  static getAnguloQtdAndar(qtdAndarX, qtdAndarY)
+  { return Math.atan2(qtdAndarX, qtdAndarY*-1); }
+
+  //em angulo do ciclo trigonometrico
+  static qtdAndarEmAngulo(qtdAndarX, qtdAndarY, angulo)
+  {
+    //Explicacao:
+      //- O qtdAndarX e qtdAndarY vao mudar, porem a hipotenusa que esses dois qtdAndar formam deve continuar a mesma.
+      //- Portanto, odemos construir um triangulo no Ciclo Trigonometrico com esse angulo, hipotenusaPadrao como hipotenusa e raio do circulo e qtdAndarX e qtdAndarY como respectivos cateto adjacente (sobre o eixo X) e cateto oposto (sobre o eixo Y).
+      //- Entao basta resolver os valores de qtdAndarX e qtdAndarY usando Seno e Cosseno...
+
+    const hipotenusaPadrao = Operacoes.hipotenusa(qtdAndarX, qtdAndarY);
+    return new Ponto(Math.cos(angulo)*hipotenusaPadrao, Math.sin(angulo)*hipotenusaPadrao);
   }
 
   procAndar(formaGeom, vaiAndar=true)
@@ -302,122 +328,72 @@ class ClasseAndar
   //objPerseguido eh ObjetoTela
   //retorna {x, y}
   {
-    let qtdAndar = {x: this._qtdAndarX, y: this._qtdAndarY};
-
-    let inverter = {x: false, y: false}; // comum ao 2o e 3o case
     switch(this._tipoAndar)
     {
       case TipoAndar.Normal:
-        break;
-      case TipoAndar.NaoPassarXYNemSairTelaInvTudo: //tambem nao pode sair da tela
-      case TipoAndar.NaoPassarXYNemSairTelaInvDir: //tambem nao pode sair da tela
-      case TipoAndar.NaoSairTelaInvTudo:
-      case TipoAndar.NaoSairTelaInvDir:
-        const inverteApenasDirecao = (this._tipoAndar === TipoAndar.NaoSairTelaInvDir ||
-          this._tipoAndar === TipoAndar.NaoPassarXYNemSairTelaInvDir);
+        return {x: this._qtdAndarX, y: this._qtdAndarY};
 
-        const vaiSairX = Tela.objVaiSairEmX(formaGeomVaiAndar, this._qtdAndarX);
-        const vaiSairY = Tela.objVaiSairEmY(formaGeomVaiAndar, this._qtdAndarY);
-
-        //se obstaculo vai sair, inverte a direcao
-        if (vaiSairX || vaiSairY)
+      case TipoAndar.PermanecerEmRetangulo:
+        //HORIZONTALMENTE
+        let vaiSairX;
+        if (this._retangulo === undefined) //eh pra considerar o ceu inteiro como o retangulo
+          vaiSairX = Tela.objVaiSairEmX(formaGeomVaiAndar, this._qtdAndarX);
+        else
         {
-          if (!inverteApenasDirecao || vaiSairX)
+          if (!isNaN(this._retangulo.width))
+          //se height ou width do retangulo for NaN, nao verificar se vai sair do retangulo naquela direcao
           {
-            inverter.x = true;
-            qtdAndar.x = -this._qtdAndarX;
-          }
-          if (!inverteApenasDirecao || vaiSairY)
-          {
-            inverter.y = true;
-            qtdAndar.y = -this._qtdAndarY;
-          }
-
-          if (inverter.x && inverter.y)
-            break;
-          //se jah inverteu nas duas direcoes, jah fez tudo
+            if (this._qtdAndarX < 0) //verificar a esquerda
+              vaiSairX = (formaGeomVaiAndar.x + this._qtdAndarX) < this._retangulo.x;
+            else //verificar a direita
+              vaiSairX = (formaGeomVaiAndar.x + formaGeomVaiAndar.width + this._qtdAndarX) > this._retangulo.x + this._retangulo.width;
+          }else
+            vaiSairX = false;
         }
 
-        if (this._tipoAndar === TipoAndar.NaoSairTelaInvTudo ||
-          this._tipoAndar === TipoAndar.NaoSairTelaInvDir)
-          break; //se for INVERTER_..._NAO_SAIR_TELA, jah fez tudo
+        //VERTICALMENTE
+        let vaiSairY;
+        if (this._inverterAmbasDirecoes && vaiSairX)
+        //se for pra inverter os dois lados se colidir qualquer um e jah colidiu, nao precisa verificar nessa direcao
+          vaiSairY = true;
+        else
+        {
+          if (this._retangulo === undefined) //eh pra considerar o ceu inteiro como o retangulo
+            vaiSairY =  Tela.objVaiSairEmY(formaGeomVaiAndar, this._qtdAndarY);
+          else
+          {
+            if (!isNaN(this._retangulo.height))
+            //se height ou width do retangulo for NaN, nao verificar se vai sair do retangulo naquela direcao
+            {
+              if (this._qtdAndarY < 0) //verificar a cima
+                vaiSairY = (formaGeomVaiAndar.y + this._qtdAndarY) < this._retangulo.y;
+              else //verificar a baixo
+                vaiSairY = (formaGeomVaiAndar.y + formaGeomVaiAndar.height + this._qtdAndarY) > this._retangulo.y + this._retangulo.height;
+            }else
+              vaiSairY = false;
+          }
+        }
 
-      case TipoAndar.NaoPassarXYPodeSairTelaInvTudo:
-      case TipoAndar.NaoPassarXYPodeSairTelaInvDir:
-      // os outros tipos andar de "nao passar XY" jah entraram no bloco anterior e se nao inverteram os dois lados continuam nesse bloco...
-        this._mudarDadosTipoNaoPassarXY(qtdAndar, inverter, formaGeomVaiAndar); //muda as coisas no metodo e volta diferente (passagem por referencia)
-        break;
+        //mudar qtdAndar baseado em qual direcao vai sair e em this._inverterAmbasDirecoes
+        if (vaiSairX || vaiSairY)
+        {
+          if (vaiSairX || this._inverterAmbasDirecoes)
+            this._qtdAndarX *= -1;
+          if (vaiSairY || this._inverterAmbasDirecoes)
+            this._qtdAndarY *= -1;
+        }
+        //retonar quanto vai andar
+        return {x: this._qtdAndarX, y: this._qtdAndarY};
 
       case TipoAndar.SeguirPers:
       case TipoAndar.SeguirInimMaisProx:
-        qtdAndar = this._qtdAndarSeguir(formaGeomVaiAndar, objPerseguido);
+        const qtdAndar = this._qtdAndarSeguir(formaGeomVaiAndar, objPerseguido);
 
         //muda o ultimoQtdAndar se for TipoAnda.Seguir...
         this._ultimoQtdAndar.x = qtdAndar.x;
         this._ultimoQtdAndar.y = qtdAndar.y;
-        break;
-    }
 
-    //inverter qtdAndarX e/ou Y se precisar
-    this.inverterDirecoesQtdAndar(inverter.x, inverter.y);
-
-    return qtdAndar;
-  }
-  _mudarDadosTipoNaoPassarXY(qtdAndar, inverter, formaGeometrica)
-  //funciona por passagem por referencia
-  {
-    const inverteApenasDirecao = (this._tipoAndar === TipoAndar.NaoPassarXYNemSairTelaInvDir ||
-      this._tipoAndar === TipoAndar.NaoPassarXYPodeSairTelaInvDir);
-
-    //se vai passar de X (de qual lado para o outro que seja)
-    if (!inverter.x && (this._qtdAndarX !== 0 || !inverteApenasDirecao) && this._atehQualXYPodeAndar.x !== undefined)
-    //se ainda nao inverteu em X e quer andar alguma coisa
-    {
-      let inicio;
-      if (this._qtdAndarX >= 0)
-        inicio = formaGeometrica.x;
-      else
-        inicio = formaGeometrica.x + this._qtdAndarX;
-      const distancia = Math.abs(this._qtdAndarX) + formaGeometrica.width;
-
-      if (Interseccao.xOuYDePontoEstahDentroDirecao(this._atehQualXYPodeAndar.x, inicio, distancia))
-      {
-        inverter.x = true;
-        qtdAndar.x = -this._qtdAndarX;
-
-        if (!inverteApenasDirecao)
-        {
-          //inverte Y tambem
-          inverter.y = true;
-          qtdAndar.y = -this._qtdAndarY;
-        }
-      }
-    }
-
-    //[igual o if de cima porem com Y ao inves de X]
-    //se vai passar de Y (de qual lado para o outro que seja)
-    if (!inverter.y && (this._qtdAndarY !== 0 || !inverteApenasDirecao) && this._atehQualXYPodeAndar.y !== undefined)
-    //se ainda nao inverteu em Y e quer andar alguma coisa
-    {
-      let inicio;
-      if (this._qtdAndarY >= 0)
-        inicio = formaGeometrica.y;
-      else
-        inicio = formaGeometrica.y + this._qtdAndarY;
-      const distancia = Math.abs(this._qtdAndarY) + formaGeometrica.height;
-
-      if (Interseccao.xOuYDePontoEstahDentroDirecao(this._atehQualXYPodeAndar.y, inicio, distancia))
-      {
-        inverter.y = true;
-        qtdAndar.y = -this._qtdAndarY;
-
-        if (!inverteApenasDirecao)
-        {
-          //inverte X tambem
-          inverter.x = true;
-          qtdAndar.x = -this._qtdAndarX;
-        }
-      }
+        return qtdAndar;
     }
   }
   _qtdAndarSeguir(formaGeomVaiAndar, objPerseguido, ehTipoDirecao=false)
@@ -469,14 +445,6 @@ class ClasseAndar
       const k = this._hipotenusaPadrao/hipotenusaQuerAndar;
       return qtdQuerAndar.multiplicado(k);
     }
-  }
-
-  inverterDirecoesQtdAndar(inverterX, inverterY)
-  {
-    if (inverterX)
-      this._qtdAndarX *= -1;
-    if (inverterY)
-      this._qtdAndarY *= -1;
   }
 
   static qntAndarParaBater(formaGeomVaiAndar, formaGeomPerseguido)
@@ -567,17 +535,7 @@ class ClasseAndar
     if (infoNovo.infoAndar === undefined)
       infoNovo.infoAndar = infoObjTelaPadrao.infoAndar;
     else
-    {
-      if (infoNovo.infoAndar.qtdAndarX === undefined)
-        infoNovo.infoAndar.qtdAndarX = infoObjTelaPadrao.infoAndar.qtdAndarX;
-      if (infoNovo.infoAndar.qtdAndarY === undefined)
-        infoNovo.infoAndar.qtdAndarY = infoObjTelaPadrao.infoAndar.qtdAndarY;
-      if (infoNovo.infoAndar.tipoAndar === undefined)
-        infoNovo.infoAndar.tipoAndar = infoObjTelaPadrao.infoAndar.tipoAndar;
-
-      if (infoNovo.infoAndar.atehQualXYPodeAndar === undefined)
-        infoNovo.infoAndar.atehQualXYPodeAndar = infoObjTelaPadrao.infoAndar.atehQualXYPodeAndar;
-    }
+      mergeInfoNovoComPadrao(infoNovo.infoAndar, infoObjTelaPadrao.infoAndar)
 
     ClasseAndar.qtdAndarDifMudarDir(infoNovo.infoAndar, alteracoesAndar);
   }

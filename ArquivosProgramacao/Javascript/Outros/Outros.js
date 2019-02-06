@@ -1,3 +1,11 @@
+//PARA ADICIONAR OBJETOS DIF
+function mergeInfoNovoComPadrao(infoNovo, infoPadrao)
+{
+  for (let chave in infoPadrao)
+    if (typeof infoPadrao[chave]!=='function' && infoNovo[chave]===undefined)
+        infoNovo[chave] = infoPadrao[chave];
+}
+
 //Novo metodo RANDOM de um numero a outro
 Math.myrandom = function (min, max, retornarInteiro=true)
 //inclusive min e exclusive max

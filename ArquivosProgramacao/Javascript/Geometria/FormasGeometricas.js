@@ -1744,16 +1744,35 @@ class FormaGeometricaComposta extends FormaGeometricaRotacionaTudo
     this._mudouArestasVertices();
   }
 
-  interseccao(obj) //retorna se estah intersectando
+  interseccao(obj, retornarIntersectou=true)
+  // se retornarIntersectou=true, retorna se estah intersectando;
+  // caso contrario, retorna um vetor de elementos={indice, formaGeometrica} (o vetor tem que conter cada formaGeometrica do this que intersecta com obj)
   {
     //Otimizacao: verificar se estah intersectando como retangulo antes
     if (super.interseccao(obj) === false)
-      return false;
+    {
+      if (retornarIntersectou)
+        return false;
+      else
+        return [];
+    }
 
-    // retorna se ha algum/some forma intersectando
-    return this._formasGeometricas.some(formaGeom => Interseccao.interseccao(formaGeom, obj));
-      //ps: esse codForma eh maior que todos os outros entao em Interseccao.interseccao() entre essa formaGeometrica e outra, sempre vira para a funcao interseccao dessa classe
-      //porem nao necessariamente as formas dentro da FormaComposta terao codForma maior que obj
+    if (retornarIntersectou)
+    {
+      // retorna se ha algum/some forma intersectando
+      return this._formasGeometricas.some(formaGeom => Interseccao.interseccao(formaGeom, obj));
+        //ps: esse codForma eh maior que todos os outros entao em Interseccao.interseccao() entre essa formaGeometrica e outra, sempre vira para a funcao interseccao dessa classe
+        //porem nao necessariamente as formas dentro da FormaComposta terao codForma maior que obj
+    }else
+    {
+      let infoFormasIntersecta = []; //vetor de elementos={indice, formaGeometrica} com todas formasGeometricas que intersectam com obj
+      this._formasGeometricas.forEach((formaGeom, indice) =>
+        {
+          if (Interseccao.interseccao(formaGeom, obj))
+            infoFormasIntersecta.push({indice: indice, formaGeometrica: formaGeom});
+        });
+      return infoFormasIntersecta;
+    }
   }
 
   mudarTamanho(porcentagem)

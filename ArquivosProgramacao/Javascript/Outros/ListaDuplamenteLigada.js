@@ -1,10 +1,10 @@
-class ListaDuplamenteLigada
+class List
 {
   constructor()
   {
     this._prim = null;
     this._ultimo = null;
-    this._qtdElem = 0;
+    this._length = 0;
 
     this._atual = null;
     this._indexAtual = -1;
@@ -27,63 +27,13 @@ class ListaDuplamenteLigada
   }
   get vazia()
   { return this._prim === null; }
-  get qtdElem()
-  { return this._qtdElem; }
-
-  //adicionar no comeco
-  inserirNoComeco(info)
-  {
-    this._prim = new _No(null, info, this._prim);
-
-    if (this._ultimo === null)
-      this._ultimo = this._prim;
-
-    this._qtdElem++;
-  }
-  inserirNoFinal(info)
-  {
-    this._ultimo = new _No(this._ultimo, info, null);
-
-    if (this._prim === null)
-      this._prim = this._ultimo;
-
-    this._qtdElem++;
-  }
-
-  //tirar do final
-  removerDoComeco()
-  {
-    if (this._prim === null)
-      throw "Nao ha elementos!";
-
-    this._prim = this._prim.prox;
-
-    if (this._prim === null)
-      this._ultimo = null;
-    else
-      this._prim.ant = null;
-    this._qtdElem--;
-  }
-  removerDoFinal()
-  {
-    if (this._ultimo === null)
-      throw "Nao ha elementos!";
-
-    this._ultimo = this._ultimo.ant;
-    if (this._ultimo === null)
-      this._prim = null;
-    else
-      this._ultimo.prox = null;
-    this._qtdElem--;
-  }
 
   esvaziar()
   {
     this._prim = null;
     this._ultimo = null;
-    this._qtdElem = 0;
+    this._length = 0;
   }
-
 
   //atual
   colocarAtualComeco()
@@ -143,9 +93,8 @@ class ListaDuplamenteLigada
         this._ultimo = this._ultimo.ant;
     }
 
-    this._qtdElem--;
+    this._length--;
   }
-
 
   //outros
   concatenar(outraLista)
@@ -168,7 +117,7 @@ class ListaDuplamenteLigada
     }
     //nao tem else porque se a outra lista for vazia nao tem mais o que fazer
 
-    this._qtdElem += outraLista._qtdElem;
+    this._length += outraLista._length;
   }
 
   //outros/aux
@@ -182,6 +131,101 @@ class ListaDuplamenteLigada
       atual = atual.prox;
     }
     console.log(string + "null");
+  }
+
+//ARRAY-LIKE GETTERS
+  get length()
+  { return this._length; }
+
+//ARRAY-LIKE METHODS
+  //adicionar
+  unshift(info)
+  {
+    this._prim = new _No(null, info, this._prim);
+    if (this._ultimo === null)
+      this._ultimo = this._prim;
+    this._length++;
+
+    return this._length;
+  }
+  push(info)
+  {
+    this._ultimo = new _No(this._ultimo, info, null);
+    if (this._prim === null)
+      this._prim = this._ultimo;
+    this._length++;
+
+    return this._length;
+  }
+
+  //remover
+  shift()
+  {
+    if (this._prim === null)
+      throw "Nao ha elementos!";
+
+    const elemRemovido = this._prim;
+    this._prim = this._prim.prox;
+
+    if (this._prim === null)
+      this._ultimo = null;
+    else
+      this._prim.ant = null;
+    this._length--;
+
+    return elemRemovido;
+  }
+  pop()
+  {
+    if (this._ultimo === null)
+      throw "Nao ha elementos!";
+
+    const elemRemovido = this._ultimo;
+    this._ultimo = this._ultimo.ant;
+
+    if (this._ultimo === null)
+      this._prim = null;
+    else
+      this._ultimo.prox = null;
+    this._length--;
+
+    return elemRemovido;
+  }
+
+  //loops
+  forEach(funcao)
+  {
+    let i = 0;
+    for (this.colocarAtualComeco(); !this.atualEhNulo; this.andarAtual(), i++)
+    {
+      this.guardarAtual();
+      funcao(atual.info, i); //os parametros sao: elemento atual e indice do elemento
+      this.colocarGuardadoNoAtual();
+    }
+  }
+  every(funcao)
+  {
+    let i = 0;
+    for (this.colocarAtualComeco(); !this.atualEhNulo; this.andarAtual(), i++)
+    {
+      this.guardarAtual();
+      if (!funcao(atual.info, i)) //os parametros sao: elemento atual e indice do elemento
+        return false;
+      this.colocarGuardadoNoAtual();
+    }
+    return true;
+  }
+  some(funcao)
+  {
+    let i = 0;
+    for (this.colocarAtualComeco(); !this.atualEhNulo; this.andarAtual(), i++)
+    {
+      this.guardarAtual();
+      if (funcao(atual.info, i)) //os parametros sao: elemento atual e indice do elemento
+        return true;
+      this.colocarGuardadoNoAtual();
+    }
+    return false;
   }
 }
 

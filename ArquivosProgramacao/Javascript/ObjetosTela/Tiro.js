@@ -62,10 +62,10 @@ class Tiro extends ObjetoTela
       (!this._ehDoPers && (tipo === TipoAndar.SeguirInimMaisProx || tipo === TipoAndar.DirecaoInimMaisProx)))
         throw "Tipo andar ou ehDoPers nao combinam!";
   }
-  setTipoAndar(tipo)
+  setTipoAndar(tipo, outrasInformacoes)
   {
     this._seEhImpossivelExcep(tipo);
-    this._classeAndar.setTipoAndar(tipo, this._formaGeometrica);
+    this._classeAndar.setTipoAndar(tipo, this._formaGeometrica, outrasInformacoes);
   }
 
   virarContraCriador(seguir)
@@ -74,13 +74,13 @@ class Tiro extends ObjetoTela
     this._ehDoPers = !this._ehDoPers;
 
     //adiciona limitacao curva (sem muita limitacao)
-    this._classeAndar.limitarCurva = {maiorAnguloMudanca: PI/12, porcVelCurva: 0.6};
+    const outrasInformacoes = {limitarCurva: {maiorAnguloMudanca: PI/12, porcVelCurva: 0.6}};
 
     //muda tipoAndar
     if (this._ehDoPers)
-      this.setTipoAndar(seguir?TipoAndar.SeguirInimMaisProx:TipoAndar.DirecaoInimMaisProx);
+      this.setTipoAndar(seguir?TipoAndar.SeguirInimMaisProx:TipoAndar.DirecaoInimMaisProx, outrasInformacoes);
     else
-      this.setTipoAndar(seguir?TipoAndar.SeguirPers:TipoAndar.DirecaoPers);
+      this.setTipoAndar(seguir?TipoAndar.SeguirPers:TipoAndar.DirecaoPers, outrasInformacoes);
   }
 
   get mortalidade()

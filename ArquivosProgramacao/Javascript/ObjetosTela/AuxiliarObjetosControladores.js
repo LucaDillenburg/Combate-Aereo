@@ -1,12 +1,4 @@
 //OBJETOS
-function minDirecao(valorDir1, valorDir2)
-{
-  if (valorDir1.valor <= valorDir2.valor)
-    return valorDir1;
-  else
-    return valorDir2;
-}
-
 class AuxInfo
 {
   static cloneImgCor(imgCor)
@@ -171,15 +163,7 @@ class AuxControladores
     if (infoObjAparecendo === undefined)
       infoObjAparecendo = infoObjAparecendoPadrao;
     else
-    {
-      //Atributos: mudarOpacidade, mudarTamanho, qtdAndar
-      if (infoObjAparecendo.mudarOpacidade === undefined)
-        infoObjAparecendo.mudarOpacidade = infoObjAparecendoPadrao.mudarOpacidade;
-      if (infoObjAparecendo.mudarTamanho === undefined)
-        infoObjAparecendo.mudarTamanho = infoObjAparecendoPadrao.mudarTamanho;
-      if (infoObjAparecendo.qtdAndar === undefined)
-        infoObjAparecendo.qtdAndar = infoObjAparecendoPadrao.qtdAndar;
-    }
+      mergeInfoNovoComPadrao(infoObjAparecendo, infoObjAparecendoPadrao);
     return infoObjAparecendo;
   }
 }

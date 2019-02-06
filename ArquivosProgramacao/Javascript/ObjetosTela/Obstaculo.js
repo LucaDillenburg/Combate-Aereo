@@ -357,30 +357,15 @@ class ControladorObstaculos
       ClasseAndar.qtdAndarDifMudarDir(infoObst.infoAndar, alteracoesAndarRotacionar); //pode ter alteracoesAndar ainda
     }else
     {
-      //InfoObstaculo: formaGeometrica, infoImgMorto, corImgEspecial, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers, [vida]
-
       //infoAndar
       ClasseAndar.qtdAndarDif(infoObst, this._infoObstaculoPadrao, alteracoesAndarRotacionar);
 
-      //qtdTiraVidaBatePers, qtdTiraVidaNaoConsegueEmpurrarPers, infoImgMorto
-      if (infoObst.qtdTiraVidaBatePers === undefined)
-        infoObst.qtdTiraVidaBatePers = this._infoObstaculoPadrao.qtdTiraVidaBatePers;
-      if (infoObst.qtdTiraVidaNaoConsegueEmpurrarPers === undefined)
-        infoObst.qtdTiraVidaNaoConsegueEmpurrarPers = this._infoObstaculoPadrao.qtdTiraVidaNaoConsegueEmpurrarPers;
-      if (infoObst.infoImgMorto === undefined)
-        infoObst.infoImgMorto = this._infoObstaculoPadrao.infoImgMorto;
-
-      //corImgEspecial (pode ser nulo)
-      if (infoObst.corImgEspecial === undefined)
-        infoObst.corImgEspecial = this._infoObstaculoPadrao.corImgEspecial;
-
-      //formaGeometrica
-      if (infoObst.formaGeometrica === undefined)
-        infoObst.formaGeometrica = this._infoObstaculoPadrao.formaGeometrica;
+      //outros atributos
+      mergeInfoNovoComPadrao(infoObst, this._infoObstaculoPadrao);
 
       //[vida]
-      if (infoObst instanceof ObstaculoComVida && infoObst.vida === undefined)
-        infoObst.vida = this._infoObstaculoPadrao.vida;
+      if (!(infoObst instanceof ObstaculoComVida) && infoObst.vida !== undefined)
+        delete infoObst.vida;
     }
 
     //rotacionar obstaculo

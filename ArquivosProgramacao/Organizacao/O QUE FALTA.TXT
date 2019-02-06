@@ -1,54 +1,37 @@
+Melhorias:
+- melhorei Sistema de Colisao: Interseccao.qntPodeAndarAntesIntersec(...) para FormasGeometricasCompostas estah funcionando perfeitamente!! (agora o algoritmo verifica o qtdPodeAndar considerando cada uma das formas de FormaGeometricaComposta do ObjParado que intersectou com o caminho do ObjQuerAndar)
+ps: isso arrumou a colisao dos tiros com FormasGeometricasCompostas (os tiros as vezes paravam antes)
+ps2: nao mudei nada para FormaGeometricaComposta
+- melhorei Sistema de andar dentro de uma area restrita, antigo: atehQualXYPodeAndar, (fazer que objeto soh pode andar X para um lado e X para o outro, Y para um lado e Y para o outro). Tirar todos aqueles tipos de TipoAndar muito parecidos, colocar parametro de maisInformacoes em InfoAndar e fazer de maneira relativa ao (x,y) do Objeto e ao tamanho da tela
+
+Novas features:
+- fazer sistema para printar quantas coisas diferentes quiser em draw do ControladorJogo: sempre printar ao final (ConjuntoDrawsEspeciaisJogo)
+
+Melhorar Jogabilidade:
+- mudar img e formaGeometrica de TiroMissil com TiroMissilDirecao (deixar o TiroMissil atual como uma bazuca, e os outros seguindo, um com mais e outro com menos limitacao de curva)
+- aumentar dano dos tiros e diminuir dano interseccao com inimigo
+- deixar canvas sempre com width/height igual
+
 Criacao de Levels:
-- Fazer para tiros, inimigos e personagens:
-  .Recortar imagens
-  .Fazer formasGeometricas
-  .adicionar: infoArmas, armasGiratorias, helices
-  .mudar Pocao baseado nessas alteracoes
-
-- FAZER PREVIA DO JOGO!!
- .pensar em como o level vai ser (em todos os diferenciais: Helicoptero, ArmasGiratorias, Missil, inimigos em TipoAndar.Direcao, inimigos pequenos com a vida desaparecendo, Oficina, Escurecer,...)
- .implementar: 2 levels
-
- Novas features:
- - opcao para ter mais de uma pocao por level, porem apenas uma de cada vez (adicionar ControladorPocaoTela.qtdPocoesDesejadoLevel)
-
-Modificacoes:
-- quando trocar de aviao, continuar com as pocoes (soh remover a primeira pocao se ela estiver sendo usada e for desfazer alteracoes no novo aviao do personagem)
-- fazer com que porcTiroCentro seja no meio de onde o tiro deve sair (para quando mudar o tiro ou o personagem de tamanho, o tiro continue saindo do lugar certo)
-
-outros:
-- Solucionado: se o PersonagemPrincipal mudasse de Aviao durante uma Pocao que mexe no Aviao dele, quando fosse desexecutar daria pau
-- em Escuridao, deixar X draws de espaco para printar o raio
-- mudar ArmazenadorInfoObjetos e ObjetosComTiros (atirarEspecifico e getPontos): inimigos jah vem de ponta cabeca
-- Arrumado: ObjetoComArmas rotacionado estah atirando para a direcao errada (tiro com qtdAndar errado)
-- Arrumado: Pocao.Missil
-
 Modificacoes estruturais:
 Geometria:
 Design:
 Otimizacao:
+outros:
 
 ---------------------------------------------------------------------------------------------
 
 FAZER AGORA:
 
-- mudar sistema de atehQualXYPodeAndar (fazer que objeto soh pode andar X para um lado e X para o outro, Y para um lado e Y para o outro - ps: nao com pontos absolutos e nem andando de uma parede do ceu ateh esse ponto e voltando). Colocar parametro de MAIS INFORMACOES em InfoAndar
-- verificar colisao dos tiros quando ObjetoColide eh FormaGeometricaComposta (problema no ultimo qtdAndar?)
-- deixar canvas sempre com width/height igual
-- fazer sistema para printar quantas coisas diferentes quiser em draw do ControladorJogo: sempre printar ao final
-(ps: fazer class ConjuntoDraws)
-
-- falta adicionar obstaculos e SuportesAereos
-- pensar em quais sao os diferenciais: escrever quais sao os diferenciais/coisas dificeis
-
-- Problema: ObjetosTelaAparecendo com Pocao DeixarTempoMaisLento nao estah funcionando
-- acabar com TipoPocao.ReverterTirosJogoInimDirInim?
-- Otimizar: tentar tirar Exatidao.ehQuaseExato(...)
 - ver se tem que clonar Info ou nao (acho que nao precisa clonar quando for passar InfoX por parametro porque no proprio construtor ele clona o que precisa (tem coisas que nao precisam ser clonadas))
+- Problema: ObjetosTelaAparecendo com Pocao DeixarTempoMaisLento nao estah funcionando
+- pensar em quais sao os diferenciais: escrever quais sao os diferenciais/coisas dificeis
+- Otimizar: tentar tirar Exatidao.ehQuaseExato(...)
 
 Coisas Importantes - DESIGN
 - Design: background inicio do jogo, fonte, pause, ganhou (reduzir tempo enquanto inimigos se explodem, PersonagemPrincipal vai crescendo e animacao de explosao atras)
 - colocar imagens em pocoes
+- conseguir imagens para obstaculos e SuportesAereos (e adiciona-los a PreviaJogo)
 - tirar fundo das imagens e printar ObjComTiros depois dos tiros em si
 - mostrar controles no pause e no inicio do jogo
 - nao sumir com os objetos da tela quando o level acabar

@@ -353,10 +353,32 @@ class Interseccao
 	static interseccao(obj1, obj2) //obj1 e obj2 sao FormaGeometricas
   // retorna se estah intersectando
 	{
-		if (obj1.codForma > obj2.codForma)
+    if (obj1.codForma > obj2.codForma)
 			return obj1.interseccao(obj2);
 		else
 			return obj2.interseccao(obj1);
+	}
+  static formasInterseccao(obj1, obj2) //obj1 e obj2 sao FormaGeometricas
+  // retorna um vetor de elementos={indice, formaGeometrica} (cada formaGeometrica eh uma formaGeometrica de obj2 e indice eh o index dessa formaGeometrica no vetor das formasGeometricas)
+  // ps: se obj2 nao for FormaGeometricaComposta e colidiu deixar indice=0
+	{
+    let interseccao;
+    if (obj1.codForma > obj2.codForma)
+    //aqui obj2.codForma eh menor que obj1.codForma, entao ele nao pode ser FormaGeometricaComposta
+      interseccao = obj1.interseccao(obj2);
+		else
+    //obj2.codForma eh maior ou igual obj1.codForma, entao ele pode ser FormaGeometricaComposta
+    {
+      if (obj2 instanceof FormaGeometricaComposta)
+        return obj2.interseccao(obj1, false); //retorna o vetor de elementos {indice, formaGeometrica}
+      interseccao = obj2.interseccao(obj1);
+    }
+    //daqui pra frente obj2 nao eh FormaGeometricaComposta e jah se tem o resultado da interseccao
+
+    if (interseccao)
+      return [{indice: 0, formaGeometrica: obj2}];
+    else
+      return [];
 	}
 
   static interseccaoComoRetangulos(obj1, obj2)
@@ -394,6 +416,13 @@ class Interseccao
       dir: Direcao.Cima
     };
 
+    const minDirecao = function(valorDir1, valorDir2)
+      {
+        if (valorDir1.valor <= valorDir2.valor)
+          return valorDir1;
+        else
+          return valorDir2;
+      }
     const menorValorDir = minDirecao(minDirecao(yBaixo, yCima), minDirecao(xDireita, xEsquerda));
     let qtdAndar = {};
     switch (menorValorDir.dir)
@@ -419,23 +448,23 @@ class Interseccao
   }
 
 	//VAI INTERSECTAR
-  static qntPodeAndarAntesIntersec(obj1, obj2, qtdAndarX, qtdAndarY, andarProporcional = true) //Obj1 e Obj2 devem ser formas geometricas
-  //explicacao: "obj2 quer andar qtdAndarX em X e qtdAndarY em Y"
+  static qntPodeAndarAntesIntersec(objParado, objQuerAndar, qtdAndarX, qtdAndarY, andarProporcional = true) //ObjParado e ObjQuerAndar devem ser formas geometricas
+  //explicacao: "objQuerAndar quer andar qtdAndarX em X e qtdAndarY em Y"
   //retorna qtdPodeAndar (x,y) para nao intersectar
-  { return Interseccao._interseccaoObjAndando(obj1, obj2, qtdAndarX, qtdAndarY, false, andarProporcional); }
+  { return Interseccao._interseccaoObjAndando(objParado, objQuerAndar, qtdAndarX, qtdAndarY, false, andarProporcional); }
 
-  static vaiTerInterseccao(obj1, obj2, qtdAndarX, qtdAndarY) //Obj1 e Obj2 devem ser formas geometricas
-  //explicacao: "obj2 quer andar qtdAndarX em X e qtdAndarY em Y"
-  { return Interseccao._interseccaoObjAndando(obj1, obj2, qtdAndarX, qtdAndarY, true); }
+  static vaiTerInterseccao(objParado, objQuerAndar, qtdAndarX, qtdAndarY) //ObjParado e ObjQuerAndar devem ser formas geometricas
+  //explicacao: "objQuerAndar quer andar qtdAndarX em X e qtdAndarY em Y"
+  { return Interseccao._interseccaoObjAndando(objParado, objQuerAndar, qtdAndarX, qtdAndarY, true); }
 
-	static _interseccaoObjAndando(obj1, obj2, qtdAndarX, qtdAndarY, returnTrueFalse, andarProporcional)
-  //Obj1 e Obj2 devem ser formas geometricas
+	static _interseccaoObjAndando(objParado, objQuerAndar, qtdAndarX, qtdAndarY, returnTrueFalse, andarProporcional)
+  //ObjParado e ObjQuerAndar devem ser formas geometricas
 	//se returnTrueFalse, retorna para VaiTerInterseccao; else, retorna para QntPodeAndarAntesIntersec
   //andarProporcional eh soh para qntPodeAndarAntesIntersec
-  //explicacao: "obj2 quer andar qtdAndarX em X e qtdAndarY em Y"
+  //explicacao: "objQuerAndar quer andar qtdAndarX em X e qtdAndarY em Y"
 	{
     //se jah estah intersectando antes de andar
-		if (Interseccao.interseccao(obj1, obj2))
+		if (Interseccao.interseccao(objParado, objQuerAndar))
     {
       if (returnTrueFalse)
         return true;
@@ -456,20 +485,20 @@ class Interseccao
 		let qtdPodeAndar = {x: qtdAndarX, y: qtdAndarY};
 
 
-		//CASO ESPECIAL (simples): se obj2 eh FormaGeometricaSimples e SOH ANDA EM UMA DIRECAO
-		if (obj2 instanceof FormaGeometricaSimples && (qtdAndarX === 0 || qtdAndarY === 0))
+		//CASO ESPECIAL (simples): se objQuerAndar eh FormaGeometricaSimples e SOH ANDA EM UMA DIRECAO
+		if (objQuerAndar instanceof FormaGeometricaSimples && (qtdAndarX === 0 || qtdAndarY === 0))
 		{
 			if (qtdAndarX === 0)
 			{
 				if (qtdAndarY < 0)
 				{
-					const nvRetangulo = new Retangulo(obj2.x, obj2.y + qtdAndarY, obj2.width, -qtdAndarY);
+					const nvRetangulo = new Retangulo(objQuerAndar.x, objQuerAndar.y + qtdAndarY, objQuerAndar.width, -qtdAndarY);
 
-          if (Interseccao.interseccao(obj1, nvRetangulo))
+          if (Interseccao.interseccao(objParado, nvRetangulo))
           {
             if (returnTrueFalse)
               return true;
-            qtdPodeAndar.y = Interseccao._qtdPodeAndarEmY(obj1, obj2, qtdAndarY);
+            qtdPodeAndar.y = Interseccao._qtdPodeAndarEmY(objParado, objQuerAndar, qtdAndarY);
           }else
             if (returnTrueFalse)
               return false;
@@ -477,13 +506,13 @@ class Interseccao
         //if (qtdAndarY > 0)
         else
 				{
-					const nvRetangulo = new Retangulo(obj2.x, obj2.y + obj2.height, obj2.width, qtdAndarY);
+					const nvRetangulo = new Retangulo(objQuerAndar.x, objQuerAndar.y + objQuerAndar.height, objQuerAndar.width, qtdAndarY);
 
-          if (Interseccao.interseccao(obj1, nvRetangulo))
+          if (Interseccao.interseccao(objParado, nvRetangulo))
           {
             if (returnTrueFalse)
               return true;
-            qtdPodeAndar.y = Interseccao._qtdPodeAndarEmY(obj1, obj2, qtdAndarY);
+            qtdPodeAndar.y = Interseccao._qtdPodeAndarEmY(objParado, objQuerAndar, qtdAndarY);
           }else
             if (returnTrueFalse)
               return false;
@@ -493,13 +522,13 @@ class Interseccao
 			{
 				if (qtdAndarX < 0)
 				{
-					const nvRetangulo = new Retangulo(obj2.x + qtdAndarX, obj2.y, -qtdAndarX, obj2.height);
+					const nvRetangulo = new Retangulo(objQuerAndar.x + qtdAndarX, objQuerAndar.y, -qtdAndarX, objQuerAndar.height);
 
-          if (Interseccao.interseccao(obj1, nvRetangulo))
+          if (Interseccao.interseccao(objParado, nvRetangulo))
           {
             if (returnTrueFalse)
               return true;
-            qtdPodeAndar.x = Interseccao._qtdPodeAndarEmX(obj1, obj2, qtdAndarX);
+            qtdPodeAndar.x = Interseccao._qtdPodeAndarEmX(objParado, objQuerAndar, qtdAndarX);
           }else
             if (returnTrueFalse)
               return false;
@@ -507,13 +536,13 @@ class Interseccao
         //if (qtdAndarX > 0)
         else
 				{
-					const nvRetangulo = new Retangulo(obj2.x + obj2.width, obj2.y, qtdAndarX, obj2.height);
+					const nvRetangulo = new Retangulo(objQuerAndar.x + objQuerAndar.width, objQuerAndar.y, qtdAndarX, objQuerAndar.height);
 
-          if (Interseccao.interseccao(obj1, nvRetangulo))
+          if (Interseccao.interseccao(objParado, nvRetangulo))
           {
             if (returnTrueFalse)
               return true;
-            qtdPodeAndar.x = Interseccao._qtdPodeAndarEmX(obj1, obj2, qtdAndarX);
+            qtdPodeAndar.x = Interseccao._qtdPodeAndarEmX(objParado, objQuerAndar, qtdAndarX);
           }else
             if (returnTrueFalse)
               return false;
@@ -527,10 +556,10 @@ class Interseccao
     // OTIMIZACAO:
     //considerar um quadradao (de onde estava pra onde foi) antes de verificar a colisao perfeita
     // obs: economiza tempo pois na maioria das vezes que esse metodo for executado, os dois objetos vao estar longe e soh considerando os dois como se fossem retangulos jah conclui-se que nao estah intersectando
-    const x2 = (qtdPodeAndar.x >= 0) ? obj2.x : obj2.x + qtdPodeAndar.x /*eh soma porque qtdPodeAndar.x eh negativo*/;
-    const y2 = (qtdPodeAndar.y >= 0) ? obj2.y : obj2.y + qtdPodeAndar.y /*eh soma porque qtdPodeAndar.x eh negativo*/;
-    if (!Interseccao.interseccaoRetDesmontado(obj1.x, obj1.y, obj1.width, obj1.height,
-      x2, y2, obj2.width + Math.abs(qtdPodeAndar.x), obj2.height + Math.abs(qtdPodeAndar.y)))
+    const x2 = (qtdPodeAndar.x >= 0) ? objQuerAndar.x : objQuerAndar.x + qtdPodeAndar.x /*eh soma porque qtdPodeAndar.x eh negativo*/;
+    const y2 = (qtdPodeAndar.y >= 0) ? objQuerAndar.y : objQuerAndar.y + qtdPodeAndar.y /*eh soma porque qtdPodeAndar.x eh negativo*/;
+    if (!Interseccao.interseccaoRetDesmontado(objParado.x, objParado.y, objParado.width, objParado.height,
+      x2, y2, objQuerAndar.width + Math.abs(qtdPodeAndar.x), objQuerAndar.height + Math.abs(qtdPodeAndar.y)))
     {
       if (returnTrueFalse)
         return false;
@@ -541,99 +570,141 @@ class Interseccao
 
 		// daqui pra baixo nao pode ser um quadrado e retangulo que soh anda pra alguma direcao... (tambem quer andar alguma coisa pelo menos)
 
-    //verificar se alguma parte do caminho do obj2 (oq vai andar) colidirah com obj2
-    const colidiu = Interseccao._colidiuCaminho(obj1, obj2, qtdAndarX, qtdAndarY);
+    //verificar se alguma parte do caminho do objQuerAndar (oq vai andar) colidirah com objParado
+    const precisaSaberTodasFormasColidiu = !returnTrueFalse;
+    const infoColidiu = Interseccao._colidiuCaminho(objParado, objQuerAndar, qtdAndarX, qtdAndarY, precisaSaberTodasFormasColidiu);
+    //retorna {colidiu, infoFormasObjParadoColidiuCaminho}, sendo que infoFormasObjParadoColidiuCaminho eh um vetor em que cada elemento={indice, formaGeometrica} e representa cada formaGeometrica do ObjetoParado que o caminho do ObjVaiAndar vai intersectar
 
     if (returnTrueFalse)
-      return colidiu;
-    if (!colidiu)
+      return infoColidiu.colidiu;
+    if (!infoColidiu.colidiu)
       return qtdPodeAndar;
 
     //daqui pra frente colidiu e eh pra retornar quanto pode andar antes de intersectar
 
-    //esse procedimento eh essencialmente para retangulos, mas vai ser usado por outras formasGeometricas, nessas formasGeometricas pode-se jah ter entrado um pouco
-    if ((obj2 instanceof FormaGeometricaComplexa || obj2 instanceof FormaGeometricaComposta ||
-      obj1 instanceof FormaGeometricaComplexa || obj1 instanceof FormaGeometricaComposta) &&
-      Interseccao.interseccaoRetDesmontado(obj1.x, obj1.y, obj1.width, obj1.height, obj2.x, obj2.y, obj2.width, obj2.height))
-      return {x: 0, y: 0};
+    //fazer um loop por cada formaGeometrica do ObjParado com quem o andar de ObjVaiAndar colidiu e guardar o menor qtdAndar
+    let menorQtdAndar;
+    infoColidiu.infoFormasObjParadoColidiuCaminho.some(infoFormaObjParadoColidiuCaminho =>
+      {
+        const qtdPodeAndarAtual = Interseccao._qtdPodeAndarSemColidir(infoFormaObjParadoColidiuCaminho.formaGeometrica,
+          objQuerAndar, qtdAndarX, qtdAndarY, andarProporcional);
 
-    // TODO : isso soh funciona perfeitamente se os dois forem quadrados ou retangulos
-    if (andarProporcional)
-    {
-      // a partir apenas de X
-      let qtdPodeAndarX1;
-      if (Interseccao.intersecDirecao(obj2.x, obj2.width, obj1.x, obj1.width))
-        qtdPodeAndarX1 = 0;
-      else
-        qtdPodeAndarX1 = Interseccao._qtdPodeAndarEmX(obj1, obj2, qtdAndarX);
-      // regra de 3 (a partir de X):
-      let qtdPodeAndarY1 = (qtdPodeAndarX1*qtdAndarY)/qtdAndarX;
+        //verificar se qtdPodeAndarAtual eh menor que menorQtdAndar
+        if (menorQtdAndar === undefined)
+          menorQtdAndar = qtdPodeAndarAtual;
+        else
+        if (andarProporcional)
+        {
+          if (qtdPodeAndarAtual.x < menorQtdAndar.x)
+          //nao precisa verificar de qtdPodeAndarAtual.y pois eh proporcional
+            menorQtdAndar = qtdPodeAndarAtual;
+        }else
+        //nao proporcional
+        {
+          if (qtdPodeAndarAtual.x < menorQtdAndar.x)
+            menorQtdAndar.x = qtdPodeAndarAtual.x;
+          if (qtdPodeAndarAtual.y < menorQtdAndar.y)
+            menorQtdAndar.y = qtdPodeAndarAtual.y;
+        }
 
-      // a partir apenas de Y
-      let qtdPodeAndarY2;
-      if (Interseccao.intersecDirecao(obj2.y, obj2.height, obj1.y, obj1.height))
-        qtdPodeAndarY2 = 0;
-      else
-        qtdPodeAndarY2 = Interseccao._qtdPodeAndarEmY(obj1, obj2, qtdAndarY);
-
-      if (Math.abs(qtdPodeAndarY1) >= Math.abs(qtdPodeAndarY2))
-      // 1: a partir de X
-        return {x: qtdPodeAndarX1, y: qtdPodeAndarY1};
-      else
-      // 2: a partir de Y
-        return {x: (qtdPodeAndarY2*qtdAndarX)/qtdAndarY, // regra de 3 (vai andar em X proporcional de quanto andara em Y)
-          y: qtdPodeAndarY2};
-    }else
-    //se nao precisa andar proporcional (anda o maximo que pode nas duas direcoes)
-    {
-      // verifica se nao estah intersectando nas duas direcoes
-      const estahIntersectandoX = Interseccao.intersecDirecao(obj2.x, obj2.width, obj1.x, obj1.width);
-      const estahIntersectandoY = Interseccao.intersecDirecao(obj2.y, obj2.height, obj1.y, obj1.height);
-
-      // se nao estiver intersectando em nenhuma das direcoes, tambem tem que calcular quanto tem que andar...
-      const naoEstahIntersectandoNenhum = !estahIntersectandoX && !estahIntersectandoY;
-
-      let qtdPodeAndarY;
-      if (estahIntersectandoX || naoEstahIntersectandoNenhum)
-      //se estah intersectando em X (eh trocado mesmo)
-        qtdPodeAndarY = Interseccao._qtdPodeAndarEmY(obj1, obj2, qtdAndarY);
-      else
-        qtdPodeAndarY = qtdAndarY;
-      let qtdPodeAndarX;
-      if (estahIntersectandoY || naoEstahIntersectandoNenhum)
-      //se estah intersectando em Y (eh trocado mesmo)
-        qtdPodeAndarX = Interseccao._qtdPodeAndarEmX(obj1, obj2, qtdAndarX);
-      else
-        qtdPodeAndarX = qtdAndarX;
-
-      return {x: qtdPodeAndarX, y: qtdPodeAndarY};
-    }
+        if (menorQtdAndar.x===0 && menorQtdAndar.y===0)
+          return true; //"break"
+        return false;
+      });
+    return menorQtdAndar;
 	}
-  static _colidiuCaminho(obj1, obj2, qtdAndarX, qtdAndarY)
+
+  //AUXILIAR CAMINHO
+  static _colidiuCaminho(objParado, objQuerAndar, qtdAndarX, qtdAndarY, retornarTodasFormasColidiu, qtdFormasGeometricasObjParado/*soh para o proprio metodo preencher durante a recursao*/)
+  //retorna {colidiu, infoFormasObjParadoColidiuCaminho} (todas as formaGeometricas que colidem, se ela for null eh porque nao colidiu)
+  //(pois em formasGeometricasCompostas pode-se ter colidido em varias formas)
+  //se nao precisa saber todas as formasGeometricas que colidiram, soh retorna {colidiu}
+  //infoFormasObjParadoColidiuCaminho eh um vetor em que cada elemento={indice, formaGeometrica} e representa cada formaGeometrica do ObjetoParado que o caminho do ObjVaiAndar vai intersectar
   {
     //EXPLICACAO:
       //- qualquer quadrado, retangulo, triangulo ou paralelogramo quando vai andar forma 1 ou 2 paralelogramos que representa(m) o caminho por onde a figura geometrica passara
-      //- desta maneira, ao verificar a interseccao de obj1 a essas formas, determina-se se relamente colidiu ou nao
-    //Otimizacao: montar as formasGeometricas que representam o caminho e verificar se intersectam com obj1 "simultanemente" (Loop: {criar forma, verificar, se colidiu=>retorna})
+      //- desta maneira, ao verificar a interseccao de objParado a essas formas, determina-se se relamente colidiu ou nao
+    //Otimizacao: montar as formasGeometricas que representam o caminho e verificar se intersectam com objParado "simultanemente" (Loop: {criar forma, verificar, se colidiu=>retorna})
 
-    if (obj2 instanceof FormaGeometricaComposta ||
-       (obj2 instanceof FormaGeometricaComplexa && !(obj2 instanceof Triangulo))) //FormasComplexas sem ser Triangulo
+    //para soh fazer isso uma vez durante todas as vezes que a recursao for chamada
+    if (qtdFormasGeometricasObjParado===undefined)
+      qtdFormasGeometricasObjParado = (objParado instanceof FormaGeometricaComposta) ? objParado.formasGeometricas.length : 1;
+
+    if (objQuerAndar instanceof FormaGeometricaComposta ||
+       (objQuerAndar instanceof FormaGeometricaComplexa && !(objQuerAndar instanceof Triangulo))) //FormasComplexas sem ser Triangulo
     {
       let vetorFormasMaisSimples;
-      if (obj2 instanceof FormaGeometricaComposta)
+      if (objQuerAndar instanceof FormaGeometricaComposta)
       //vetor de quaisquer formas nao compostas (mais simples do que FormaComposta)
-        vetorFormasMaisSimples = obj2.formasGeometricas;
+        vetorFormasMaisSimples = objQuerAndar.formasGeometricas;
       else
       //vetor de triangulos (mais simples do que Quadrilateros ou Paralelogramos)
-        vetorFormasMaisSimples = obj2.triangulos;
+        vetorFormasMaisSimples = objQuerAndar.triangulos;
 
-      return vetorFormasMaisSimples.some(formaMaisSimples =>
-        Interseccao._colidiuCaminho(obj1, formaMaisSimples, qtdAndarX, qtdAndarY));
+      //para evitar repeticao de codigo
+      const funcaoColidiuCaminho = (formaMaisSimples) =>
+        Interseccao._colidiuCaminho(objParado, formaMaisSimples, qtdAndarX, qtdAndarY, retornarTodasFormasColidiu);
+      if (!retornarTodasFormasColidiu)
+      //se nao precisa saber todas as formasGeometricas soh retorna {colidiu}
+      {
+        const colidiu = vetorFormasMaisSimples.some(formaMaisSimples => //soh faz loop ateh algum ter colidido
+            funcaoColidiuCaminho(formaMaisSimples).colidiu);
+        return {colidiu: colidiu};
+      }else
+      {
+        //verificar em qual formaGeometricaSimples
+        let infoFormasObjParadoColidiuCaminho = [];
+        vetorFormasMaisSimples.some(formaMaisSimples => //passa por todos os elementos independente de jah ter colidido ou nao (para conseguir todos as formasGeometricas); a nao ser que o vetor jah tenha todas as formasGeometricas do objeto parado
+          {
+            const novosInfoFormasObjParadoColidiu = funcaoColidiuCaminho(formaMaisSimples).infoFormasObjParadoColidiuCaminho;
+            Interseccao._concatenarVetoresFormasGeomColidiu(infoFormasObjParadoColidiuCaminho, novosInfoFormasObjParadoColidiu) //concatena as formasGeometricas de objParado que nao estao em infoFormasObjParadoColidiuCaminho no proprio infoFormasObjParadoColidiuCaminho
+
+            //se infoFormasObjParadoColidiuCaminho jah tem todas as formasGeometricas de ObjParado, pode sair
+            if (infoFormasObjParadoColidiuCaminho.length === qtdFormasGeometricasObjParado)
+              return true; //"break"
+            return false;
+          });
+        return {colidiu: infoFormasObjParadoColidiuCaminho.length>0, infoFormasObjParadoColidiuCaminho: infoFormasObjParadoColidiuCaminho};
+      }
     }else
-    // por recursao, sempre vai chegar ateh aqui (se obj2 era Triangulo, Quadrado ou Retangulo, ou se era FormaGeometricaComplexas ou FormaGeometricaComposta e foi reduzido a Quadrados, Retangulos e Triangulos
-      return Interseccao._montarFormasGeomCaminho(obj2, qtdAndarX, qtdAndarY). //monta 1 ou 2 formas geometricas
-        some(formaGeom => Interseccao.interseccao(formaGeom, obj1)); //testa se alguma das formas geometricas montadas (que representam o caminho de obj1) intersecta com obj1 (obj parado)
-        //verificar se alguma parte do caminho do obj2 (oq vai andar) colidirah com obj2
+    // por recursao, sempre vai chegar ateh aqui (se objQuerAndar era Triangulo, Quadrado ou Retangulo, ou se era FormaGeometricaComplexas ou FormaGeometricaComposta e foi reduzido a Quadrados, Retangulos e Triangulos
+    {
+      //monta formas geometricas
+      const formasGeometricasMontadas = Interseccao._montarFormasGeomCaminho(objQuerAndar, qtdAndarX, qtdAndarY); //1 ou 2 formas geometricas
+
+      if (!retornarTodasFormasColidiu)
+      //se nao precisa saber todas as formasGeometricas soh retorna {colidiu}
+      {
+        //testa se alguma das formas geometricas montadas (que representam o caminho de objQuerAndar) intersecta com objParado
+        const colidiu = formasGeometricasMontadas.some(formaGeom => //soh faz o loop ateh descobrir que alguma formaGeometrica colidiu
+          Interseccao.interseccao(formaGeom, objParado)); //verificar se alguma parte do caminho do objQuerAndar (oq vai andar) colidirah com objQuerAndar
+        return {colidiu: colidiu};
+      }else
+      {
+        //verificar em qual formaGeometricaSimples
+        let infoFormasObjParadoColidiuCaminho = [];
+        formasGeometricasMontadas.some(formaGeom => //passa por todos os elementos independente de jah ter colidido ou nao (para conseguir todos as formasGeometricas); a nao ser que o vetor jah tenha todas as formasGeometricas do objeto parado
+          {
+            const novosInfoFormasObjParadoColidiu = Interseccao.formasInterseccao(formaGeom, objParado); //verificar em quais formasGeometricas de objParado o caminho do objQuerAndar (oq vai andar) colidirah
+            Interseccao._concatenarVetoresFormasGeomColidiu(infoFormasObjParadoColidiuCaminho, novosInfoFormasObjParadoColidiu) //concatena as formasGeometricas de objParado que nao estao em infoFormasObjParadoColidiuCaminho no proprio infoFormasObjParadoColidiuCaminho
+
+            //se infoFormasObjParadoColidiuCaminho jah tem todas as formasGeometricas de ObjParado, pode sair
+            if (infoFormasObjParadoColidiuCaminho.length === qtdFormasGeometricasObjParado)
+              return true; //"break"
+            return false;
+          });
+        return {colidiu: infoFormasObjParadoColidiuCaminho.length>0, infoFormasObjParadoColidiuCaminho: infoFormasObjParadoColidiuCaminho};
+      }
+    }
+  }
+  static _concatenarVetoresFormasGeomColidiu(infoFormasObjParadoColidiuCaminho, novosInfoFormasObjParadoColidiu)
+  {
+    novosInfoFormasObjParadoColidiu.forEach(novaFormaGeomAtual =>
+      {
+        //se essa nova forma geometrica que colidiu nao existe no vetor, adiciona-se ela
+        if (!infoFormasObjParadoColidiuCaminho.some(formaGeomColidiu => formaGeomColidiu.indice === novaFormaGeomAtual.indice))
+          infoFormasObjParadoColidiuCaminho.push(novaFormaGeomAtual);
+      });
   }
   static _montarFormasGeomCaminho(obj, qtdAndarX, qtdAndarY)
   //esse metodo vai retornar o(s) paralelogramo(s) que o andar de obj formaria (1 ou 2)
@@ -778,31 +849,94 @@ class Interseccao
 
     return formasGeomAndar;
   }
-  static _qtdPodeAndarEmX(obj1, obj2, qtdAndarX)
+
+  //AUXILIAR QTDANDAR NAO COLIDIR
+  static _qtdPodeAndarSemColidir(objParado, objQuerAndar, qtdAndarX, qtdAndarY, andarProporcional)
+  //objParado eh na verdade cada formaGeometrica de ObjParado que o caminho de ObjQuerAndar colidiu
+  {
+    //esse procedimento eh essencialmente para retangulos, mas vai ser usado por outras formasGeometricas, nessas formasGeometricas pode-se jah ter entrado um pouco
+    if ((objQuerAndar instanceof FormaGeometricaComplexa || objQuerAndar instanceof FormaGeometricaComposta ||
+      objParado instanceof FormaGeometricaComplexa || objParado instanceof FormaGeometricaComposta) &&
+      Interseccao.interseccaoRetDesmontado(objParado.x, objParado.y, objParado.width, objParado.height, objQuerAndar.x, objQuerAndar.y, objQuerAndar.width, objQuerAndar.height))
+      return {x: 0, y: 0};
+
+    // TODO : isso soh funciona perfeitamente se os dois forem quadrados ou retangulos (poderia-se fazer para FormasGeometricasComplexas tambem - para FormasGeometricasCompostas nao precisa porque dentro nesse metodo soh entram FormasGeometricasNaoCompostas)
+    if (andarProporcional)
+    {
+      // a partir apenas de X
+      let qtdPodeAndarX1;
+      if (Interseccao.intersecDirecao(objQuerAndar.x, objQuerAndar.width, objParado.x, objParado.width))
+        qtdPodeAndarX1 = 0;
+      else
+        qtdPodeAndarX1 = Interseccao._qtdPodeAndarEmX(objParado, objQuerAndar, qtdAndarX);
+      // regra de 3 (a partir de X):
+      let qtdPodeAndarY1 = (qtdPodeAndarX1*qtdAndarY)/qtdAndarX;
+
+      // a partir apenas de Y
+      let qtdPodeAndarY2;
+      if (Interseccao.intersecDirecao(objQuerAndar.y, objQuerAndar.height, objParado.y, objParado.height))
+        qtdPodeAndarY2 = 0;
+      else
+        qtdPodeAndarY2 = Interseccao._qtdPodeAndarEmY(objParado, objQuerAndar, qtdAndarY);
+
+      if (Math.abs(qtdPodeAndarY1) >= Math.abs(qtdPodeAndarY2))
+      // 1: a partir de X
+        return {x: qtdPodeAndarX1, y: qtdPodeAndarY1};
+      else
+      // 2: a partir de Y
+        return {x: (qtdPodeAndarY2*qtdAndarX)/qtdAndarY, // regra de 3 (vai andar em X proporcional de quanto andara em Y)
+          y: qtdPodeAndarY2};
+    }else
+    //se nao precisa andar proporcional (anda o maximo que pode nas duas direcoes)
+    {
+      // verifica se nao estah intersectando nas duas direcoes
+      const estahIntersectandoX = Interseccao.intersecDirecao(objQuerAndar.x, objQuerAndar.width, objParado.x, objParado.width);
+      const estahIntersectandoY = Interseccao.intersecDirecao(objQuerAndar.y, objQuerAndar.height, objParado.y, objParado.height);
+
+      // se nao estiver intersectando em nenhuma das direcoes, tambem tem que calcular quanto tem que andar...
+      const naoEstahIntersectandoNenhum = !estahIntersectandoX && !estahIntersectandoY;
+
+      let qtdPodeAndarY;
+      if (estahIntersectandoX || naoEstahIntersectandoNenhum)
+      //se estah intersectando em X (eh trocado mesmo)
+        qtdPodeAndarY = Interseccao._qtdPodeAndarEmY(objParado, objQuerAndar, qtdAndarY);
+      else
+        qtdPodeAndarY = qtdAndarY;
+      let qtdPodeAndarX;
+      if (estahIntersectandoY || naoEstahIntersectandoNenhum)
+      //se estah intersectando em Y (eh trocado mesmo)
+        qtdPodeAndarX = Interseccao._qtdPodeAndarEmX(objParado, objQuerAndar, qtdAndarX);
+      else
+        qtdPodeAndarX = qtdAndarX;
+
+      return {x: qtdPodeAndarX, y: qtdPodeAndarY};
+    }
+  }
+  static _qtdPodeAndarEmX(objParado, objQuerAndar, qtdAndarX)
   // considera que vai colidir em X
   {
     // TODO: fazer isso considerando que os objetos podem nao ser Retangulos
     if (qtdAndarX < 0)
-      return Interseccao._qtdPodeAndarNaoColidir(obj1.x + obj1.width - obj2.x);
+      return Interseccao._qtdAndarComMargem(objParado.x + objParado.width - objQuerAndar.x);
     else
     if (qtdAndarX > 0)
-      return Interseccao._qtdPodeAndarNaoColidir(obj1.x - (obj2.x + obj2.width));
+      return Interseccao._qtdAndarComMargem(objParado.x - (objQuerAndar.x + objQuerAndar.width));
     else
       return 0;
   }
-  static _qtdPodeAndarEmY(obj1, obj2, qtdAndarY)
+  static _qtdPodeAndarEmY(objParado, objQuerAndar, qtdAndarY)
   // considera que vai colidir em Y
   {
     // TODO: fazer isso considerando que os objetos podem nao ser Retangulos
     if (qtdAndarY < 0)
-      return Interseccao._qtdPodeAndarNaoColidir(obj1.y + obj1.height - obj2.y);
+      return Interseccao._qtdAndarComMargem(objParado.y + objParado.height - objQuerAndar.y);
     else
     if (qtdAndarY > 0)
-      return Interseccao._qtdPodeAndarNaoColidir(obj1.y - (obj2.y + obj2.height));
+      return Interseccao._qtdAndarComMargem(objParado.y - (objQuerAndar.y + objQuerAndar.height));
     else
       return 0;
   }
-  static _qtdPodeAndarNaoColidir(qtdAndar)
+  static _qtdAndarComMargem(qtdAndar)
   {
     if (qtdAndar < 0)
       return Math.min(qtdAndar + qntNaoColidir, 0);

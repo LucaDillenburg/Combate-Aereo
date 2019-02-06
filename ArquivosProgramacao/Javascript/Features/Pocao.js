@@ -650,7 +650,6 @@ class ControladorPocaoTela
           pocoesPossiveis.push(TipoPocao.DeixarTempoMaisLento);
         case 9:
           pocoesPossiveis.push(TipoPocao.RUIMTirosPersDirEle);
-          pocoesPossiveis.push(TipoPocao.ReverterTirosJogoInimDirInim);
         case 8:
           pocoesPossiveis.push(TipoPocao.TirarVidaTodosInim);
           pocoesPossiveis.push(TipoPocao.GanharMuitaVida);
@@ -1008,7 +1007,8 @@ class ControladorPocoesPers
       // TODO: design
       noStroke();
       textSize(30);
-      text(this._nomePocaoEscrever, width/2 - 10, (height-heightPrimeiraPocao)/2 - 30); //escrever nome da pocao
+      textAlign(CENTER, CENTER);
+      text(this._nomePocaoEscrever, width/2, (height - heightVidaUsuario)/2); //escrever nome da pocao
     }
   }
 }
