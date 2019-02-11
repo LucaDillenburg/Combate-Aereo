@@ -1,17 +1,17 @@
 //TIRO
 class InfoTiro extends InfoObjetoTela
 {
-  constructor(formaGeometrica, infoImgMorto, infoAndar, mortalidade, ehDoPers)
+  constructor(formaGeometrica, infoImgVivo, infoImgMorto, infoAndar, mortalidade, ehDoPers)
   //ehDoPers: soh vai ser preenchido pelo ControladorTiros
   {
-    super(formaGeometrica, infoImgMorto);
+    super(formaGeometrica, infoImgVivo, infoImgMorto);
     this.infoAndar = infoAndar;
     this.mortalidade = mortalidade;
     this.ehDoPers = ehDoPers;
   }
 
   clone()
-  { return new InfoTiro(this.formaGeometrica, this.infoImgMorto.clone(), this.infoAndar.clone(), this.mortalidade, this.ehDoPers); }
+  { return new InfoTiro(this.formaGeometrica, this.infoImgVivo.clone(), this.infoImgMorto.clone(), this.infoAndar.clone(), this.mortalidade, this.ehDoPers); }
 }
 class Tiro extends ObjetoTela
 {
@@ -308,12 +308,12 @@ class ControladorTiros
     this._ehPersPrinc = ehPersPrinc;
 
     //vetor de tiros
-    this._tiros = [];
-
-    //tiros mortos (sao printados depois de todos)
-    this._tirosMortos = [];
+    this._tiros = new List();
 
     this._funcCamadasColTirarTirosEsp = new FuncEmCamadas();
+
+    //para remocao
+    this._indexesRemover = [];
   }
 
   //infoTiroPadrao
@@ -352,20 +352,11 @@ class ControladorTiros
       ClasseAndar.qtdAndarDifMudarDir(infoTiro.infoAndar, alteracoesAndarRotacionar); //pode ter alteracoesAndarRotacionar ainda
     }else
     {
-      //infoTiro: formaGeometrica, infoImgMorto, infoAndar, ehDoPers, mortalidade
-
       //infoAndar
       ClasseAndar.qtdAndarDif(infoTiro, infoTiroPadraoAtual, alteracoesAndarRotacionar);
 
-      //corMorto, mortalidade
-      if (infoTiro.infoImgMorto === undefined)
-        infoTiro.infoImgMorto = infoTiroPadraoAtual.infoImgMorto;
-      if (infoTiro.mortalidade === undefined)
-        infoTiro.mortalidade = infoTiroPadraoAtual.mortalidade;
-
-      //formaGeometrica
-      if (infoTiro.formaGeometrica === undefined)
-        infoTiro.formaGeometrica = infoTiroPadraoAtual.formaGeometrica;
+      //outros atributos
+      mergeInfoNovoComPadrao(infoTiro, infoTiroPadraoAtual);
     }
 
     //rotacionar tiro
@@ -404,12 +395,13 @@ class ControladorTiros
       {
         if (tiro.vivo)
         {
-          //retorna se tiro continua no vetor de tiros (pode estar morto ou nao)
-          const continuaNoVetor = tiro.andar();
+          const continuaNoVetor = tiro.andar(); //soh retorna que eh para remover se estah totalmente fora da tela
           if (!continuaNoVetor)
-    				this._removerTiro(index);
+            this._querRemoverTiro(index);
         }
       });
+
+    this._removerTiros();
   }
 
   //quando personagem, inimigos ou obstaculos se moverem
@@ -435,7 +427,7 @@ class ControladorTiros
   concatenarTiros(controladorTiros)
   {
     //os tiros do outro controlador serao passados para esse (todos os elementos de controladorTiros._tiros serao adicionados ao final de this._tiros)
-    this._tiros.push(...controladorTiros._tiros);
+    this._tiros.concat(controladorTiros._tiros);
   }
 
   //POCAO
@@ -457,7 +449,7 @@ class ControladorTiros
       ControladorJogo.pers.getControladorTiros(0).concatenarTiros(this);
 
     //jah passou os tiros pra outro controladorTiro, entao esvazia esse
-    this._tiros = [];
+    this._tiros.clear();
   }
   mudarTempo(porcentagem)
   {
@@ -490,7 +482,10 @@ class ControladorTiros
     this._tiros.forEach(tiro =>
       {
         if (tiro.vivo)
-          tiro.draw();
+        {
+          const rem = tiro.draw();
+          if (rem) console.log("tiro nao ficou vivo=false, mas estah trocando img por imgMorreu"); //AQUI
+        }
       });
 	}
   drawMortos() //desenha os tiros mortos
@@ -499,17 +494,26 @@ class ControladorTiros
       {
         if (!tiro.vivo)
         {
-          const removerDoVetor = tiro.draw();
+          const removerDoVetor = tiro.draw(); //soh retorna que eh para remover se jah printou todas as imagens morto
           if (removerDoVetor)
-            this._removerTiro(index);
+            this._querRemoverTiro(index);
         }
       });
+
+    this._removerTiros();
   }
 
-  //auxiliar
-  _removerTiro(index)
+  //remover tiros
+  //obs: nao pode remover durante o forEach, se nao o loop nao iterarah sobre todos os elementos, entao tem que guardar todos os indices dos elementos que quer quer deletar e depois deletar todos
+  _querRemoverTiro(index)
   {
-    this._tiros.splice(index,1);
-    //remover 1 elemento a partir de indexInim
+    this._indexesRemover.push(index);
+  }
+  _removerTiros()
+  {
+    this._indexesRemover.forEach((indexRemover, i) => this._tiros.splice(indexRemover-i, 1));
+    //"-i" porque a cada elemento que eh removido proximos elementos decaem uma posicao (e [i] eh o numero de elementos que jah foram removidos)
+
+    this._indexesRemover = []; //jah removeu todos os inimigos
   }
 }

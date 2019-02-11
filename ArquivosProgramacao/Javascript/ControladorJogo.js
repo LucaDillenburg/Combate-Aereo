@@ -1,7 +1,6 @@
+const testando = false;
+
 const EstadoJogo = {"NaoComecou":0, "Jogando":1, "Pausado":2, "Morto":3, "Ganhou": 4};
-
-const testando = true;
-
 // ControladorJogo eh static class porque sempre soh vai existir 1 e eh mais pratico (pq nao precisar ficar passando os objetoTela necessarios, nem level, estadoJogo e outros getters)
 class ControladorJogo
 {
@@ -15,6 +14,13 @@ class ControladorJogo
 
     ControladorJogo._estadoJogo = EstadoJogo.NaoComecou;
     //quando personagem mudar estado do jogo (pausar), novo atributo: ControladorJogo._estadoJogoAnterior
+
+    //arrumar background inicio
+    const medidasPadrao = {width: 2880, height: 1800}; //img.width e img.height nao estah funcionando
+    const img = loadImage("ArquivosProgramacao/Imagens/Outros/background_inicio.jpg");
+    const medidas = {height: height, width: medidasPadrao.width*height/medidasPadrao.height/*calcular width da imagem a partir do height*/};
+    const ponto = new Ponto((width-medidas.width)/2, 0);
+    ControladorJogo._infoBackgroundInicio = {img: img, medidas: medidas, ponto: ponto};
   }
 
  //GETTER
@@ -333,7 +339,7 @@ class ControladorJogo
         case 1:
         {
           // escuridao
-          let infoEscuridao = new InfoEscuridao();
+          /* let infoEscuridao = new InfoEscuridao();
           infoEscuridao.tempoEscurecendo = 800;
           infoEscuridao.desvioTempoEscurec = 0;
           infoEscuridao.tempoEscuroTotal = 0;
@@ -343,7 +349,7 @@ class ControladorJogo
           infoEscuridao.desvioIntervalo = 0;
           infoEscuridao.qtdRepeticoes = 2;
           infoEscuridao.desvioQtdRep = 0;
-          ControladorJogo._escuridao = new Escuridao(infoEscuridao);
+          ControladorJogo._escuridao = new Escuridao(infoEscuridao); */
         }
         break;
       }
@@ -379,7 +385,7 @@ class ControladorJogo
   //retornar tempo em segundos
   {
     if (ControladorJogo.previaJogo)
-      return 70;
+      return 50;
 
     // TODO: ajeitar tempo cada level
     switch (level)
@@ -527,13 +533,14 @@ class ControladorJogo
   {
     if (ControladorJogo._estadoJogo === EstadoJogo.NaoComecou)
     {
-      // TODO : design
-      background(255);
+      //desenhar imagem de fundo
+      const infoImg = ControladorJogo._infoBackgroundInicio;
+      image(infoImg.img, infoImg.ponto.x, infoImg.ponto.y, infoImg.medidas.width, infoImg.medidas.height);
       push();
-        stroke(0);
-        fill(0);
+        //desenhar texto
         textSize(40);
-        text("Pressione [ESC] para começar a jogar", 50, 50);
+        textAlign(CENTER);
+        text("Pressione [ESC] para começar a jogar", width/2, height*0.8);
       pop();
       return;
     }
@@ -622,7 +629,7 @@ class ControladorJogo
     ControladorJogo._controladorPocaoTela.draw();
 
     //desenha o personagem e os tiros dele (sua vida e suas pocoes ainda nao)
-    ControladorJogo._personagemPrincipal.draw(false);
+    ControladorJogo._personagemPrincipal.draw(TipoDrawPersonagem.ParteDoCeu);
 
     //desenha os tiros mortos (eles tem que ficar por cima de todos os ObjetosTela)
     ControladorJogo._controladorOutrosTirosNaoPers.drawMortos(); //sem dono
@@ -630,12 +637,15 @@ class ControladorJogo
     ControladorJogo._controladoresInimigos.forEach(contrInims => contrInims.drawTirosMortosInims()); //de Inimigos
     ControladorJogo._personagemPrincipal.drawTirosMortos(); //de PersonagemPrincipal
 
+    //desenha a mira arma giratoria (nao podia desenhar junto com a parte do ceu porque dessa forma os tiros mortos ficariam por cima da mira)
+    ControladorJogo._personagemPrincipal.draw(TipoDrawPersonagem.MiraArmaGiratoria);
+
     if (ControladorJogo._escuridao !== undefined)
       ControladorJogo._escuridao.draw();
       //desenha a escuridao por cima de tudo a nao ser da vida do personagem, de suas pocoes e do level
 
     //desenha a vida e as pocoes do personagem
-    ControladorJogo._personagemPrincipal.draw(true);
+    ControladorJogo._personagemPrincipal.draw(TipoDrawPersonagem.Painel);
 
     //desenha draws especiais (informacoes em texto normalmente)
     ControladorJogo._conjuntoDrawsEspeciais.draw();

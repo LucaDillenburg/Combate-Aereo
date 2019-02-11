@@ -14,6 +14,13 @@ class Timer
     //variavel de controle para quando parar: (tem que ser antes do primeiro procDraw)
     this._continuar = true;
 
+    //para mudarTempo (jah tem que setar agora pois jah vai executar o procDraw a primeira vez)
+    this._qtdSomaCount = 1;
+
+    if (ControladorJogo.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.DeixarTempoMaisLento)
+    // PARTE DA EXECUCAO DA POCAO (deixar tempo mais lento no Timer)
+      this.mudarTempo(porcentagemDeixarTempoLento);
+
     if (ehInterval===Timer.ehIntervalFazerAoCriar)
     {
       this._funcao();
@@ -35,10 +42,6 @@ class Timer
       //seta valor inicial do tempo (tempo total)
       this._infoMudarTempo.obj[this._infoMudarTempo.atr] = tempo;
     }
-
-    if (ControladorJogo.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.DeixarTempoMaisLento)
-    // PARTE DA EXECUCAO DA POCAO (deixar tempo mais lento no Timer)
-      this.mudarTempo(porcentagemDeixarTempoLento);
 
     //jah adiciona o timer
     ConjuntoTimers.adicionarTimer(this);
@@ -63,7 +66,7 @@ class Timer
   {
     if (!this._continuar) return false;
 
-    this._count++;
+    this._count += this._qtdSomaCount;
 
     if (this._infoMudarTempo !== undefined)
     //atualiza a variavel de tempo do objeto
@@ -83,9 +86,7 @@ class Timer
   //POCAO
   mudarTempo(porcentagem)
   {
-    //inversamente proporcional
-    this._freq /= porcentagem;
-    this._count /= porcentagem;
+    this._qtdSomaCount *= porcentagem;
   }
 }
 

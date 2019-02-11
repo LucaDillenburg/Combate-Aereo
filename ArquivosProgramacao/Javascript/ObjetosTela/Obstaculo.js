@@ -1,18 +1,19 @@
 //OBSTACULO
 class InfoObstaculo extends InfoObjetoTela
 {
-  constructor(formaGeometrica, infoImgMorto, corImgEspecial, infoAndar, qtdTiraVidaBatePers, qtdTiraVidaNaoConsegueEmpurrarPers)
+  constructor(formaGeometrica, infoImgVivo, infoImgMorto, corImgEspecial, infoAndar, qtdTiraVidaBatePers, qtdTiraVidaNaoConsegueEmpurrarPers, anguloRotacionarObst)
   //corImgEspecial pode ser nulo ou undefined
   {
-    super(formaGeometrica, infoImgMorto);
+    super(formaGeometrica, infoImgVivo, infoImgMorto);
     this.corImgEspecial = corImgEspecial;
     this.infoAndar = infoAndar;
     this.qtdTiraVidaBatePers = qtdTiraVidaBatePers;
     this.qtdTiraVidaNaoConsegueEmpurrarPers = qtdTiraVidaNaoConsegueEmpurrarPers;
+    this.anguloRotacionarObst = anguloRotacionarObst;
   }
 
   clone()
-  { return new InfoObstaculo(this.formaGeometrica, this.infoImgMorto.clone(), AuxInfo.cloneImgCor(this.corImgEspecial), this.infoAndar.clone(), this.qtdTiraVidaBatePers, this.qtdTiraVidaNaoConsegueEmpurrarPers); }
+  { return new InfoObstaculo(this.formaGeometrica, this.infoImgVivo.clone(), this.infoImgMorto.clone(), AuxInfo.cloneImgCor(this.corImgEspecial), this.infoAndar.clone(), this.qtdTiraVidaBatePers, this.qtdTiraVidaNaoConsegueEmpurrarPers, this.anguloRotacionarObst); }
 }
 class Obstaculo extends ObjetoTela
 {
@@ -31,6 +32,10 @@ class Obstaculo extends ObjetoTela
     //andar
     this._seEhImpossivelExcep(infoObstaculo.infoAndar.tipoAndar);
     this._classeAndar = new ClasseAndar(infoObstaculo.infoAndar, this._formaGeometrica);
+
+    //para rotacionar obstaculos (nao necessario)
+    if (infoObstaculo.anguloRotacionarObst !== undefined)
+      this._anguloRotacionarObst = infoObstaculo.anguloRotacionarObst;
   }
 
   //procedimentos quando criar obstaculo
@@ -284,19 +289,28 @@ class Obstaculo extends ObjetoTela
       this._vida = 0;
     this.morreu(false);
   }
+
+  draw()
+  {
+    //para rotacionar obstaculo
+    if (this._anguloRotacionarObst !== undefined)
+      this._formaGeometrica.rotacionar(this._anguloRotacionarObst);
+
+    return super.draw();
+  }
 }
 
 // OBSTACULO COM VIDA
 class InfoObstaculoComVida extends InfoObstaculo
 {
-  constructor(formaGeometrica, infoImgMorto, corImgEspecial, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers, vida)
+  constructor(formaGeometrica, infoImgVivo, infoImgMorto, corImgEspecial, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers, vida, anguloRotacionarObst)
   {
-    super(formaGeometrica, infoImgMorto, corImgEspecial, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers);
+    super(formaGeometrica, infoImgVivo, infoImgMorto, corImgEspecial, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers, anguloRotacionarObst);
     this.vida = vida;
   }
 
   clone()
-  { return new InfoObstaculoComVida(this.formaGeometrica, this.infoImgMorto.clone(), AuxInfo.cloneImgCor(this.corImgEspecial), this.infoAndar.clone(), this.qtdTiraVidaNaoConsegueEmpurrarPers, this.vida); }
+  { return new InfoObstaculoComVida(this.formaGeometrica, this.infoImgVivo.clone(), this.infoImgMorto.clone(), AuxInfo.cloneImgCor(this.corImgEspecial), this.infoAndar.clone(), this.qtdTiraVidaNaoConsegueEmpurrarPers, this.vida, this.anguloRotacionarObst); }
 }
 class ObstaculoComVida extends Obstaculo
 {
@@ -342,6 +356,9 @@ class ControladorObstaculos
     // obstaculos que NAO interagem com o meio (soh sao printados). para ObjetosTelaAparecendo:
     this._obstaculosSurgindo = []; //fila
     this._infoObjAparecendoPadrao = infoObjAparecendoPadrao;
+
+    //para remocao:
+    this._indexesRemover = [];
   }
 
   get infoObstaculoPadrao()
@@ -385,20 +402,23 @@ class ControladorObstaculos
     //mesclar InfoObjAparecendo com InfoObjAparecendoPadrao
     infoObjAparecendo = AuxControladores.infoObjAparecendoCorreto(infoObjAparecendo, this._infoObjAparecendoPadrao);
     infoObjAparecendo.formaGeometrica = infoObstaculo.formaGeometrica;
+    infoObjAparecendo.infoImgVivo = infoObstaculo.infoImgVivo;
 
     //fazer ele ir aparecendo na tela aos poucos (opacidade e tamanho): ele nao interage com o meio ainda
-    this._obstaculosSurgindo.unshift(new ObjetoTelaAparecendo(pontoInicial, infoObjAparecendo, TipoObjetos.Obstaculo, () =>
+    this._obstaculosSurgindo.unshift(new ObjetoTelaAparecendo(pontoInicial, infoObjAparecendo, TipoObjetos.Obstaculo, (formaGeomApareceu, indexInicialImgVivo) =>
       {
         //remover esse obstaculo (o primeiro a ser adicionado sempre vai ser o primeiro a ser retirado pois o tempo que ele vai ficar eh sempre igual ao dos outros que estao la)
         this._obstaculosSurgindo.pop();
 
+        //mudar propriedades do obstaculo para dar ideia de continuidade e nao quebra
+        infoObstaculo.formaGeometrica = formaGeomApareceu; //usa a mesma forma (continuidade)
+        infoObstaculo.infoImgVivo.indexInicial = indexInicialImgVivo; //para que o index da imagem vivo seja o mesmo
         //adicionar obstaculo que interage com o meio
         let novoObstaculo;
         if (infoObstaculo instanceof InfoObstaculoComVida) // se eh obstaculo com vida
           novoObstaculo = new ObstaculoComVida(pontoInicial, infoObstaculo);
         else
           novoObstaculo = new Obstaculo(pontoInicial, infoObstaculo);
-
         novoObstaculo.procCriou();
 
         if (ControladorJogo.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.DeixarTempoMaisLento)
@@ -419,13 +439,14 @@ class ControladorObstaculos
       {
         if (obst.vivo)
         {
-          //retorna se obstaculo continua no vetor de obstaculos (pode estar morto ou nao)
-          const continuaNoVetor = obst.andar();
+          const continuaNoVetor = obst.andar(); //soh retorna que eh para remover se o obstaculo ficar totalmente fora da tela
           if (!continuaNoVetor)
           //nao aparece mais na tela
-            this._removerObst(index);
+            this._querRemoverObst(index);
         }
       });
+
+    this._removerObsts(); //realmente remove os obstaculos que queria remover
   }
 
   //para andar obstaculos
@@ -529,18 +550,27 @@ class ControladorObstaculos
 	{
     this._obstaculos.forEach((obst, index) =>
       {
-        const removerDoVetor = obst.draw();
+        const removerDoVetor = obst.draw(); //soh retorna que eh pra remover se jah printou todas as imagens de morto
         if (removerDoVetor)
-          this._removerObst(index);
+          this._querRemoverObst(index);
       });
+
+    this._removerObsts(); //realmente remove os obstaculos que queria remover
 	}
   drawSurgindo() //desenha obstaculos surgindo
   { this._obstaculosSurgindo.forEach(obstSurgindo => obstSurgindo.draw()); }
 
-  //auxiliar
-  _removerObst(index)
+  //remover obstaculos
+  //obs: nao pode remover durante o forEach, se nao o loop nao iterarah sobre todos os elementos, entao tem que guardar todos os indices dos elementos que quer quer deletar e depois deletar todos
+  _querRemoverObst(index)
   {
-    this._obstaculos.splice(index,1);
-    //remover 1 elemento a partir de indexInim
+    this._indexesRemover.push(index);
+  }
+  _removerObsts()
+  {
+    this._indexesRemover.forEach((indexRemover, i) => this._obstaculos.splice(indexRemover-i, 1));
+    //"-i" porque a cada elemento que eh removido proximos elementos decaem uma posicao (e [i] eh o numero de elementos que jah foram removidos)
+
+    this._indexesRemover = []; //jah removeu todos os inimigos
   }
 }

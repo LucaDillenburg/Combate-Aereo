@@ -5,14 +5,46 @@
 //simples
 class InfoObjetoTelaSimples
 {
-  constructor(formaGeometrica)
-  { this.formaGeometrica = formaGeometrica; }
+  constructor(formaGeometrica, infoImgVivo)
+  {
+    this.formaGeometrica = formaGeometrica;
+    this.infoImgVivo = infoImgVivo;
+  }
+}
+class InfoImg
+{
+  constructor(vetorImg, qtdVezesPrintarCadaImg=1)
+  {
+    this.vetorImg = vetorImg;
+    this.qtdVezesPrintarCadaImg = qtdVezesPrintarCadaImg;
+  }
+
+  clone()
+  { return new InfoImg(cloneVetor(this.vetorImg), this.qtdVezesPrintarCadaImg); }
+}
+class InfoImgVivo extends InfoImg
+{
+  constructor(vetorImg, qtdVezesPrintarCadaImg, indexInicial=0)
+  {
+    super(vetorImg, qtdVezesPrintarCadaImg);
+    this.indexInicial = indexInicial;
+  }
+
+  clone()
+  { return new InfoImgVivo(cloneVetor(this.vetorImg), this.qtdVezesPrintarCadaImg, this.indexInicial); }
 }
 class ObjetoTelaSimples //recebe apenas uma classe informacao como parametro
 {
   constructor(pontoInicial, infoObjetoTelaSimples)
   // pontoInicial pode ser null se deseja-se ficar com a formaGeometrica como estava
   {
+    if (infoObjetoTelaSimples !== undefined)
+    //pode ser que seja undefined (em ObjPocaoPers por exemplo)
+      this._constructor(pontoInicial, infoObjetoTelaSimples);
+  }
+  _constructor(pontoInicial, infoObjetoTelaSimples)
+  {
+    //criar clonar formaGeometrica de acordo com o ponto inicial
     if (pontoInicial !== null)
     {
       // em Y
@@ -42,32 +74,67 @@ class ObjetoTelaSimples //recebe apenas uma classe informacao como parametro
       this._formaGeometrica = infoObjetoTelaSimples.formaGeometrica.clone(x,y);
     }else
       this._formaGeometrica = infoObjetoTelaSimples.formaGeometrica.clone();
+
+    //imagens vivo
+    this._vetorImgsVivo = infoObjetoTelaSimples.infoImgVivo.vetorImg;
+    this._qtdVezesPrintarCadaImgVivo = infoObjetoTelaSimples.infoImgVivo.qtdVezesPrintarCadaImg;
+    this._indexImgVivo = infoObjetoTelaSimples.infoImgVivo.indexInicial;
+    if (this instanceof ObjetoTelaAparecendo) console.log(this._indexImgVivo);
+    this._qtdVezesPrintouImgVivo = 0;
+    this._colocarImgVivoAtual();
   }
 
+  //getter
   get formaGeometrica()
   { return this._formaGeometrica; }
 
+  //tratamento das imagens vivo (sprite sheet)
+  _proximaImgVivo()
+  {
+    //mudar index (como vetor circular)
+    this._indexImgVivo = (this._indexImgVivo + 1)%this._vetorImgsVivo.length;
+    //mudar img em formaGeometrica
+    this._colocarImgVivoAtual();
+  }
+  _colocarImgVivoAtual()
+  {
+    //mudar corImg da formaGeometrica
+    this._formaGeometrica.corImg = this._vetorImgsVivo[this._indexImgVivo];
+  }
+
   draw()
-  { this._formaGeometrica.draw(); }
+  {
+    if (this._vetorImgsVivo.length > 1)
+    //se tem mais de uma imagem no vetor de imagens vivo, vai para a proxima
+    {
+      this._qtdVezesPrintouImgVivo++;
+      if (this._qtdVezesPrintouImgVivo >= this._qtdVezesPrintarCadaImgVivo)
+      {
+        this._proximaImgVivo();
+        this._qtdVezesPrintouImgVivo = 0;
+      }
+    }
+
+    this._formaGeometrica.draw();
+  }
 }
 
 //normal
 class InfoObjetoTela extends InfoObjetoTelaSimples
 {
-  constructor(formaGeometrica, infoImgMorto)
+  constructor(formaGeometrica, infoImgVivo, infoImgMorto)
   {
-    super(formaGeometrica);
+    super(formaGeometrica, infoImgVivo);
     this.infoImgMorto = infoImgMorto;
   }
 }
-class InfoImgMorto
+class InfoImgMorto extends InfoImg
 {
-  constructor(vetorImg, qtdVezesPrintarCadaImg=1, infoAdicionarImgSec)
+  constructor(vetorImg, qtdVezesPrintarCadaImg, infoAdicionarImgSec)
   //infoAdicionarImgSec: undefined=>substituir a imagem (nao adicionar img secundaria); caso contrario: {porcWidth, porcLadosCentroImg}
   {
-    this.vetorImg = vetorImg;
+    super(vetorImg, qtdVezesPrintarCadaImg);
     this.infoAdicionarImgSec = infoAdicionarImgSec;
-    this.qtdVezesPrintarCadaImg = qtdVezesPrintarCadaImg;
   }
 
   clone()

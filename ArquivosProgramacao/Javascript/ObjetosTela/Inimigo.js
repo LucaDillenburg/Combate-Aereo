@@ -8,10 +8,10 @@ const absWidthVidaInim = 40;
 const maxRotacionarArmaGiratoriaInim = maxRotacionarArmaGiratoriaPers * 0.3;
 class InfoInimigo extends InfoObjetoComArmas_e_Vida
 {
-  constructor(formaGeometrica, infoImgMorto, vida, corVida, mostrarVidaSempre=true, porcentagemTempoVida, qtdTiraVidaPersQndIntersec, infoAndar, rotacionarInimAnguloAnda=false, infoArmas, qtdHelices, qtdsRotateDifHelices, ehInimEssencial)
+  constructor(formaGeometrica, infoImgVivo, infoImgMorto, vida, corVida, mostrarVidaSempre=true, porcentagemTempoVida, qtdTiraVidaPersQndIntersec, infoAndar, rotacionarInimAnguloAnda=false, infoArmas, qtdHelices, qtdsRotateDifHelices, ehInimEssencial)
   //ehInimEssencial: soh o controladorInimigos que coloca
   {
-    super(formaGeometrica, infoImgMorto, vida, infoArmas, qtdHelices, qtdsRotateDifHelices);
+    super(formaGeometrica, infoImgVivo, infoImgMorto, vida, infoArmas, qtdHelices, qtdsRotateDifHelices);
     this.corVida = corVida;
     this.mostrarVidaSempre = mostrarVidaSempre;
     if (porcentagemTempoVida !== undefined)
@@ -23,7 +23,7 @@ class InfoInimigo extends InfoObjetoComArmas_e_Vida
   }
 
   clone()
-  { return new InfoInimigo(this.formaGeometrica, this.infoImgMorto.clone(), this.vida, AuxInfo.cloneImgCor(this.corVida), this.mostrarVidaSempre, this.porcentagemTempoVida, this.qtdTiraVidaPersQndIntersec, this.infoAndar.clone(), this.rotacionarInimAnguloAnda, cloneVetorComClone(this.infoArmas), this.qtdHelices, cloneVetor(this.qtdsRotateDifHelices), this.ehInimEssencial); }
+  { return new InfoInimigo(this.formaGeometrica, this.infoImgVivo.clone(), this.infoImgMorto.clone(), this.vida, AuxInfo.cloneImgCor(this.corVida), this.mostrarVidaSempre, this.porcentagemTempoVida, this.qtdTiraVidaPersQndIntersec, this.infoAndar.clone(), this.rotacionarInimAnguloAnda, cloneVetorComClone(this.infoArmas), this.qtdHelices, cloneVetor(this.qtdsRotateDifHelices), this.ehInimEssencial); }
 }
 class Inimigo extends ObjetoComArmas_e_Vida
 {
@@ -304,6 +304,9 @@ class ControladorInimigos
     this._infoObjAparecendoPadrao = infoObjAparecendoPadrao;
 
     this._ehDeInimigosEssenciais = ehDeInimigosEssenciais;
+
+    //para remocao
+    this._indexesRemover = [];
   }
 
   //setter
@@ -359,18 +362,19 @@ class ControladorInimigos
     infoObjAparecendo = AuxControladores.infoObjAparecendoCorreto(infoObjAparecendo, this._infoObjAparecendoPadrao);
     //atributos que o controlador coloca (formaGeometrica, qtdHelices e qtdsRotateDifHelices):
     infoObjAparecendo.formaGeometrica = infoInimigo.formaGeometrica;
+    infoObjAparecendo.infoImgVivo = infoInimigo.infoImgVivo;
     infoObjAparecendo.qtdHelices = infoInimigo.qtdHelices;
     infoObjAparecendo.qtdsRotateDifHelices = infoInimigo.qtdsRotateDifHelices;
 
-
     //fazer ele ir aparecendo na tela aos poucos (opacidade e tamanho): ele nao interage com o meio ainda
-    this._inimigosSurgindo.unshift(new ObjetoTelaAparecendo(pontoInicial, infoObjAparecendo, TipoObjetos.Inimigo, (formaGeomApareceu) => //(funcao callback)
+    this._inimigosSurgindo.unshift(new ObjetoTelaAparecendo(pontoInicial, infoObjAparecendo, TipoObjetos.Inimigo, (formaGeomApareceu, indexInicialImgVivo) => //(funcao callback)
       {
         //remover esse inimigo (o primeiro a ser adicionado sempre vai ser o primeiro a ser retirado pois o tempo que ele vai ficar eh sempre igual ao dos outros que estao la)
         this._inimigosSurgindo.pop();
 
         //adicionar inimigo que interage com o meio
         infoInimigo.formaGeometrica = formaGeomApareceu; //usa a mesma forma porque a formaGeometrica em infoInimigo pode nao estar com a mesma rotacao das helices por exemplo
+        infoInimigo.infoImgVivo.indexInicial = indexInicialImgVivo; //para que o index da imagem vivo seja o mesmo (ideia de continuidade e nao quebra)
         const novoInim = new Inimigo(pontoInicial, infoInimigo);
         novoInim.procCriou();
 
@@ -407,13 +411,14 @@ class ControladorInimigos
       {
         if (inim.vivo)
         {
-          //retorna se tiro continua em this._inimigos (pode estar morto ou nao)
-          const continuaNoVetor = inim.andar(this._indexContr, indexInim);
+          const continuaNoVetor = inim.andar(this._indexContr, indexInim); //soh retorna que eh para remover se inimigo estah totalmente fora da tela
           if (!continuaNoVetor)
           //inimigo nao aparece na tela
-            this._removerInimAtualCompleto(indexInim);
+            this._querRemoverInim(indexInim);
         }
       });
+
+    this._removerInims(); //realmente remove os inimigos que queria remover
   }
 
   //para ver se level acabou
@@ -584,10 +589,12 @@ class ControladorInimigos
 	{
     this._inimigos.forEach((inim, indexInim) =>
       {
-        const removerDoVetor = inim.draw();
+        const removerDoVetor = inim.draw(); //soh retorna que eh para remover se jah foi printado todos as imagens morto do inimigo
         if (removerDoVetor)
-          this._removerInimAtualCompleto(indexInim);
+          this._querRemoverInim(indexInim);
       });
+
+    this._removerInims(); //realmente remove os inimigos que queria remover
 	}
   drawTirosMortosInims()
   { this._inimigos.forEach(inim => inim.drawTirosMortos()); }
@@ -595,9 +602,22 @@ class ControladorInimigos
   { this._inimigosSurgindo.forEach(inimSurgindo => inimSurgindo.draw()); }
 
   //auxiliar
-  _removerInimAtualCompleto(indexInim)
+  //remover inimigos:
+  //obs: nao pode remover durante o forEach, se nao o loop nao iterarah sobre todos os elementos, entao tem que guardar todos os indices dos elementos que quer quer deletar e depois deletar todos
+  _querRemoverInim(index)
   {
-    this._inimigos[indexInim].procVaiSerRemovido();
-    this._inimigos.splice(indexInim,1); //remover 1 elemento a partir de indexInim
+    this._indexesRemover.push(index);
+  }
+  _removerInims()
+  {
+    this._indexesRemover.forEach((indexRemover, i) =>
+      {
+        const indexRemoverAtualizado = indexRemover-i;
+        this._inimigos[indexRemoverAtualizado].procVaiSerRemovido();
+        this._inimigos.splice(indexRemoverAtualizado, 1);
+      });
+    //"-i" porque a cada elemento que eh removido proximos elementos decaem uma posicao (e [i] eh o numero de elementos que jah foram removidos)
+
+    this._indexesRemover = []; //jah removeu todos os inimigos
   }
 }

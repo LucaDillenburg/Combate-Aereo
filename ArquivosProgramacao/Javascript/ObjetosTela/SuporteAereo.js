@@ -1,14 +1,14 @@
 //SUPORTE AEREO (do inimigo)
 class InfoSuporteAereo extends InfoObjetoComArmas
 {
-  constructor(formaGeometrica, infoImgMorto, infoArmas, qtdTiraVidaNaoConsegueEmpurrarPers, qtdHelices, qtdsRotateDifHelices)
+  constructor(formaGeometrica, infoImgVivo, infoImgMorto, infoArmas, qtdTiraVidaNaoConsegueEmpurrarPers, qtdHelices, qtdsRotateDifHelices)
   {
-    super(formaGeometrica, infoImgMorto, infoArmas, qtdHelices, qtdsRotateDifHelices);
+    super(formaGeometrica, infoImgVivo, infoImgMorto, infoArmas, qtdHelices, qtdsRotateDifHelices);
     this.qtdTiraVidaNaoConsegueEmpurrarPers = qtdTiraVidaNaoConsegueEmpurrarPers;
   }
 
   clone()
-  { return new InfoSuporteAereo(this.formaGeometrica, this.infoImgMorto.clone(), cloneVetorComClone(this.infoArmas), this.qtdTiraVidaNaoConsegueEmpurrarPers, this.qtdHelices, cloneVetor(this.qtdsRotateDifHelices)); }
+  { return new InfoSuporteAereo(this.formaGeometrica, this.infoImgVivo.clone(), this.infoImgMorto.clone(), cloneVetorComClone(this.infoArmas), this.qtdTiraVidaNaoConsegueEmpurrarPers, this.qtdHelices, cloneVetor(this.qtdsRotateDifHelices)); }
 }
 class SuporteAereo extends ObjetoComArmas
 {
@@ -75,18 +75,20 @@ class ControladorSuportesAereos
     let infoObjAparecendo = this._infoObjAparecendoPadrao.clone();
     //atributos que o controlador coloca (formaGeometrica, qtdHelices e qtdsRotateDifHelices):
     infoObjAparecendo.formaGeometrica = infoSuporteAereo.formaGeometrica;
+    infoObjAparecendo.infoImgVivo = infoSuporteAereo.infoImgVivo;
     infoObjAparecendo.qtdHelices = infoSuporteAereo.qtdHelices;
     infoObjAparecendo.qtdsRotateDifHelices = infoSuporteAereo.qtdsRotateDifHelices;
 
 
     //fazer ele ir aparecendo na tela aos poucos (opacidade e tamanho): ele nao interage com o meio ainda
-    this._suportesAereosSurgindo.unshift(new ObjetoTelaAparecendo(pontoInicial, infoObjAparecendo, TipoObjetos.SuporteAereo, (formaGeomApareceu) => //(funcao callback)
+    this._suportesAereosSurgindo.unshift(new ObjetoTelaAparecendo(pontoInicial, infoObjAparecendo, TipoObjetos.SuporteAereo, (formaGeomApareceu, indexInicialImgVivo) => //(funcao callback)
       {
         //remover esse suporteAereo surgindo (o primeiro a ser adicionado sempre vai ser o primeiro a ser retirado pois o tempo que ele vai ficar eh sempre igual ao dos outros que estao la)
         this._suportesAereosSurgindo.pop();
 
         //adicionar SuporteAereo que interage com o meio
         infoSuporteAereo.formaGeometrica = formaGeomApareceu; //usa a mesma forma porque a formaGeometrica em infoSuporteAereo pode nao estar com a mesma rotacao das helices por exemplo
+        infoSuporteAereo.infoImgVivo.indexInicial = indexInicialImgVivo; //para que o index da imagem vivo seja o mesmo (ideia de continuidade e nao quebra)
         const novoSuporteAereo = new SuporteAereo(pontoInicial, infoSuporteAereo);
         novoSuporteAereo.procCriou();
 

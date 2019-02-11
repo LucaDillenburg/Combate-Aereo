@@ -5,513 +5,92 @@
     <title></title>
     <script src="../../Javascript/p5/p5.min.js"></script>
     <script src="../../Javascript/Geometria/GeometriaBasica.js"></script>
+    <script src="../../Javascript/Geometria/FormasGeometricas.js"></script>
+    <script src="../../Javascript/Outros/List.js"></script>
+    <script src="../../Javascript/Outros/Outros.js"></script>
   </head>
   <body>
-    <input type="text" id="raio">
-    <input type="text" id="angulo">
+    <input type="text" id="a"> <input type="button" value="Click me" onclick="rotacionar()"> </br>
 
     <script type="text/javascript" onload="setup()">
 
-    var vetor = [];
-    vetor.push(1);
-    vetor.push(7);
-    vetor.push(10);
-    vetor.push(14);
-    vetor.push(43);
-    vetor.push(1);
+    let l = new List();
+    l.push(0);
+    l.push(1);
+    l.push(2);
+    l.push(3);
+    l.push(4);
+    l.push(5);
+    l.push(6);
+    l.push(7);
+    l.push(8);
+    console.log(l + "");
 
-    console.time("a");
-    vetor.splice(0,1);
-    console.timeEnd("a");
-
-    console.time("a");
-    vetor.shift();
-    console.timeEnd("a");
-
-    console.log(vetor);
-    console.log(vetor.length);
-
-/*
-    class Ponto
-    {
-      constructor(x, y)
+    l.forEach((e,i) =>
       {
-        this.x = x;
-        this.y = y;
-      }
-
-      static max(p1, p2)
-      //mais de baixo (maior Y) e da direita (maior X)
-      {
-        if (p1.y > p2.y)
-          return p1;
-        if (p2.y > p1.y)
-          return p2;
-        // p1.y === p2.y
-        return (p1.x > p2.x ? p1 : p2);
-      }
-
-      static min(p1, p2)
-      //mais de cima (menor Y) e da esquerda (menor X)
-      {
-        if (p1.y < p2.y)
-          return p1;
-        if (p2.y < p1.y)
-          return p2;
-        // p1.y === p2.y
-        return (p1.x < p2.x ? p1 : p2);
-      }
-
-      mais(outro) //ponto
-      { return new Ponto(this.x + outro.x, this.y + outro.y); }
-      menos(outro) //ponto
-      { return new Ponto(this.x - outro.x, this.y - outro.y); }
-
-      dividido(divisor) //numero
-      { return new Ponto(this.x/divisor, this.y/divisor); }
-      multiplicado(mult) //numero
-      { return new Ponto(this.x*mult, this.y*mult); }
-
-      compareTo(outro)
-      // <0 : se this for menor (acima e esquerda)
-      // >0 : se this for maior (abaixo e direita)
-      // 0: se forem iguais
-      {
-        if (this.y < outro.y)
-          return -1;
-        if (this.y > outro.y)
-          return 1;
-
-        //y eh igual
-        if (this.x < outro.x)
-          return -1;
-        if (this.x > outro.x)
-          return 1;
-
-        //iguais
-        return 0;
-      }
-
-      equals(outro, exato)
-      {
-        if (this.x === outro.x && this.y === outro.y)
-          return true;
-        else
-        if (exato)
-          return false;
-
-        return Exatidao.ehQuaseExato(this.x, outro.x) && Exatidao.ehQuaseExato(this.y, outro.y);
-      }
-
-      distancia(ponto)
-      { return Operacoes.hipotenusa(ponto.x - this.x, ponto.y - this.y); }
-
-      toString()
-      { return "(" + this.x + "," + this.y + ")"; }
-
-      clone()
-      { return new Ponto(this.x, this.y); }
-    }
-
-    var vetor = [];
-    vetor.push(new Ponto(1,1));
-    vetor.push(new Ponto(7,7));
-    vetor.push(new Ponto(10,10));
-    vetor.push(new Ponto(14,14));
-    vetor.push(new Ponto(43,43));
-    vetor.push(new Ponto(1,1));
-    console.log(vetor.map(element => element.clone()));
-
-/*
-    class Classe
-    {
-      method()
-      {
-        chamaCallback(() => console.log(this));
-      }
-    }
-
-    function chamaCallback(f) { f(); }
-
-    let classe = new Classe();
-    classe.method();
-
-/*
-class Ponto
-{
-  constructor(x, y)
-  {
-    this.x = x;
-    this.y = y;
-  }
-
-  static max(p1, p2)
-  //mais de baixo (maior Y) e da direita (maior X)
-  {
-    if (p1.y > p2.y)
-      return p1;
-    if (p2.y > p1.y)
-      return p2;
-    // p1.y === p2.y
-    return (p1.x > p2.x ? p1 : p2);
-  }
-
-  static min(p1, p2)
-  //mais de cima (menor Y) e da esquerda (menor X)
-  {
-    if (p1.y < p2.y)
-      return p1;
-    if (p2.y < p1.y)
-      return p2;
-    // p1.y === p2.y
-    return (p1.x < p2.x ? p1 : p2);
-  }
-
-  mais(outro) //ponto
-  { return new Ponto(this.x + outro.x, this.y + outro.y); }
-  menos(outro) //ponto
-  { return new Ponto(this.x - outro.x, this.y - outro.y); }
-
-  dividido(divisor) //numero
-  { return new Ponto(this.x/divisor, this.y/divisor); }
-  multiplicado(mult) //numero
-  { return new Ponto(this.x*mult, this.y*mult); }
-
-  compareTo(outro)
-  // <0 : se this for menor (acima e esquerda)
-  // >0 : se this for maior (abaixo e direita)
-  // 0: se forem iguais
-  {
-    if (this.y < outro.y)
-      return -1;
-    if (this.y > outro.y)
-      return 1;
-
-    //y eh igual
-    if (this.x < outro.x)
-      return -1;
-    if (this.x > outro.x)
-      return 1;
-
-    //iguais
-    return 0;
-  }
-
-  equals(outro, exato)
-  {
-    if (this.x === outro.x && this.y === outro.y)
-      return true;
-    else
-    if (exato)
-      return false;
-
-    return Exatidao.ehQuaseExato(this.x, outro.x) && Exatidao.ehQuaseExato(this.y, outro.y);
-  }
-
-  distancia(ponto)
-  { return Operacoes.hipotenusa(ponto.x - this.x, ponto.y - this.y); }
-
-  toString()
-  { return "(" + this.x + "," + this.y + ")"; }
-
-  clone()
-  { return new Ponto(this.x, this.y); }
-}
-
-    var vetor = [];
-    vetor.push(new Ponto(1,1));
-    vetor.push(new Ponto(7,7));
-    vetor.push(new Ponto(10,10));
-    vetor.push(new Ponto(14,14));
-    vetor.push(new Ponto(43,43));
-    vetor.push(new Ponto(1,1));
-    let soma = vetor.reduce((total,elem) => total.mais(elem));
-    console.log(soma);
-
-    /*
-    var vetor = [];
-    vetor.push("Charlott");
-    vetor.push("Louisvald");
-    vetor.push("shushusp");
-    vetor.push("Amenedial");
-    vetor.push("Lucifer");
-    vetor.push("Cloe");
-    vetor[10] = "Luca e Ana sao top!";
-    vetor["11"] = "HEEEY!";
-    vetor["ana"] = "luca";
-    vetor["luca"] = "ana";
-
-    console.log("%cFOR IN", "color:red");
-    for (let elem in vetor)
-      console.log(elem + ": " + vetor[elem]);
-
-    console.log("");
-    console.log("%cFOR EACH", "color:red");
-    vetor.forEach(elem => {
-        console.log(elem);
+        console.log(i);
+        if (i===6)
+          l.splice(i,3);
       });
 
-    console.log("");
-    console.log("%cEVERY", "color:red");
-    vetor.every((elem,key) => {
-      console.log(key + ": " + elem);
-      if (key == 4)
-        return false;
-      return true;
-    });
-
-    //Conclusions:
-      //for...in: todas os elementos (sejam indices de numeros ou strings), tem continue e break
-      //forEach: percorre todos os elementos em que os indices sao numeros ou "12" (mesmo que nao esteja na sequencia ou pule indexes)
-      //every: forEach com break ("return true" continua a funcao e "return false" funciona como break)
-      //map: retorna um array em que cada elemento foi mudado (ex: todos os elementos foram colocados ao quadrado)
-      //filter: return new array com todos os elementos que obedecem a uma condicao
-      //reduce: reduzir todos os elementos a 1 soh (ex: somar todos eles)
-
-/*
-    window.addEventListener("load", setup);
-    function setup()
-    {
-      createCanvas(300,300);
-    }
-
-    function draw()
-    {
-      ControladorJogo.draw();
-    }
+    //l.splice(2, 3);
+    console.log(l + "");
 
     /*
-    class Teste
-    {
-      funcao(num)
-      {
-        //metodo(new a(callback))
-        setTimeout(function() { console.log(num); }, 1000);
-      }
-    }
+    for (let i = 0; i<1000; i++)
+      l.push(i);
 
-    //static class
-    let teste = new Teste();
-    teste.funcao(1);
-    teste.funcao(2);
-    teste.funcao(3);
+    console.time("t");
+    for (let i = 0; i<100000; i++)
+    {
+      const random = Math.myrandom(0,6);
+      if (l.getElem(random) !== random)
+        console.log("deu errado");
+    }
+    console.timeEnd("t")
+    console.log("yeah");
 
     /*
-    var centro, raio, angulo, ponto, pontoRel;
-
-    function setup()
-    {
-      // createCanvas must be the first statement
-      createCanvas(window.innerWidth-20, window.innerHeight-50);
-      background(0);
-
-      document.getElementById("defaultCanvas0").addEventListener("click", function(){
-        centro = {x: mouseX, y: mouseY};
-        raio = document.getElementById("raio").value;
-
-        let rotation = (PI*document.getElementById("angulo").value)/180; // pra deixar em radiano
-
-        console.log(rotation*180/PI);
-        angulo = PI/2 - rotation;
-        console.log(angulo*180/PI);
-        if (angulo < 0)
-          angulo += 2*PI;
-        console.log(angulo*180/PI);
-
-        const x = Math.cos(angulo) * raio;
-        const y = Math.sin(angulo) * raio;
-        pontoRel = {x: x, y: y};
-        ponto = {x: centro.x + x, y: centro.y + y};
-
-
-        console.table([centro, ponto, raio, angulo, pontoRel]);
-      });
-    }
-    function draw()
-    {
-      background(0);
-      if (centro != null)
-      {
-        fill(255);
-        //ellipse(centro.x, centro.y, raio);
-
-        fill("green");
-        //if (ponto != null)
-        //  rect(ponto.x, ponto.y, 1, 1);
-      }
-    }
-
-/*
-    function printar()
-    {
-      lista.printar();
-      console.log(lista._prim);
-      console.log(lista._ultimo);
-    }
-
-    var lista = new ListaDuplamenteLigada();
-    lista.inserirNoFinal(9);
-    printar();
-
-    console.log("");
-
-    lista.inserirNoFinal(2);
-    lista.inserirNoComeco(1);
-    printar();
-
-    lista.colocarAtualComeco();
-    lista.andarAtual();
-    lista.removerAtual();
-    printar();
-
-/*
-const LIMIT = 10000;
-let arr = new Array(LIMIT);
-console.time("ArrayBuffer");
-for (let i = 0; i < LIMIT; i++)
-    arr[i] = i;
-console.timeEnd("ArrayBuffer");
-
-console.time("ArrayBuffer rem");
-for (let i = 0; i < LIMIT; i++)
-{
-  arr[i] = 0;
-  arr.splice(i, 1);
-}
-console.timeEnd("ArrayBuffer rem");
-
-console.log("%c asdf", 'color: green');
-
-let lista = new ListaDuplamenteLigada();
-console.time("lista");
-for (let i = 0; i < LIMIT; i++)
-    lista.inserirNoFinal(i);
-console.timeEnd("lista");
-
-console.time("lista rem");
-for (lista.colocarAtualComeco(); !lista.atualEhNulo; lista.andarAtual())
-    lista.removerAtual();
-console.timeEnd("lista rem");
-
-
-/*
-  let array = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
-  for( var i = 0; i < array.length-1; i++)
-     if ( array[i] === 5) array.splice(i, 1);
-  console.table(array);
-
-//=> [1, 2, 3, 4, 6, 7, 8, 9, 0]
-
-    /*
-    let lista = new ListaDuplamenteLigada();
-    lista.inserirNoFinal(9);
-    lista.printar();
-    lista.inserirNoFinal(1);
-    lista.printar();
-
-    /*
-    var a = [];
-    a.push(12);
-    a.push(5);
-    console.table(a);
-
-    console.log("foreach")
-    a.forEach(function(valor, chave){
-      console.log(valor);
-    });
-
-    /*
-    var b = null;// = undefined;
-    alert(b);
-
-    var a = {};
-    alert(a .x === undefined);
-
-    //alert(null === undefined); //false
-
-    //delete variables
-    class A
-    {
-      constructor()
-      {
-        this.ola = null;
-      }
-    }
-    var a = new A();
-    console.log(a.ola);
-    delete a.ola;
-    console.log(a.ola);
-
-    /*
-      function a()
-      {
-        const a;
-        a = 23;
-        console.log(a);
-      }
-      a(); //ERRO
-
-      function x(level)
-      {
-        console.log("aux: " + Math.floor(level-1/5));
-        return Math.floor((level-1)/5)*2 + 3;
-      }
-
-      for (let i = 1; i<15; i++)
-        console.log(x(i));
-
-
-      /*
+      let f;
       function setup()
       {
         // createCanvas must be the first statement
-        createCanvas(window.innerWidth-20, window.innerHeight-20);
+        createCanvas(window.innerWidth-20, window.innerHeight-100);
         background(0);
+
+        f = new Retangulo(150, 100, 120, 300, {fill: "green"});
+        f.adicionarImagemSecundaria(undefined, loadImage("../../Imagens/Colisao/Explosao1.png"), 1, {x: 0.5, y: 0.5});
       }
 
-      window.addEventListener("keydown", function (event) {
-        console.log(event.key);
-      });
+      function rotacionar()
+      {
+        const a = parseFloat(document.getElementById("a").value);
+        console.log(a);
+        f = f.rotacionar(a);
+      }
 
       function draw()
       {
-        //https://p5js.org/reference/#/p5/arc
+        background(0);
+        f.draw();
 
-        // angulo final: regra de (porc * 2*PI) - PI/2
-        let proporc = 0.5;
+        push();
+        let ret = {x: 150, y: 80, width: 130, height: 300};
+        translate(ret.x + ret.width/2, ret.y + ret.height/2);
+        rotate(50*PI/180);
+        fill("green");
+        rect(-ret.width/2, -ret.height/2, ret.width, ret.height);
 
-        fill(100);
-        let raio = 55;
-        let x = 10 + raio;
-        let y = height - 100 - raio;
+        push();
+        let ret2 = {x: -120, y: -50, width: 60, height: 50};
+        translate(ret2.x + ret2.width/2, ret2.y + ret2.height/2);
+        rotate(10*PI/180);
+        fill("blue");
+        rect(-ret2.width/2, -ret2.height/2, ret2.width, ret2.height);
+        pop();
 
-        let cor = color("red");
-        if (proporc == 1)
-        {
-          strokeWeight(10);
-          stroke(cor);
-          ellipse(x, y, raio);
-        }else
-        {
-          strokeWeight(3); //8.5 para 10 (desse strokeWeight para o de baixo)
-          stroke(30);//color("white"));
-          ellipse(x, y, raio);
-
-          strokeWeight(4.5);
-          stroke(cor);
-          arc(x, y, raio, raio, -PI/2, proporc*2*PI - PI/2);
-                              //"raio width"
-                                    //"raio height"
-                                        //angulo em radiano onde comeca (lembrar do circulo trigonometrico)
-                                            //angulo em radiano onde termina o circulo (lembrar do circulo trigonometrico)
-          // o circulo trigonometrico usado deve ser no sentido contrario (aumenta em sentido horario)
-        }
-
-        noStroke(); fill(255);
-        //image(loadImage("img.JPG"), x-12, y-2, 2*raio-10, 2*raio-5);
-        text("Poder disso daqui!!!", x-20, y + 2*raio);
-      }
-      */
+        pop();
+      }*/
     </script>
   </body>
 </html>

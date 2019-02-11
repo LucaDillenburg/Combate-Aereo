@@ -3,22 +3,26 @@ window.addEventListener("load", setup);
 window.addEventListener("keydown", keyDown);
 window.addEventListener("keyup", keyUp);
 
+// The statements in the setup() function executes once when the program begins
 const tamStroke = 1.5;
 const frameRatePadrao = 40;
-
-
-// The statements in the setup() function executes once when the program begins
+const fontePadrao = "ArquivosProgramacao/Fontes/ScorchedEarth.otf";
 function setup()
 {
   //cria canvas com tamanho minimo e sempre com as mesmas proporcoes (se o tamanho da tela atual for pequeno, cria maior)
   const medidasCanvas = getMedidasCanvas();
   createCanvas(medidasCanvas.width, medidasCanvas.height);
-
-  //setar outras propriedades do canvas
   background(0);
+
+  //setar propriedades padroes do canvas
+    //frameRate
   frameRate(frameRatePadrao);
-  strokeWeight(tamStroke);
+    //propriedades visuais
+  //textFont(loadFont(fontePadrao));
   noCursor();
+  fill(0);
+  stroke(0);
+  strokeWeight(tamStroke);
 
   //carregar imagens: para otimizar
   ArmazenadorInfoObjetos.carregarImagens();
@@ -27,7 +31,7 @@ function setup()
   ControladorJogo.inicializar(previaJogo);
 }
 //tamanho canvas
-const proporcaoWidtHeight = 1.3;
+const proporcaoWidtHeight = 1.4;
 const minimoWidthTela = 600;
 const pxlsSobrandoTela = 20;
 function getMedidasCanvas()

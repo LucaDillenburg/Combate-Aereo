@@ -1,45 +1,56 @@
-Melhorias:
-- melhorei Sistema de Colisao: Interseccao.qntPodeAndarAntesIntersec(...) para FormasGeometricasCompostas estah funcionando perfeitamente!! (agora o algoritmo verifica o qtdPodeAndar considerando cada uma das formas de FormaGeometricaComposta do ObjParado que intersectou com o caminho do ObjQuerAndar)
-ps: isso arrumou a colisao dos tiros com FormasGeometricasCompostas (os tiros as vezes paravam antes)
-ps2: nao mudei nada para FormaGeometricaComposta
-- melhorei Sistema de andar dentro de uma area restrita, antigo: atehQualXYPodeAndar, (fazer que objeto soh pode andar X para um lado e X para o outro, Y para um lado e Y para o outro). Tirar todos aqueles tipos de TipoAndar muito parecidos, colocar parametro de maisInformacoes em InfoAndar e fazer de maneira relativa ao (x,y) do Objeto e ao tamanho da tela
-
 Novas features:
-- fazer sistema para printar quantas coisas diferentes quiser em draw do ControladorJogo: sempre printar ao final (ConjuntoDrawsEspeciaisJogo)
+- opcao para ter sprite sheet enquanto vivo
+- opcao para rotacionar obstaculos a cada draw
 
-Melhorar Jogabilidade:
-- mudar img e formaGeometrica de TiroMissil com TiroMissilDirecao (deixar o TiroMissil atual como uma bazuca, e os outros seguindo, um com mais e outro com menos limitacao de curva)
-- aumentar dano dos tiros e diminuir dano interseccao com inimigo
-- deixar canvas sempre com width/height igual
+Solucao de Problemas:
+- Problema: alguns tiros (da esquerda) dos inimigos estao andando menos que os outros.
+Causa: se algum elemento de um vetor eh removido durante o forEach dele, o forEach nao passa por todos os elementos
+Solucao: guardar indices que quer deletar e deletar depois que a iteracao acabar (nao fiz um clone do vetor pois isso gastaria mais memoria e tempo apesar de ser mais facil). Arrumei isso em todos as remocoes de todos os controladores.
+
+- Problema Solucionado: ObjetosTelaAparecendo com Pocao DeixarTempoMaisLento nao estah funcionando
+Solucao: padronizar o mudarTempo do Timer e do ObjetosTelaAparecendo, pois o ObjetosTelaAparecendo pega o freq do Timer depois dele jah ter feito o seu mudarTempo
+
+- Problema Solucionado: o desenhar das imagens secundarias quando a formaGeometrica estava rotacionada nao estava funcionando
+Causa e Solucao: estava-se considerando [porcLadosCentroImg] como porcentagens de [width e height] ao inves de [widthSemRotac e heightSemRotac]
 
 Criacao de Levels:
+- colocar imagens em pocoes e colocar no codigo (cada pocao terah um width/height mas todas elas terao width=tamanho ou height=tamanho dependendo da proporcao da imagem)
+- pegar fotos de explosoes e fazer InfoImgMorto para tiros
+
 Modificacoes estruturais:
+- deixar this._tiros como List
+
+outros:
+- deixar a velocidade proporcional ao frameRatePadrao
+
+Melhorias:
+Melhorar Jogabilidade:
 Geometria:
 Design:
 Otimizacao:
-outros:
 
 ---------------------------------------------------------------------------------------------
 
 FAZER AGORA:
 
-- ver se tem que clonar Info ou nao (acho que nao precisa clonar quando for passar InfoX por parametro porque no proprio construtor ele clona o que precisa (tem coisas que nao precisam ser clonadas))
-- Problema: ObjetosTelaAparecendo com Pocao DeixarTempoMaisLento nao estah funcionando
+- deixar ControladorInimigos e ControladorObjetos com List
+- fazer Obstaculos e SuportesAereos
+- arrumar text(...) a formatacao estah errada (pesquisar "textAlign()")
+
 - pensar em quais sao os diferenciais: escrever quais sao os diferenciais/coisas dificeis
+- ver se tem que clonar Info ou nao (acho que nao precisa clonar quando for passar InfoX por parametro porque no proprio construtor ele clona o que precisa (tem coisas que nao precisam ser clonadas))
 - Otimizar: tentar tirar Exatidao.ehQuaseExato(...)
 
 Coisas Importantes - DESIGN
 - Design: background inicio do jogo, fonte, pause, ganhou (reduzir tempo enquanto inimigos se explodem, PersonagemPrincipal vai crescendo e animacao de explosao atras)
-- colocar imagens em pocoes
-- conseguir imagens para obstaculos e SuportesAereos (e adiciona-los a PreviaJogo)
 - tirar fundo das imagens e printar ObjComTiros depois dos tiros em si
 - mostrar controles no pause e no inicio do jogo
 - nao sumir com os objetos da tela quando o level acabar
 
+- Mover e fazer tais procedimentos antes de printa-los na tela?
+
 Coisas Importantes - backend:
 - tirar getters e setters desnecessarios
-- Mover e fazer tais procedimentos antes de printa-los na tela?
-- deixar tamanho dos objetos proporcional a tela, e a velocidade proporcional ao frameRatePadrao
 - fazer funcao para andar (andar no contorno da funcao no grafico)
 - pensar um pouco na colisao de obstaculos (para onde eles vao quando colidem)
 - podemos saber se um ponto estah dentro de um quadrilatero (ou soh paralelogramo?) se estiver entre as retas de cima e de baixo e da direita e da esquerda (qual maneira eh mair rapida??)

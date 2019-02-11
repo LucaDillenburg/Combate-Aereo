@@ -1,12 +1,12 @@
 //OBJETO COM TIROS
 class InfoObjetoComArmas extends InfoObjetoTela
 {
-  constructor(formaGeometrica, infoImgMorto, infoArmas, qtdHelices=0, qtdsRotateDifHelices)
+  constructor(formaGeometrica, infoImgVivo, infoImgMorto, infoArmas, qtdHelices=0, qtdsRotateDifHelices)
   // se tem helices (jah tem que ter adicionado as imagens secundarias na formaGeometrica)
   // qtdsRotateHelices: eh um vetor
   // se quiser que alguma helice gire numa velocidade diferente do que a padrao colocar no vetor o valor da velocidade no index dessa helice (as demais helices cujos indices nao tem nenhum valor no vetor, girarao na velocidade padrao)
   {
-    super(formaGeometrica, infoImgMorto);
+    super(formaGeometrica, infoImgVivo, infoImgMorto);
     this.infoArmas = infoArmas;
     this.qtdHelices = qtdHelices;
     this.qtdsRotateDifHelices = qtdsRotateDifHelices;
@@ -472,12 +472,12 @@ class ObjetoComArmas extends ObjetoTela
 //OBJETO COM TIROS E VIDA
 class InfoObjetoComArmas_e_Vida extends InfoObjetoComArmas
 {
-  constructor(formaGeometrica, infoImgMorto, vida, infoArmas, qtdHelices, qtdsRotateDifHelices)
+  constructor(formaGeometrica, infoImgVivo, infoImgMorto, vida, infoArmas, qtdHelices, qtdsRotateDifHelices)
   // se tem helices (jah tem que ter adicionado as imagens secundarias na formaGeometrica)
   // qtdsRotateHelices: eh um vetor
   // se quiser que alguma helice gire numa velocidade diferente do que a padrao colocar no vetor o valor da velocidade no index dessa helice (as demais helices cujos indices nao tem nenhum valor no vetor, girarao na velocidade padrao)
   {
-    super(formaGeometrica, infoImgMorto, infoArmas, qtdHelices, qtdsRotateDifHelices);
+    super(formaGeometrica, infoImgVivo, infoImgMorto, infoArmas, qtdHelices, qtdsRotateDifHelices);
     this.vida = vida;
   }
 }

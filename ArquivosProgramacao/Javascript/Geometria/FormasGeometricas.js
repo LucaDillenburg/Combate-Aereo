@@ -211,23 +211,25 @@ class FormaGeometrica extends FormaGeometricaBasica
         const infoImgSec = this._imagensSecundarias[chave];
 
         //opacidade (ZERO ou 1 vez por metodo)
-        if (!jahSetouOpacidade)
+        if (jahSetouOpacidade===false)
         {
-          push(); //por causa da opacidade
+          push();
+
+          //opacidade
           this._colocarOpacidadeParaImg(opacidade); //opacidade imagens secundarias
           jahSetouOpacidade = true;
 
+          //rotacionar
           if (this.anguloRotacionouTotal!==0)
           {
-            push();
             translate(this.centroMassa.x, this.centroMassa.y);
             rotate(this._anguloRotacionouTotal);
           }
         }
 
         //desenhar imagem
-        let centroX = infoImgSec.porcLadosCentroImg.x*this.width;
-        let centroY = infoImgSec.porcLadosCentroImg.y*this.height;
+        let centroX = infoImgSec.porcLadosCentroImg.x*this.widthSemRotac;
+        let centroY = infoImgSec.porcLadosCentroImg.y*this.heightSemRotac;
         if (this.anguloRotacionouTotal!==0)
         {
           centroX -= this.distXCentroAbs;
@@ -240,17 +242,10 @@ class FormaGeometrica extends FormaGeometricaBasica
 
         this._desenharImagemRotacionada(infoImgSec.img, infoImgSec.rotacao,
           centroX, centroY, infoImgSec.width, infoImgSec.height);
-
-        if (this.anguloRotacionouTotal!==0)
-          pop();
       }
 
-    if (jahSetouOpacidade)
-    {
+    if (jahSetouOpacidade===true)
       pop(); //por causa da opacidade
-      if (this.anguloRotacionouTotal!==0)
-        pop(); //por causa do rotacionar da formaGeometrica
-    }
   }
   _mudarTamanhoImgsSecundarias(porcentagem)
   {
@@ -364,6 +359,8 @@ class FormaGeometrica extends FormaGeometricaBasica
   -> setRotacao(angulo)
   -> get distXCentroAbs()
   -> get distYCentroAbs()
+  -> get widthSemRotac()
+  -> get heightSemRotac()
 
   //desenho
   -> draw(opacidade)

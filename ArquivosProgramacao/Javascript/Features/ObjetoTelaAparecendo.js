@@ -3,19 +3,19 @@ const tempoObjetoAparecerAntesIniciarLv = 3500;
 //inimigo
 const tempoInimAparecerDuranteLv = 750;
 //obstaculo
-const tempoObstAparecerDuranteLv = 120;
+const tempoObstAparecerDuranteLv = 330;
 //suporte aereo
 const tempoSuporteAereoAparecerDuranteLv = 600;
 //pocao
-const tempoPocaoAparecerDuranteLv = 120;
+const tempoPocaoAparecerDuranteLv = 300;
 class InfoObjetoTelaAparecendo extends InfoObjetoTelaSimples
 {
-  constructor(mudarOpacidade, mudarTamanho, qtdAndar, formaGeometrica, qtdHelices=0, qtdsRotateDifHelices)
+  constructor(mudarOpacidade, mudarTamanho, qtdAndar, formaGeometrica, infoImgVivo, qtdHelices=0, qtdsRotateDifHelices)
   // qtdAndar: se for undefined nao vai andar
-  // formaGeometrica, qtdHelices, qtdsRotateDifHelices: soh os controladores colocam a formaGeometrica
+  // formaGeometrica, infoImgVivo, qtdHelices, qtdsRotateDifHelices: soh os controladores colocam a formaGeometrica
   {
     //atributos que o controlador coloca
-    super(formaGeometrica);
+    super(formaGeometrica, infoImgVivo);
     this.qtdHelices = qtdHelices;
     this.qtdsRotateDifHelices = qtdsRotateDifHelices;
 
@@ -56,11 +56,11 @@ class ObjetoTelaAparecendo extends ObjetoTelaSimples
     }
 
     //callback
-    const tmr = new Timer(() => callback(this._formaGeometrica), tempoObjetosAparec);
+    const tmr = new Timer(() => callback(this._formaGeometrica, this._indexImgVivo), tempoObjetosAparec);
     //isso resolve os problemas com o escopo da funcao callback
 
     //setar variaveis vitais...
-    this._qtdVezesTotal = tmr.freq-1;
+    this._qtdVezesTotal = tmr.freq;
     this._qtdVezesCompletas = 0;
     this._qtdSomarCadaVez = 1; //vai ser um a nao ser que mudar o tempo
 
@@ -82,13 +82,15 @@ class ObjetoTelaAparecendo extends ObjetoTelaSimples
     this._mudarOpacidade = infoObjAparecendo.mudarOpacidade;
     this._mudarTamanho = infoObjAparecendo.mudarTamanho;
 
-    if (ControladorJogo.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.DeixarTempoMaisLento)
-    // PARTE DA EXECUCAO DA POCAO (deixar tempo mais lento do novo objeto aparecendo)
-      this.mudarTempo(porcentagemDeixarTempoLento);
-
     //para helicoptero
     if (infoObjAparecendo.qtdHelices > 0)
       this._helices = new Helices(infoObjAparecendo.qtdHelices, infoObjAparecendo.qtdsRotateDifHelices);
+
+    if (ControladorJogo.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.DeixarTempoMaisLento)
+    // PARTE DA EXECUCAO DA POCAO (deixar tempo mais lento do novo objeto aparecendo)
+    {
+      this.mudarTempo(porcentagemDeixarTempoLento);
+    }
   }
 
   draw()

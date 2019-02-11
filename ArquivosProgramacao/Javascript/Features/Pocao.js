@@ -84,20 +84,12 @@ class Pocao
   get tempoTotal() { return this._tempoTotal; }
   get tempoRestante() { return this._tempoRestante; }
 
-  static informacoesPocaoFromCod(codPocao, strQuer)
+  static informacoesPocaoFromCod(codPocao)
   {
-    // TODO: fazer isso certo (soh fiz pra nao ter que fazer em tudo (depois mudar))
-    if (strQuer === "img")
-      return {fill: "white", stroke: "white"};
-    if (strQuer === "imgMorreu")
-      return {fill: "orange", stroke: "orange"};
-
     switch(codPocao)
     //mudaAviaoPersTemp soh eh obrigatorio se temDesexecutar for true
     {
       case TipoPocao.DiminuirTamanhoPers:
-        /* if (strQuer === "img") return ;
-        if (strQuer === "imgMorreu") return ; */
         return {nome: "Poção anão", ativadoInstant: false, temDesexecutar: true, mudaAviaoPersTemp: true};
       case TipoPocao.MatarObjetos1Tiro:
         return {nome: "Poção Fácil de Matar", ativadoInstant: false, temDesexecutar: true, mudaAviaoPersTemp: false};
@@ -137,9 +129,9 @@ class Pocao
 
   getMedidasFormaGeometrica(ehPrimeiraPocao=false)
   //toma em consideracao se this._personagemJahPegou e se ehPrimeiraPocao (quando jah pegou)
-  //ehPrimeiraPocao: se personagem jah pegou, se eh a pocao mais a baixo ou nao
+  //ehPrimeiraPocao: se eh a pocao mais a baixo ou nao (soh precisa se personagem jah pegou pocao)
   {
-    let medidas = {width: 1, height: 1}; //sempre deixar height=1
+    let width = this._proporcaoWidhHeightFormaGeom(); //width/height = width se height=1
     let tamanho;
     if (this._personagemJahPegou)
     {
@@ -151,23 +143,45 @@ class Pocao
         tamanho = heightOutrasPocoes;
     }
     else
-      tamanho = 32;
-    medidas.width *= tamanho;
-    medidas.height *= tamanho;
-    return medidas;
+      tamanho = 55;
+    return {width: width*tamanho, height: tamanho};
   }
-  getFormaGeometrica(ehPrimeiraPocao)
+  _proporcaoWidhHeightFormaGeom()
+  {
+    switch(this._codPocao)
+    {
+      case TipoPocao.MatarObjetos1Tiro:
+        return 0.835;
+      case TipoPocao.ReverterTirosJogoInimSeguirInim:
+        return 1;
+      case TipoPocao.DeixarTempoMaisLento:
+        return 0.865;
+      case TipoPocao.GanharMuitaVida:
+        return 1.023;
+      case TipoPocao.PersComMissil:
+        return 1;
+      case TipoPocao.CongelarInimigos:
+        return 0.89;
+
+      default:
+        return 1;
+    }
+  }
+  get _nomePocao()
+  {
+    for (var nomePocaoAtual in TipoPocao)
+      if (TipoPocao[nomePocaoAtual] === this._codPocao)
+        return nomePocaoAtual;
+  }
+  getFormaGeomInfoImgVivo(ehPrimeiraPocao)
+  //soh precisa ehPrimeiraPocao se personagem jah pegou pocao
   {
     const medidas = this.getMedidasFormaGeometrica(ehPrimeiraPocao);
-
-    //se tiver que retornar forma geometrica em si
-    let formaGeometrica = new Retangulo(undefined,undefined, medidas.width, medidas.height);
-    formaGeometrica.corImg = Pocao.informacoesPocaoFromCod(this._codPocao, "img");
-    return formaGeometrica;
+    return {formaGeometrica: new Retangulo(undefined,undefined, medidas.width, medidas.height),
+      infoImgVivo: new InfoImgVivo([ArmazenadorInfoObjetos.getImagem("Pocoes/" + this._nomePocao)])};
   }
-  getImgMorreu()
-  { return Pocao.informacoesPocaoFromCod(this._codPocao, "imgMorreu"); }
 
+  //QUANDO USUARIO PEGOU POCAO
   procMorreu()
   // retorna se jah foi usado
   {
@@ -181,7 +195,7 @@ class Pocao
     return this._informacoesPocao.ativadoInstant;
   }
 
-  //QUANDO USUARIO JAH PEGOU (se for imediatamente) ou quando ele usar (nao imediatamente)
+  //EXECUTAR E DESECUTAR POCAO
   executarPocao()
   {
     let tempoPocaoResta = null; //quanto tempo a pocao fica ativo ateh desaparecer de novo (em milisegundos)
@@ -448,28 +462,25 @@ class Pocao
 
 
 //quando personagem ainda nao pegou
-class ObjetoTelaPocao
+class InfoObjetoTelaPocao extends InfoObjetoTelaSimples
 {
-  constructor(x, y, pocao, formaGeomPocao)
+  constructor(formaGeometrica, infoImgVivo, pocao)
+  {
+    super(formaGeometrica, infoImgVivo);
+    this.pocao = pocao;
+  }
+}
+class ObjetoTelaPocao extends ObjetoTelaSimples
+{
+  constructor(pontoInicial, infoObjetoTelaPocao)
   // nao faz clone no pocao
   {
-    //backend propriamente dito
-    this._pocao = pocao;
+    //formaGeometrica e imagens vivo
+    super(pontoInicial, infoObjetoTelaPocao);
 
-    //tela
-    if (formaGeomPocao === undefined)
-      this._formaGeometrica = this._pocao.getFormaGeometrica();
-    else
-      this._formaGeometrica = formaGeomPocao;
-    this._formaGeometrica.x = x;
-    this._formaGeometrica.y = y;
-
-    //vivo
-    this._vivo = true;
+    //pocao
+    this._pocao = infoObjetoTelaPocao.pocao;
   }
-
-  get formaGeometrica() { return this._formaGeometrica; }
-  get vivo() { return this._vivo; }
 
   intersectaPers(qtdAndarX, qtdAndarY)
   {
@@ -479,16 +490,11 @@ class ObjetoTelaPocao
       return Interseccao.vaiTerInterseccao(this._formaGeometrica, ControladorJogo.pers.formaGeometrica, qtdAndarX, qtdAndarY);
   }
 
-  morreu()
-  //jah faz o procedimento depois de morrer (jah faz o procedimento ou deixa a pocao guardado para o usuario quiser usar)
+  procMorreu()
   {
-    this._vivo = false;
-    this._formaGeometrica.corImg = this._pocao.getImgMorreu(); //mudar para imgMorto
-    this._pocao.procMorreu(); //faz o procedimento depois de morrer
+    this._pocao.procMorreu();
+    //coloca mais uma pocao no controladorPocoesPers, e, jah executa a pocao ou deixa a pocao guardado para o usuario quiser usar
   }
-
-  draw()
-  { this._formaGeometrica.draw(); }
 }
 
 const distanciaMinPersPocao = 350; //calculado a distancia entre os centro-de-massas
@@ -590,10 +596,17 @@ class ControladorPocaoTela
     const pontoPode = this._pontoPodeColocar(pocao.getMedidasFormaGeometrica());
 
     //fazer pocao ir aparecendo na tela aos poucos (opacidade e tamanho): ele nao interage com o meio ainda
-    const infoObjAparecendo = new InfoObjetoTelaAparecendo(false, true, undefined, pocao.getFormaGeometrica());
-    this._objPocao = new ObjetoTelaAparecendo(pontoPode, infoObjAparecendo, TipoObjetos.Pocao,
-      () => this._objPocao = new ObjetoTelaPocao(pontoPode.x, pontoPode.y, pocao, this._objPocao.formaGeometrica));
-      //adicionar objPocao propriamente dito (e jah tirando o ObjetoTelaAparecendo)
+    const formaGeomInfoImgVivo = pocao.getFormaGeomInfoImgVivo();
+    const infoObjAparecendo = new InfoObjetoTelaAparecendo(false, true, undefined,
+      formaGeomInfoImgVivo.formaGeometrica, formaGeomInfoImgVivo.infoImgVivo);
+    this._objPocao = new ObjetoTelaAparecendo(pontoPode, infoObjAparecendo, TipoObjetos.Pocao, (formaGeomApareceu, indexInicialImgVivo) =>
+      {
+        //para que o index da imagem vivo seja o mesmo (ideia de continuidade e nao quebra):
+        formaGeomInfoImgVivo.infoImgVivo.indexInicial = indexInicialImgVivo;
+        //adicionar objPocao propriamente dito (e jah tirando o ObjetoTelaAparecendo)
+        this._objPocao = new ObjetoTelaPocao(pontoPode, new InfoObjetoTelaPocao(formaGeomApareceu,
+          formaGeomInfoImgVivo.infoImgVivo, pocao));
+      });
   }
 
   //onde colocar
@@ -726,19 +739,16 @@ class ControladorPocaoTela
     if (this._objPocao !== undefined && this._objPocao instanceof ObjetoTelaPocao && //se for ObjetoTelaAparecendo nao interage com o meio
      !ControladorJogo.pers.controladorPocoesPegou.estahUsandoPocao && //soh pode pegar a pocao se pers nao tiver usando nenhuma no momento
      this._objPocao.intersectaPers(qtdAndarX, qtdAndarY))
-      this._objPocao.morreu(); //ainda nao tira da tela (soh quando desenhar a ultima vez)
+    {
+      this._objPocao.procMorreu(); //coloca mais uma pocao no controladorPocoesPers e executa ou nao a pocao dependendo de qual pocao eh
+      this.tirarPocaoTela(false); //tiro pocao da tela (false porque nao foi porque o tempo acabou)
+    }
   }
 
   draw()
   {
     if (this._objPocao !== undefined)
-    {
       this._objPocao.draw();
-
-      //se morreu, mostra o objeto pela ultima vez e depois tira ele
-      if (!(this._objPocao instanceof ObjetoTelaAparecendo) && !this._objPocao.vivo)
-        this.tirarPocaoTela(false);
-    }
   }
 }
 
@@ -747,47 +757,54 @@ class ControladorPocaoTela
 const xPrimeiraPocao = 26;
 const xOutrasPocoesGuardadas = 5;
 const qtdYPrimAcimaVidaPers = 10;
-const heightPrimeiraPocao = 28;
-const heightOutrasPocoes = 15;
+const heightPrimeiraPocao = 45;
+const heightOutrasPocoes = 23;
 const espacoEntrePocoesPers = 10;
 
-const diametroSemiCirculoPocao = heightPrimeiraPocao*2;
+const diametroSemiCirculoPocao = heightPrimeiraPocao*1.6;
 const qtdSubirComecouUsarPocao = diametroSemiCirculoPocao * 0.4;
 
 const tempoNomePocaoApareceTela = 2500;
 
-class ObjPocaoPers
+class ObjPocaoPers extends ObjetoTelaSimples
 {
-  constructor(pocao, qtdPocoes)
-  //qtdPocoes eh com esse jah
+  constructor(pocao)
   {
+    super();
+
+    //propriedades
     this._pocao = pocao;
     this._estahSendoUsado = false;
 
-    this.ehPrimeiraPocao = true; // cria formaGeometrica
-    //ps: todo ObjPocaoPers criado vai pro comeco/mais embaixo
+    //formaGeometrica no lugar certo e infoImgVivo
+    //ehPrimeiraPocao: true (todo ObjPocaoPers criado vai pro comeco/mais embaixo)
+      //formaGeometrica e infoImgVivo
+    const formaGeomInfoImgVivo = this._pocao.getFormaGeomInfoImgVivo(true);
+      //lugar certo
+    const pontoInicial = {x: xPrimeiraPocao, y: height - (heightVidaUsuario + qtdYPrimAcimaVidaPers + formaGeomInfoImgVivo.formaGeometrica.height)};
+      //contructor
+    this._constructor(pontoInicial, formaGeomInfoImgVivo/*tem todos os atributos de InfoObjetoTelaSimples*/);
   }
 
   get pocao()
   { return this._pocao; }
-  get formaGeometrica()
-  { return this._formaGeometrica; }
 
   comecouAUsar()
   { this._estahSendoUsado = true; }
   get estahSendoUsado()
   { return this._estahSendoUsado; }
 
-  set ehPrimeiraPocao(ehPrim)
+  set ehPrimeiraPocao(ehPrimeiraPocao)
   {
-    const formaGeomAnterior = this._formaGeometrica;
+    const yFormaGeomAnterior = this._formaGeometrica.y;
 
-    this._formaGeometrica = this._pocao.getFormaGeometrica(ehPrim);
-    this._formaGeometrica.x = (ehPrim) ? xPrimeiraPocao : xOutrasPocoesGuardadas;
-    if (formaGeomAnterior === undefined)
-      this._formaGeometrica.y = height - (heightVidaUsuario + qtdYPrimAcimaVidaPers + this._formaGeometrica.height);
-    else
-      this._formaGeometrica.y = formaGeomAnterior.y;
+    //mudarTamanho
+    const novoWidth = this._pocao.getMedidasFormaGeometrica(ehPrimeiraPocao).width;
+    this._formaGeometrica.mudaTamanho(novoWidth/this._formaGeometrica.width);
+
+    //mudar (x,y)
+    this._formaGeometrica.x = (ehPrimeiraPocao) ? xPrimeiraPocao : xOutrasPocoesGuardadas;
+    this._formaGeometrica.y = yFormaGeomAnterior;
   }
 
   arrumarLugar(instrucao, pocaoRemovidaTinhaDesexecutar=false)

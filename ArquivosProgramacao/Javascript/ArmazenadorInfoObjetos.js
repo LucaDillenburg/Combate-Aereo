@@ -33,8 +33,8 @@ class ArmazenadorInfoObjetos
         new Retangulo(0*tamanho,0.145*tamanho, 1*tamanho, 0.25*tamanho),
         new Retangulo(0.4125*tamanho,0*tamanho, 0.185*tamanho, 0.795*tamanho),
         new Quadrilatero(new Ponto(0.255, 0.76).multiplicado(tamanho), new Ponto(0.435, 0.555).multiplicado(tamanho), new Ponto(0.5625, 0.545).multiplicado(tamanho), new Ponto(0.735, 0.755).multiplicado(tamanho)),
-      ],
-      ArmazenadorInfoObjetos.getImagem("Personagem/AviaoOriginal"));
+      ]);
+    infoPersonagemPrincipal.infoImgVivo = new InfoImgVivo([ArmazenadorInfoObjetos.getImagem("Personagem/AviaoOriginal")]);
     infoPersonagemPrincipal.infoImgMorto = new InfoImgMorto([{fill: "black"}]);
     infoPersonagemPrincipal.vida = vida(1);
     infoPersonagemPrincipal.qtdAndar = velocidade(1);
@@ -64,8 +64,8 @@ class ArmazenadorInfoObjetos
         new Retangulo(0.4323529411764706*tamanho,0*tamanho, 0.1338235294117647*tamanho, 0.7655502392344498*tamanho),
         new Retangulo(0.2838235294117647*tamanho,0.625*tamanho, 0.4323529411764706*tamanho, 0.11323529411764706*tamanho),
         new Retangulo(0.27941176470588236*tamanho,0.15294117647058825*tamanho, 0.4441176470588235*tamanho, 0.32941176470588235*tamanho),
-      ],
-      ArmazenadorInfoObjetos.getImagem("Personagem/AviaoBruto"));
+      ]);
+    infoPersonagemPrincipal.infoImgVivo = new InfoImgVivo([ArmazenadorInfoObjetos.getImagem("Personagem/AviaoBruto")]);
     infoPersonagemPrincipal.infoImgMorto = new InfoImgMorto([{fill: "black"}]);
     infoPersonagemPrincipal.vida = vida(1.5);
     infoPersonagemPrincipal.qtdAndar = velocidade(1.25);
@@ -95,8 +95,8 @@ class ArmazenadorInfoObjetos
         new Retangulo(0*tamanho,0.7623762376237624*tamanho, 1*tamanho, 0.557920792079208*tamanho),
         new Retangulo(0.36039603960396044*tamanho,0*tamanho, 0.27722772277227725*tamanho, 1.5282178217821782*tamanho),
         new Retangulo(0.2599009900990099*tamanho,1.5282178217821782*tamanho, 0.46782178217821785*tamanho, 0.20445544554455447*tamanho),
-      ],
-      ArmazenadorInfoObjetos.getImagem("Personagem/AviaoMaster"));
+      ]);
+    infoPersonagemPrincipal.infoImgVivo = new InfoImgVivo([ArmazenadorInfoObjetos.getImagem("Personagem/AviaoMaster")]);
     infoPersonagemPrincipal.infoImgMorto = new InfoImgMorto([{fill: "black"}]);
     infoPersonagemPrincipal.vida = vida(3);
     infoPersonagemPrincipal.qtdAndar = velocidade(1.65);
@@ -528,12 +528,12 @@ class ArmazenadorInfoObjetos
       rotacionarInimAnguloAnda = (tipoAndar === TipoAndar.SeguirPers || tipoAndar === TipoAndar.DirecaoPers);
 
     let infoInim = new InfoInimigo();
-    formaGeometrica.corImg = ArmazenadorInfoObjetos.getImagem("Inimigos/" + nomeInim); //adicionar imagem a formaGeometrica
     infoInim.formaGeometrica = formaGeometrica;
+    infoInim.infoImgVivo = new InfoImgVivo([ArmazenadorInfoObjetos.getImagem("Inimigos/" + nomeInim)]); //imagem vivo
+    infoInim.infoImgMorto = new InfoImgMorto([{fill: "black"}]);
     infoInim.rotacionarInimAnguloAnda = rotacionarInimAnguloAnda; // se true, os inimigos vao rotacionar automaticamente, apontando pra onde estao andando (exemplo de USO: inimigos seguindo personagem)
     infoInim.qtdHelices = qtdHelices;
     infoInim.qtdsRotateDifHelices = qtdsRotateDifHelices;
-    infoInim.infoImgMorto = new InfoImgMorto([{fill: "black"}]);
     infoInim.vida = vida(nivelVida);
     infoInim.qtdTiraVidaPersQndIntersec = mortalidadeIntersecInim(nivelMortalIntersec);
     infoInim.infoArmas = infoArmas;
@@ -666,12 +666,18 @@ class ArmazenadorInfoObjetos
     nivelVelocidade /= Math.pow(aceleracao.valor, aceleracao.qntsVezes);
 
     let infoTiro = new InfoTiro();
-    infoTiro.infoImgMorto = new InfoImgMorto([{fill: "black"}]);
     infoTiro.mortalidade = mortalidadeTiro(nivelMortalidade * (ehDoPers) ? porcTiroPersMaisForte : 1);
 
-    //formaGeometrica
-    formaGeometrica.corImg = ArmazenadorInfoObjetos.getImagem("Tiros/" + nomeTiro);
+    //formaGeometricae e imagens vivo
     infoTiro.formaGeometrica = formaGeometrica;
+    infoTiro.infoImgVivo = new InfoImgVivo([ArmazenadorInfoObjetos.getImagem("Tiros/" + nomeTiro)]); //imagem vivo
+
+    //infoMorto
+    const qtdExplosoes = 3;
+    let vetorImgsExplosoes = [];
+    for (let i = 1; i<=qtdExplosoes; i++)
+      vetorImgsExplosoes.push(ArmazenadorInfoObjetos.getImagem("Colisao/Explosao"+i));
+    infoTiro.infoImgMorto = new InfoImgMorto(vetorImgsExplosoes, 1, {porcWidth: 2, porcLadosCentroImg: new Ponto(0.5, 0.3)});
 
     //rotacionar imagem formaGeometrica
     if (alteracoesAndarRotacionar==undefined || alteracoesAndarRotacionar.ehAngulo === undefined)
@@ -732,6 +738,19 @@ class ArmazenadorInfoObjetos
     vetParteCaminhos.push("Acessorios/ArmaGiratoria");
     vetParteCaminhos.push("Acessorios/HeliceRobusta");
 
+    //colisoes
+    vetParteCaminhos.push("Colisao/Explosao1");
+    vetParteCaminhos.push("Colisao/Explosao2");
+    vetParteCaminhos.push("Colisao/Explosao3");
+
+    //pocoes
+    vetParteCaminhos.push("Pocoes/DeixarTempoMaisLento");
+    vetParteCaminhos.push("Pocoes/CongelarInimigos");
+    vetParteCaminhos.push("Pocoes/ReverterTirosJogoInimSeguirInim");
+    vetParteCaminhos.push("Pocoes/PersComMissil");
+    vetParteCaminhos.push("Pocoes/MatarObjetos1Tiro");
+    vetParteCaminhos.push("Pocoes/GanharMuitaVida");
+
     //raios
     vetParteCaminhos.push("Raios/raio1");
     vetParteCaminhos.push("Raios/raio2");
@@ -767,7 +786,7 @@ class ArmazenadorInfoObjetos
   //ATRIBUTOS...
 
 //velocidade
-const velPadrao = 10;
+const velPadrao = 400/frameRatePadrao;
 function velocidade(nivel)
 { return nivel*velPadrao; }
 

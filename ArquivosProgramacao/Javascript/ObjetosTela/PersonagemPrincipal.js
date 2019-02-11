@@ -1,9 +1,9 @@
 //PERSONAGEM PRINCIPAL
 class InfoPersonagemPrincipal extends InfoObjetoComArmas_e_Vida
 {
-  constructor(formaGeometrica, infoImgMorto, vida, qtdAndar, infoArmas, qtdHelices, qtdsRotateDifHelices)
+  constructor(formaGeometrica, infoImgVivo, infoImgMorto, vida, qtdAndar, infoArmas, qtdHelices, qtdsRotateDifHelices)
   {
-    super(formaGeometrica, infoImgMorto, vida, infoArmas, qtdHelices, qtdsRotateDifHelices);
+    super(formaGeometrica, infoImgVivo, infoImgMorto, vida, infoArmas, qtdHelices, qtdsRotateDifHelices);
     this.qtdAndar = qtdAndar;
   }
 }
@@ -281,25 +281,84 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
   { return this._controladorPocoesPegou; }
 
   //draw
-  draw(desenharPainel)
+  draw(tipoDrawPers)
   //desenharPainel: se for true, soh desenha vida e pocoes do personagem; se for false, soh desenha o personagem e seus tiros
   //ps: se for undefined, desenhar os dois
   {
-    if (!desenharPainel || desenharPainel===undefined)
+    //parte do ceu
+    if (tipoDrawPers === TipoDrawPersonagem.ParteDoCeu || tipoDrawPers===undefined)
       this._desenharParteCeu();
-    if (desenharPainel || desenharPainel===undefined)
+
+    //mira arma giratoria
+    if (this.ehAviaoMaster &&
+      (tipoDrawPers === TipoDrawPersonagem.MiraArmaGiratoria || tipoDrawPers===undefined))
+      this._desenharMiraArmaGiratoria();
+
+    //painel
+    if (tipoDrawPers === TipoDrawPersonagem.Painel || tipoDrawPers===undefined)
       this._desenharPainelPers();
   }
+
+  //auxiliares draw
+
+    //parte do ceu
   _desenharParteCeu()
   //desenhar coisas do personagem que estao no ceu (Personagem, Tiros e MiraArmaGiratoria)
   {
     //desenha personagem e tiros
     super.draw();
+  }
 
     //mira arma giratoria
-    if (this.ehAviaoMaster)
-      this._desenharMiraArmaGiratoria();
+  _desenharMiraArmaGiratoria()
+  {
+    push();
+
+    //DESENHAR MIRA ARMA GIRATORIA
+    const maxMirasArmaGiratoria = 6;
+    const raioPrimeiraMira = 8;
+    const porcTamUltimaMira = 0.2;
+    const opacidadeUltimaMira = 0.3;
+    const corMira = color(230, 0, 0);
+    const strokeMira = color(128, 0, 0);
+
+    //se antes de adicionar a mira mais recente jah estah com o maximo de miras, tem que tirar a mais antiga (a primeira)
+    if (this._vetorMiraArmaGiratoria.length >= maxMirasArmaGiratoria)
+      this._vetorMiraArmaGiratoria.shift();
+
+    //a mira da arma giratoria mais recente estarah por ultimo
+    this._vetorMiraArmaGiratoria.push(new Ponto(mouseX, mouseY));
+
+    //tem que mudar o raio e a opacidade a cada miraArma desenhada
+      //raio
+    const qtdMudaTamanhoCadaMira = (raioPrimeiraMira - porcTamUltimaMira*raioPrimeiraMira)/(maxMirasArmaGiratoria-1);
+    let raioMiraAtual = raioPrimeiraMira - qtdMudaTamanhoCadaMira*(this._vetorMiraArmaGiratoria.length-1)/*raio mira mais antiga (primeira posicao do array)*/;
+      //opacidade
+    const qtdMudaOpacidadeCadaMira = (1 - opacidadeUltimaMira)/(maxMirasArmaGiratoria-1);
+    let opacidadeMiraAtual = 1 - qtdMudaOpacidadeCadaMira*(this._vetorMiraArmaGiratoria.length-1)/*opacidade mira mais antiga (primeira posicao do array)*/;
+      //stroke
+    stroke(strokeMira);
+    this._vetorMiraArmaGiratoria.forEach(miraArma =>
+      {
+        fill(color(red(corMira), green(corMira), blue(corMira), opacidadeMiraAtual*255));
+        ellipse(miraArma.x, miraArma.y, raioMiraAtual*2, raioMiraAtual*2);
+
+        //mudar raioMiraAtual e opacidadeMiraAtual
+        raioMiraAtual += qtdMudaTamanhoCadaMira;
+        opacidadeMiraAtual += qtdMudaOpacidadeCadaMira;
+      });
+
+    //soh para dar um efeito
+    const diametroCirculoFinal = 10;
+    const ultimaMiraArma = this._vetorMiraArmaGiratoria[this._vetorMiraArmaGiratoria.length-1];
+    noStroke();
+    fill("red");
+    ellipse(ultimaMiraArma.x, ultimaMiraArma.y, diametroCirculoFinal);
+
+    pop();
   }
+
+    //parte do painel
   _desenharPainelPers()
   {
     //vida
@@ -311,29 +370,6 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
     //retangulos que simbolizam quanto falta para personagem poder atirar com arma nao automatica
     if (this.ehAviaoMaster && this._controladorPocoesPegou.codPocaoSendoUsado!==TipoPocao.PersComMissil)
       this._desenharFreqArmaNaoAutom();
-  }
-
-  _desenharVida()
-  {
-    push();
-
-    stroke(0);
-    fill(255);
-    rect(0, height - heightVidaUsuario, width, heightVidaUsuario);
-
-    noStroke(0);
-    fill("green");
-    rect(tamStroke, height - heightVidaUsuario + tamStroke,
-      (width - 2*tamStroke)*(this._vida/this._vidaMAX), heightVidaUsuario - 2*tamStroke);
-
-    fill(0);
-    const fontSize = 22;
-    textSize(fontSize);
-    text("Vida: " + (this._vida.toFixed(Operacoes.primAlgoritDpVirgulaEhZero(this._vida)?0:1)) + "/" +
-      (this._vidaMAX.toFixed(Operacoes.primAlgoritDpVirgulaEhZero(this._vidaMAX)?0:1)),
-      5, height - heightVidaUsuario + fontSize);
-
-    pop();
   }
   _desenharFreqArmaNaoAutom()
   {
@@ -385,51 +421,29 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
 
     pop();
   }
-  _desenharMiraArmaGiratoria()
+  _desenharVida()
   {
     push();
 
-    //DESENHAR MIRA ARMA GIRATORIA
-    const maxMirasArmaGiratoria = 6;
-    const raioPrimeiraMira = 8;
-    const porcTamUltimaMira = 0.2;
-    const opacidadeUltimaMira = 0.3;
-    const corMira = color(230, 0, 0);
-    const strokeMira = color(128, 0, 0);
+    stroke(0);
+    fill(255);
+    rect(0, height - heightVidaUsuario, width, heightVidaUsuario);
 
-    //se antes de adicionar a mira mais recente jah estah com o maximo de miras, tem que tirar a mais antiga (a primeira)
-    if (this._vetorMiraArmaGiratoria.length >= maxMirasArmaGiratoria)
-      this._vetorMiraArmaGiratoria.shift();
+    noStroke(0);
+    fill("green");
+    rect(tamStroke, height - heightVidaUsuario + tamStroke,
+      (width - 2*tamStroke)*(this._vida/this._vidaMAX), heightVidaUsuario - 2*tamStroke);
 
-    //a mira da arma giratoria mais recente estarah por ultimo
-    this._vetorMiraArmaGiratoria.push(new Ponto(mouseX, mouseY));
-
-    //tem que mudar o raio e a opacidade a cada miraArma desenhada
-      //raio
-    const qtdMudaTamanhoCadaMira = (raioPrimeiraMira - porcTamUltimaMira*raioPrimeiraMira)/(maxMirasArmaGiratoria-1);
-    let raioMiraAtual = raioPrimeiraMira - qtdMudaTamanhoCadaMira*(this._vetorMiraArmaGiratoria.length-1)/*raio mira mais antiga (primeira posicao do array)*/;
-      //opacidade
-    const qtdMudaOpacidadeCadaMira = (1 - opacidadeUltimaMira)/(maxMirasArmaGiratoria-1);
-    let opacidadeMiraAtual = 1 - qtdMudaOpacidadeCadaMira*(this._vetorMiraArmaGiratoria.length-1)/*opacidade mira mais antiga (primeira posicao do array)*/;
-      //stroke
-    stroke(strokeMira);
-    this._vetorMiraArmaGiratoria.forEach(miraArma =>
-      {
-        fill(color(red(corMira), green(corMira), blue(corMira), opacidadeMiraAtual*255));
-        ellipse(miraArma.x, miraArma.y, raioMiraAtual*2, raioMiraAtual*2);
-
-        //mudar raioMiraAtual e opacidadeMiraAtual
-        raioMiraAtual += qtdMudaTamanhoCadaMira;
-        opacidadeMiraAtual += qtdMudaOpacidadeCadaMira;
-      });
-
-    //soh para dar um efeito
-    const diametroCirculoFinal = 10;
-    const ultimaMiraArma = this._vetorMiraArmaGiratoria[this._vetorMiraArmaGiratoria.length-1];
-    noStroke();
-    fill("red");
-    ellipse(ultimaMiraArma.x, ultimaMiraArma.y, diametroCirculoFinal);
+    fill(0);
+    const fontSize = 22;
+    textSize(fontSize);
+    textAlign(CENTER, LEFT);
+    text("Vida: " + (this._vida.toFixed(Operacoes.primAlgoritDpVirgulaEhZero(this._vida)?0:1)) + "/" +
+      (this._vidaMAX.toFixed(Operacoes.primAlgoritDpVirgulaEhZero(this._vidaMAX)?0:1)),
+      15, height - heightVidaUsuario + fontSize);
 
     pop();
   }
 }
+
+const TipoDrawPersonagem = {"ParteDoCeu": 1, "MiraArmaGiratoria": 2, "Painel": 3}
