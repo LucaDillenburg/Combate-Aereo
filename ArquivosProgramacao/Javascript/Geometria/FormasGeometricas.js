@@ -121,12 +121,10 @@ class FormaGeometricaBasica
 class FormaGeometrica extends FormaGeometricaBasica
 {
   constructor (corImg, porcentagemImagem=1)
-  // corImg: imagem ou {fill*: cor, stroke: cor}
+  // corImg: imagem ou {fill: cor, stroke: cor}
   {
     super();
-    //se nao estah querendo soh a parte de backend (sem colocar na tela)
-    if (corImg !== undefined)
-      this.corImg = corImg;
+    this.corImg = corImg;
     this._porcentagemImagem = porcentagemImagem;
   }
 
@@ -135,6 +133,13 @@ class FormaGeometrica extends FormaGeometricaBasica
   { return this._corImg; }
   set corImg(corImg) // se for adicionar imagem tem que setar porcentagemImagem
   {
+    if (corImg===undefined)//se nao estah querendo soh a parte de backend (sem colocar na tela) ou se eh pro draw sair transparente
+    {
+      delete this._ehCor;
+      delete this._corImg;
+      return;
+    }
+
     this._ehCor = corImg.fill!==undefined || corImg.stroke!==undefined;
     if (this._ehCor)
     {
@@ -177,7 +182,14 @@ class FormaGeometrica extends FormaGeometricaBasica
       this._imagensSecundarias[chave] = infoImgSec;
   }
   removerImagemSecundaria(chave)
-  { delete this._imagensSecundarias[chave]; }
+  {
+    if (!isNaN(chave)) //se for numero, dar splice
+      this._imagensSecundarias.splice(chave, 1);
+    else
+      delete this._imagensSecundarias[chave];
+  }
+  removerTodasImagensSecundarias()
+  { delete this._imagensSecundarias; }
   //rotacao
   rotacionarImagemSecundaria(chave, qtdMuda)
   {
@@ -654,21 +666,24 @@ class FormaGeometricaSimples extends FormaGeometrica
   //draw
   draw(opacidade)
   {
-    push(); //opacidadeImg ou fill/stroke
-    if (this._ehCor)
+    if (this._ehCor !== undefined) //pode querer printar soh as imagens secundarias
     {
-      //cor e opacidade
-      this._colocarCores(opacidade);
-      //desenhar retangulo
-      rect(this._x, this._y, this.width, this.height);
-    }else
-    {
-      //opacidade
-      this._colocarOpacidadeParaImg(opacidade);
-      //desenhar a imagem
-      this._desenharImagem();
+      push(); //opacidadeImg ou fill/stroke
+      if (this._ehCor)
+      {
+        //cor e opacidade
+        this._colocarCores(opacidade);
+        //desenhar retangulo
+        rect(this._x, this._y, this.width, this.height);
+      }else
+      {
+        //opacidade
+        this._colocarOpacidadeParaImg(opacidade);
+        //desenhar a imagem
+        this._desenharImagem();
+      }
+      pop(); //opacidadeImg ou fill/stroke
     }
-    pop(); //opacidadeImg ou fill/stroke
 
     //imagens secundarias
     this._desenharImagensSecundarias(opacidade);
@@ -706,9 +721,6 @@ class Retangulo extends FormaGeometricaSimples
   constructor(x, y, width, height, corImg, porcentagemImagem)
   {
     super(x, y, corImg, porcentagemImagem);
-
-    if (width < 0 || height < 0)
-      throw "Dados inválidos para criar retângulo!";
 
     this._width = width;
     this._height = height;
@@ -760,10 +772,6 @@ class Quadrado extends FormaGeometricaSimples
   constructor(x, y, tamanhoLado, corImg, porcentagemImagem)
   {
     super(x, y, corImg, porcentagemImagem);
-
-    if (width < 0 || height < 0)
-      throw "Dados inválidos para criar quadrado!";
-
     this._tamLado = tamanhoLado;
   }
 
@@ -1138,10 +1146,12 @@ class FormaGeometricaComplexa extends FormaGeometricaRotacionaTudo
       });
 
     // arrumar maiorX e maiorY
+    const qtdCresceu = this._qtdCresceuMedidasMudarTamanho(porcentagem);
+    //como this._setXYMudarTamanho(...) mudou this._maiorX e this._maiorY, tem que adicionar todo o qtdCrescer e nao sobre dois
     if (this._maiorX !== undefined)
-      this._maiorX += (1.00 - porcentagem)*this.width;
+      this._maiorX += qtdCresceu.width;
     if (this._maiorY !== undefined)
-      this._maiorY += (1.00 - porcentagem)*this.height;
+      this._maiorY += qtdCresceu.height;
 
     // arrumar width e height para printar image
     if (this._widthSemRotacionar !== undefined)
@@ -1502,23 +1512,26 @@ class Triangulo extends FormaGeometricaComplexa
 
   draw(opacidade)
   {
-    push(); //opacidade ou fill/stroke
-    if (this._ehCor)
+    if (this._ehCor !== undefined) //pode querer printar soh as imagens secundarias
     {
-      //cor e opacidade
-      this._colocarCores(opacidade);
-      //desenhar triangulo
-      triangle(this._a.x, this._a.y,
-        this._b.x, this._b.y,
-        this._c.x, this._c.y);
-    }else
-    {
-      //opacidade
-      this._colocarOpacidadeParaImg(opacidade);
-      //desenhar a imagem
-      this._desenharImagem();
+      push(); //opacidade ou fill/stroke
+      if (this._ehCor)
+      {
+        //cor e opacidade
+        this._colocarCores(opacidade);
+        //desenhar triangulo
+        triangle(this._a.x, this._a.y,
+          this._b.x, this._b.y,
+          this._c.x, this._c.y);
+      }else
+      {
+        //opacidade
+        this._colocarOpacidadeParaImg(opacidade);
+        //desenhar a imagem
+        this._desenharImagem();
+      }
+      pop(); //opacidadeImg ou fill/stroke
     }
-    pop(); //opacidadeImg ou fill/stroke
 
     //imagens secundarias
     this._desenharImagensSecundarias(opacidade);
@@ -1554,24 +1567,27 @@ class Quadrilatero extends FormaGeometricaComplexa
 
   draw(opacidade)
   {
-    push(); //opacidade ou fill/stroke
-    if (this._ehCor)
+    if (this._ehCor !== undefined) //pode querer printar soh as imagens secundarias
     {
-      //cor e opacidade
-      this._colocarCores(opacidade);
-      //desenhar o quadrilatero
-      quad(this._a.x, this._a.y,
-           this._b.x, this._b.y,
-           this._c.x, this._c.y,
-           this._d.x, this._d.y);
-    }else
-    {
-      //opacidade
-      this._colocarOpacidadeParaImg(opacidade);
-      //desenhar a imagem
-      this._desenharImagem();
+      push(); //opacidade ou fill/stroke
+      if (this._ehCor)
+      {
+        //cor e opacidade
+        this._colocarCores(opacidade);
+        //desenhar o quadrilatero
+        quad(this._a.x, this._a.y,
+             this._b.x, this._b.y,
+             this._c.x, this._c.y,
+             this._d.x, this._d.y);
+      }else
+      {
+        //opacidade
+        this._colocarOpacidadeParaImg(opacidade);
+        //desenhar a imagem
+        this._desenharImagem();
+      }
+      pop(); //opacidadeImg ou fill/stroke
     }
-    pop(); //opacidadeImg ou fill/stroke
 
     //imagens secundarias
     this._desenharImagensSecundarias(opacidade);
@@ -1648,8 +1664,6 @@ class FormaGeometricaComposta extends FormaGeometricaRotacionaTudo
     super(undefined, porcentagemImagem);
     //ps: tem que ser undefined porque this._formasGeometricas nao estah construido ainda entao se corImg fosse uma cor daria erro
 
-    if (formasGeometricas.length <= 1) throw "FormaGeometricaComposta precisa de mais de uma formaGeometrica";
-
     //formasGeometricas
     this._formasGeometricas = [];
     formasGeometricas.forEach(formaGeom =>
@@ -1680,7 +1694,7 @@ class FormaGeometricaComposta extends FormaGeometricaRotacionaTudo
     super.corImg = corImg;
 
     //se for cor, colocar em todos as formasGeometricas
-    if (this._ehCor)
+    if (this._ehCor===true)
     {
       // setar as formasGeometricas com essa cor, pois elas serao printadas
       this._formasGeometricas.forEach(formaGeom => formaGeom.corImg = corImg);
@@ -1779,6 +1793,9 @@ class FormaGeometricaComposta extends FormaGeometricaRotacionaTudo
     //imagens secundarias (tem que ser antes de tudo mesmo)
     this._mudarTamanhoImgsSecundarias(porcentagem);
 
+    const pontoReferenciaCentral = this.centroMassa;
+    //ps: tem que ser antes de mudar o (x,y)
+
     //mudar (x,y)
     // obs: NAO "this.x" E "this.y" POIS AS FORMAS GEOMETRICAS JAH ESTAO NO LUGAR CERTO
     const qtdCresceu = this._qtdCresceuMedidasMudarTamanho(porcentagem);
@@ -1786,10 +1803,10 @@ class FormaGeometricaComposta extends FormaGeometricaRotacionaTudo
     this._y -= qtdCresceu.height/2; //eh this.menorY
 
     // mudarTamanho das outras formasGeometricas
-    const pontoReferenciaCentral = this.centroMassa;
     this._formasGeometricas.forEach(forma => forma.mudarTamanho(porcentagem, pontoReferenciaCentral));
 
     // arrumar maiorX e maiorY
+    //como mudou this._x e this._y mas nao this._maiorX e this._maiorY, adiciona qtdCresceu sobre dois e nao ele todo
     if (this._maiorX !== undefined)
       this._maiorX += qtdCresceu.width/2;
     if (this._maiorY !== undefined)
@@ -1894,19 +1911,22 @@ class FormaGeometricaComposta extends FormaGeometricaRotacionaTudo
   //desenho
   draw(opacidade)
   {
-    // se corImg for cor, desenhar todas as formas, senao desenhar apenas a imagem
-    if (this._ehCor)
-      this._formasGeometricas.forEach(formaGeom => formaGeom.draw(opacidade));
-    else
+    if (this._ehCor !== undefined) //pode querer printar soh as imagens secundarias
     {
-      push(); //opacidade
+      // se corImg for cor, desenhar todas as formas, senao desenhar apenas a imagem
+      if (this._ehCor)
+        this._formasGeometricas.forEach(formaGeom => formaGeom.draw(opacidade));
+      else
+      {
+        push(); //opacidade
 
-      //opacidade
-      this._colocarOpacidadeParaImg(opacidade);
-      //desenhar a imagem
-      this._desenharImagem();
+        //opacidade
+        this._colocarOpacidadeParaImg(opacidade);
+        //desenhar a imagem
+        this._desenharImagem();
 
-      pop(); //opacidadeImg ou fill/stroke
+        pop(); //opacidadeImg ou fill/stroke
+      }
     }
 
     //imagens secundarias

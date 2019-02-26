@@ -348,7 +348,24 @@ class ObjetoComArmas extends ObjetoTela
         {
           //constantes
           const chaveArmaGiratoria = ObjetoComArmas.chaveArmaGiratoria(arma.config.indexArmaGiratoria);
-          const pontoDestino = (this instanceof PersonagemPrincipal)?new Ponto(mouseX,mouseY):ControladorJogo.pers.formaGeometrica.centroMassa; //aonde quer atirar (mouse ou personagem)
+          let pontoDestino;
+          if (this instanceof PersonagemPrincipal)
+            pontoDestino = new Ponto(mouseX,mouseY);
+          else
+          {
+            if (ControladorJogo.pers.formaGeometrica!==undefined) //se ainda nao acabou as imagens de morrer do personagem depois que ele morreu
+            {
+              pontoDestino = ControladorJogo.pers.formaGeometrica.centroMassa; //aonde quer atirar (mouse ou personagem)
+              this._ultimoPontoDestino = pontoDestino;
+            }
+            else
+            if (this._ultimoPontoDestino!==undefined)
+            //se jah acabou de printar pers mas guardou a ultima posicao dele, continua mirando para la
+              pontoDestino = this._ultimoPontoDestino;
+            else
+            //se jah acabou de printar personagem e nao guardou ultima posicao dele, deixa arma giratoria parada
+              return;
+          }
           const maxRotacionarArmaGiratoria = (this instanceof PersonagemPrincipal)?maxRotacionarArmaGiratoriaPers:maxRotacionarArmaGiratoriaInim; //maximo angulo pode rotacionar (muda se for personagem ou inimigo)
 
           //o angulo que forma com o mouse (se PersonagemPrincipal) ou personagem (se Inimigo)
@@ -509,7 +526,8 @@ class ObjetoComArmas_e_Vida extends ObjetoComArmas
     if (this._vida < 0)
         this._vida = 0;
 
-    if (this._vida <= 0)
+    if (this._vivo && this._vida <= 0)
+    //se ainda estava vivo e agora estah sem vida
       this.morreu();
 
     return this._vivo;

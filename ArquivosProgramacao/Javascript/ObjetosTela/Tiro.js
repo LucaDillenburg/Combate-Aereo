@@ -184,7 +184,7 @@ class Tiro extends ObjetoTela
      //entao tira vida do pers e morre para ele
     //else, se bateu em obstaculo morre para ele, caso contrario soh anda
 
-    const qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(ControladorJogo.pers.formaGeometrica, this._formaGeometrica, qtdAndarX, qtdAndarY);
+    const qtdPodeAndar = ControladorJogo.pers.qntPodeAndarAntesIntersecObjAndar(this._formaGeometrica, qtdAndarX, qtdAndarY);
     const hipotenusa = Operacoes.hipotenusa(qtdPodeAndar.x, qtdPodeAndar.y);
 
     //se bateu no pers antes de qntPodeAndarAntesIntersec com o obstaculo
@@ -482,10 +482,7 @@ class ControladorTiros
     this._tiros.forEach(tiro =>
       {
         if (tiro.vivo)
-        {
-          const rem = tiro.draw();
-          if (rem) console.log("tiro nao ficou vivo=false, mas estah trocando img por imgMorreu"); //AQUI
-        }
+          tiro.draw();
       });
 	}
   drawMortos() //desenha os tiros mortos
@@ -504,6 +501,10 @@ class ControladorTiros
   }
 
   //remover tiros
+  removerTodosTiros()
+  {
+    this._tiros.clear();
+  }
   //obs: nao pode remover durante o forEach, se nao o loop nao iterarah sobre todos os elementos, entao tem que guardar todos os indices dos elementos que quer quer deletar e depois deletar todos
   _querRemoverTiro(index)
   {

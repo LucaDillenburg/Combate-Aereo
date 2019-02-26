@@ -94,6 +94,37 @@ class List
 
     return false;
   }
+  reduce(callback, valorInicial)
+  //callback: function(acumulador, valorAtual, indexAtual)
+  {
+    //setaqr valores iniciais
+    let acumulador, atual, i;
+    if (valorInicial === undefined)
+    //se valor inicial eh undefined, colocar valor do primeiro elemento
+    {
+      acumulador = this._prim.info;
+
+      //comeco o loop no segundo elemento
+      atual = this._prim.prox;
+      i = 1;
+    }else
+    {
+      acumulador = valorInicial;
+      //comeco o loop no primeiro elemento
+      atual = this._prim;
+      i = 0;
+    }
+
+    //fazer loop
+    for (; atual!==null; i++)
+    {
+      if (atual.info !== undefined)
+        acumulador = funcao(acumulador, atual.info, i);
+      atual = atual.prox; //anda atual
+    }
+
+    return acumulador;
+  }
 
   //almost array-like methods
   getElem(index)
@@ -170,13 +201,13 @@ class List
   toString()
   {
     let atual = this._prim;
-    let string = "";
+    let vetor = [];
     while(atual !== null)
     {
-      string += atual.info + " -> ";
+      vetor.push(atual.info);
       atual = atual.prox;
     }
-    return string + "null";
+    return vetor;
   }
 }
 

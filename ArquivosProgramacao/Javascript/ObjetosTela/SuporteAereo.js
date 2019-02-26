@@ -48,9 +48,9 @@ class ControladorSuportesAereos
   constructor(infoObjAparecendoPadrao, infoSuporteAereoPadrao)
   {
     //SuportesAereos que jah interagem com o meio
-    this._suportesAereos = [];
+    this._suportesAereos = new List();
     //SuportesAereos que estao surgindo
-    this._suportesAereosSurgindo = [];
+    this._suportesAereosSurgindo = new List();
 
     //infos padroes (para adicionar)
     this._infoObjAparecendoPadrao = infoObjAparecendoPadrao;
@@ -61,8 +61,8 @@ class ControladorSuportesAereos
   { return this._suportesAereos; }
   zerarSuportesAereos()
   {
-    this._suportesAereos = [];
-    this._suportesAereosSurgindo = [];
+    this._suportesAereos.clear();
+    this._suportesAereosSurgindo.clear();
   }
 
   //adicionar

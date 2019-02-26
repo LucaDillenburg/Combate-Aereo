@@ -141,73 +141,62 @@
 
       function printarProporcoes()
       {
+        const constante = maiorWidth(); // TAMANHO BASEADO NO MAIOR WIDTH SENDO 1
+
+        let menorX, menorY;
+        formasGeometricas.forEach(forma => {
+          if (menorX == undefined || forma.menorX < menorX)
+            menorX = forma.menorX;
+          if (menorY == undefined || forma.menorY < menorY)
+            menorY = forma.menorY;
+        });
+
+        let str = "const tamanho = " + document.getElementById("tamanho").value + ";\n";
         if (formasGeometricas.length > 1)
-        {
-          const constante = maiorWidth(); // TAMANHO BASEADO NO MAIOR WIDTH SENDO 1
-
-          let menorX, menorY;
-          formasGeometricas.forEach(forma => {
-            if (menorX == undefined || forma.menorX < menorX)
-              menorX = forma.menorX;
-            if (menorY == undefined || forma.menorY < menorY)
-              menorY = forma.menorY;
-          });
-
-          let str = "const tamanho = " + document.getElementById("tamanho").value + ";\n";
           str += "const formaGeometrica = new FormaGeometricaComposta(undefined,undefined, \n"
             + "[\n";
-          formasGeometricas.forEach(forma => {
-            if (forma instanceof Retangulo)
-              str += "  new Retangulo("+ ((forma.menorX - menorX)/constante) +"*tamanho,"+ ((forma.menorY - menorY)/constante) +"*tamanho, "+(forma.width/constante)+"*tamanho, "+(forma.height/constante)+"*tamanho),";
+        formasGeometricas.forEach(forma => {
+          if (forma instanceof Retangulo)
+          {
+            if (formasGeometricas.length > 1)
+              str += "  new Retangulo("+ ((forma.menorX - menorX)/constante) +"*tamanho,"+ ((forma.menorY - menorY)/constante) +"*tamanho, "+(forma.width/constante)+"*tamanho, "+(forma.height/constante)+"*tamanho)";
+            else
+              str += "  new Retangulo(undefined, undefined,"+(forma.width/constante)+"*tamanho, "+(forma.height/constante)+"*tamanho)";
+          }
+          else
+          {
+            let p = new Ponto(menorX, menorY);
+
+            let a = forma._a.menos(p).dividido(constante);
+            let b = forma._b.menos(p).dividido(constante);
+            let c = forma._c.menos(p).dividido(constante);
+
+            let funct = function(p) { return "new Ponto("+p.x+", "+p.y+")"; }
+
+            if (forma instanceof Triangulo)
+              str += "  new Triangulo("+funct(a)+".multiplicado(tamanho), "+funct(b)+".multiplicado(tamanho), "+funct(c)+".multiplicado(tamanho))";
             else
             {
-              let p = new Ponto(menorX, menorY);
+              let d = forma._d.menos(p).dividido(constante);
 
-              let a = forma._a.menos(p).dividido(constante);
-              let b = forma._b.menos(p).dividido(constante);
-              let c = forma._c.menos(p).dividido(constante);
-
-              let funct = function(p) { return "new Ponto("+p.x+", "+p.y+")"; }
-
-              if (forma instanceof Triangulo)
-                str += "  new Triangulo("+funct(a)+".multiplicado(tamanho), "+funct(b)+".multiplicado(tamanho), "+funct(c)+".multiplicado(tamanho)),";
+              if (forma instanceof Quadrilatero)
+                str += "  new Quadrilatero("+funct(a)+".multiplicado(tamanho), "+funct(b)+".multiplicado(tamanho), "+funct(c)+".multiplicado(tamanho), "
+                  +funct(d)+".multiplicado(tamanho))";
               else
-              {
-                let d = forma._d.menos(p).dividido(constante);
-
-                if (forma instanceof Quadrilatero)
-                  str += "  new Quadrilatero("+funct(a)+".multiplicado(tamanho), "+funct(b)+".multiplicado(tamanho), "+funct(c)+".multiplicado(tamanho), "
-                    +funct(d)+".multiplicado(tamanho)),";
-                else
-                if (forma instanceof Paralelogramo)
-                  str += "  new Paralelogramo("+funct(a)+".multiplicado(tamanho), "+funct(b)+".multiplicado(tamanho), "+funct(c)+".multiplicado(tamanho), "
-                    +funct(d)+".multiplicado(tamanho)),";
-              }
+              if (forma instanceof Paralelogramo)
+                str += "  new Paralelogramo("+funct(a)+".multiplicado(tamanho), "+funct(b)+".multiplicado(tamanho), "+funct(c)+".multiplicado(tamanho), "
+                  +funct(d)+".multiplicado(tamanho))";
             }
-            str += "\n";
-          });
-          str += "], \n\""+caminhoImg+"\")";
+          }
+          if (formasGeometricas.length > 1)
+            str += ",\n";
+          else
+            str += ";";
+        });
+        if (formasGeometricas.length > 1)
+          str += "]);";
 
-          console.log(str);
-        }else
-        {
-          /*
-            Regra de 3:
-            width -- height
-                1 -- x
-            x = height/width
-
-            constante = width;
-          */
-
-          const x = formasGeometricas[0].height / formasGeometricas[0].width;
-          const constante = formasGeometricas[0].width;
-
-          console.log(
-            "const tamanho = " + document.getElementById("tamanho").value + ";\n" +
-            "const formaGeometrica = new Retangulo(undefined,undefined, 1*tamanho, "+x+"*tamanho, corImg);\n"
-          );
-        }
+        console.log(str);
       }
       function maiorWidth()
       {

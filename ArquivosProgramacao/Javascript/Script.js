@@ -12,7 +12,7 @@ function setup()
   //cria canvas com tamanho minimo e sempre com as mesmas proporcoes (se o tamanho da tela atual for pequeno, cria maior)
   const medidasCanvas = getMedidasCanvas();
   createCanvas(medidasCanvas.width, medidasCanvas.height);
-  background(0);
+  background(120, 120, 120);
 
   //setar propriedades padroes do canvas
     //frameRate
@@ -24,11 +24,11 @@ function setup()
   stroke(0);
   strokeWeight(tamStroke);
 
-  //carregar imagens: para otimizar
+  //carregar imagens: para otimizar (nao ter que carregar durante o jogo)
   ArmazenadorInfoObjetos.carregarImagens();
 
   //ControladorJogo (estrutura de tudo)
-  ControladorJogo.inicializar(previaJogo);
+  ControladorJogo.inicializar();
 }
 //tamanho canvas
 const proporcaoWidtHeight = 1.4;

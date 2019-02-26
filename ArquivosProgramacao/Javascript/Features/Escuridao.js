@@ -90,6 +90,10 @@ class Escuridao
     this._qtdEscurecer = 255/(Math.randomComDesvio(this._tempoEscurecendo, this._desvioTempoEscurec)/frameRatePadrao);
     this._qtdEscuroAtual = 0;
 
+    if (ControladorJogo.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.DeixarTempoMaisLento)
+    // PARTE DA EXECUCAO DA POCAO (deixar tempo mais lento da escuridao)
+      this.mudarTempo(porcentagemDeixarTempoLento); //ainda nao tem nenhum tiro
+
     this._escurecendo = true; //se for false eh porque esta ficando mais claro
 
     this._qtdDrawsSemEscurecer = qtdDrawsIntervaloDesenharRaio;
@@ -191,5 +195,10 @@ class Escuridao
       // jah acabou de clarear, entao vai comecar a escurecer de novo ou acaba o bloco
         this._proximoEscClarMsmBloco();
     }
+  }
+
+  mudarTempo(porcentagem)
+  {
+    this._qtdEscurecer *= porcentagem;
   }
 }

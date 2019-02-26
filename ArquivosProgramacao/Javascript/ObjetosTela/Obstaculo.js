@@ -1,11 +1,10 @@
 //OBSTACULO
+const porcPerdaColisaoObst = 0.8;
 class InfoObstaculo extends InfoObjetoTela
 {
-  constructor(formaGeometrica, infoImgVivo, infoImgMorto, corImgEspecial, infoAndar, qtdTiraVidaBatePers, qtdTiraVidaNaoConsegueEmpurrarPers, anguloRotacionarObst)
-  //corImgEspecial pode ser nulo ou undefined
+  constructor(formaGeometrica, infoImgVivo, infoImgMorto, infoAndar, qtdTiraVidaBatePers, qtdTiraVidaNaoConsegueEmpurrarPers, anguloRotacionarObst)
   {
     super(formaGeometrica, infoImgVivo, infoImgMorto);
-    this.corImgEspecial = corImgEspecial;
     this.infoAndar = infoAndar;
     this.qtdTiraVidaBatePers = qtdTiraVidaBatePers;
     this.qtdTiraVidaNaoConsegueEmpurrarPers = qtdTiraVidaNaoConsegueEmpurrarPers;
@@ -13,17 +12,13 @@ class InfoObstaculo extends InfoObjetoTela
   }
 
   clone()
-  { return new InfoObstaculo(this.formaGeometrica, this.infoImgVivo.clone(), this.infoImgMorto.clone(), AuxInfo.cloneImgCor(this.corImgEspecial), this.infoAndar.clone(), this.qtdTiraVidaBatePers, this.qtdTiraVidaNaoConsegueEmpurrarPers, this.anguloRotacionarObst); }
+  { return new InfoObstaculo(this.formaGeometrica, this.infoImgVivo.clone(), this.infoImgMorto.clone(), this.infoAndar.clone(), this.qtdTiraVidaBatePers, this.qtdTiraVidaNaoConsegueEmpurrarPers, this.anguloRotacionarObst); }
 }
 class Obstaculo extends ObjetoTela
 {
   constructor(pontoInicial, infoObstaculo)
   {
     super(pontoInicial, infoObstaculo);
-
-    //cor
-    this._corImgEspecial = infoObstaculo.corImgEspecial;
-    this._especial = false;
 
     //tirar vida
     this._qtdTiraVidaBatePers = infoObstaculo.qtdTiraVidaBatePers;
@@ -58,7 +53,7 @@ class Obstaculo extends ObjetoTela
 
     //verificar se colidiu com algum obstaculo
     const colidiuObst = ControladorJogo.controladoresObstaculos.some(controladorObsts =>
-      controladorObsts.vaiColidirOutroObst(this));
+      controladorObsts.colideOutroObstParado(this));
     if (colidiuObst)
     //se o lugar destino jah estiver ocupado, morre
       this.morreu();
@@ -89,9 +84,8 @@ class Obstaculo extends ObjetoTela
   { return this._explodiu; }
 
   // tirar vida personagem
-  tirarVidaPersBateu()
-  //para quando personagem encostar em obstaculo: quando for barrado por ele OU quando obstaculo empurrar pers
-  { ControladorJogo.pers.mudarVida(-this._qtdTiraVidaBatePers); }
+  get qtdTiraVidaBatePers()
+  { return this._qtdTiraVidaBatePers; }
   tirarVidaPersNaoConsegueEmpurrar()
   //tirar vida personagem quando nao consegue empurrar o pesonagem
   { ControladorJogo.pers.mudarVida(-this._qtdTiraVidaNaoConsegueEmpurrarPers); }
@@ -99,8 +93,6 @@ class Obstaculo extends ObjetoTela
   //outros getters e setters
   get qtdTiraVidaNaoConsegueEmpurrarPers()
   { return this._qtdTiraVidaNaoConsegueEmpurrarPers; }
-  get corImgEspecial()
-  { return this._corImgEspecial; }
 
   //andar
   get classeAndar()
@@ -121,8 +113,17 @@ class Obstaculo extends ObjetoTela
   //contrObst eh usado apenas para caso o obstaculo tenha que empurrar o personagem (pers.mudarXY)
   //retorna se continua no vetor de obsaculos
   {
+    //calcular quando eh pra andar
     let qtdAndar = this._classeAndar.procAndar(this._formaGeometrica);
 
+    //andar
+    this._mudarXY(qtdAndar);
+
+    //se estah dentro da tela, nao deve ser removido do vetor (mesmo que esteja morto)
+    return !Tela.objSaiuTotalmente(this._formaGeometrica);
+  }
+  _mudarXY(qtdAndar)
+  {
     //info: menorHipotenusa, objsColidiram, qtdPodeAndarX, qtdPodeAndarY, qtdAndarXPadrao, qtdAndarYPadrao
     const hipotenusaPadrao = Operacoes.hipotenusa(qtdAndar.x, qtdAndar.y);
     let info =
@@ -138,8 +139,8 @@ class Obstaculo extends ObjetoTela
       controladorObsts.qtdAndarSemColidirOutrosObsts(info, this));
     //colidiu: info.objsColidiram.length>0
 
-    const qtdPodeAndar = Interseccao.qntPodeAndarAntesIntersec(ControladorJogo.pers.formaGeometrica, this._formaGeometrica,
-      info.qtdPodeAndarX, info.qtdPodeAndarY, false);
+    const qtdPodeAndar = ControladorJogo.pers.qntPodeAndarAntesIntersecObjAndar(this._formaGeometrica,
+      info.qtdPodeAndarX, info.qtdPodeAndarY, true);
     const hipotenusaPers = Operacoes.hipotenusa(qtdPodeAndar.x, qtdPodeAndar.y);
 
     // comparar hipotenusa dos obstaculos com a do personagem
@@ -149,7 +150,7 @@ class Obstaculo extends ObjetoTela
       const xPersAntes = ControladorJogo.pers.formaGeometrica.x;
       const yPersAntes = ControladorJogo.pers.formaGeometrica.y;
 
-      this.tirarVidaPersBateu(); // para quando personagem encostar em obstaculo: quando for barrado por ele OU quando obstaculo empurrar pers
+      ControladorJogo.pers.colidiuObj(this); // para quando personagem encostar em obstaculo: quando for barrado por ele OU quando obstaculo empurrar pers
       const conseguiuAndarTudo = ControladorJogo.pers.mudarXY(qtdAndar.x - qtdPodeAndar.x, qtdAndar.y - qtdPodeAndar.y);
       if (!conseguiuAndarTudo)
       {
@@ -161,59 +162,18 @@ class Obstaculo extends ObjetoTela
         this.tirarVidaPersNaoConsegueEmpurrar();
       }
     }else
-    if (info.menorHipotenusa <= hipotenusaPers || info.meonrHipotenusa !== hipotenusaPadrao)
+    if (info.menorHipotenusa <= hipotenusaPers || info.menorHipotenusa !== hipotenusaPadrao)
     //colidiu com outros obstaculos
     {
-      // TODO: ta muito porco...
-
       //muda o qtdAndar baseado na colisao com obstaculos
       qtdAndar.x = info.qtdPodeAndarX;
       qtdAndar.y = info.qtdPodeAndarY;
 
-      //inverter o andar dos outros obstaculos
-      let qualInverter = 0; //1: X, 2: Y, 3: X e Y
-      info.objsColidiram.forEach(obstBateu =>
-        {
-          if (obstBateu.formaGeometrica instanceof FormaGeometricaComplexa)
-          {
-            qualInverter = 3;
-            obstBateu.classeAndar.inverterDirecoesQtdAndar(true, true);
-          }else
-          if (Interseccao.inteiroDentroDeDirecao(this._formaGeometrica.y + qtdAndar.y, this._formaGeometrica.height,
-            obstBateu.formaGeometrica.y, obstBateu.formaGeometrica.height))
-          //se um ficara completamente dentro do outro em Y, muda-se apenas em X
-          {
-            obstBateu.classeAndar.inverterDirecoesQtdAndar(true, false);
-            if (qualInverter === 0 || qualInverter === 2)
-              qualInverter++; //1: X
-          }else
-          if (Interseccao.inteiroDentroDeDirecao(this._formaGeometrica.x + qtdAndar.x, this._formaGeometrica.width,
-            obstBateu.formaGeometrica.x, obstBateu.formaGeometrica.width))
-          //se um ficara completamente dentro do outro em X, muda-se apenas em Y
-          {
-            obstBateu.classeAndar.inverterDirecoesQtdAndar(false, true);
-            if (qualInverter < 2) // mesma coisa que: (qualInverter === 0 || qualInverter === 1)
-              qualInverter += 2; //2: Y
-          }else
-          //muda as duas direcoes
-          {
-            qualInverter = 3;
-            obstBateu.classeAndar.inverterDirecoesQtdAndar(true, true);
-          }
-        });
-
-      //inverte
-      switch (qualInverter)
+      if (info.objsColidiram.length > 0)
       {
-        case 1:
-          this._classeAndar.inverterDirecoesQtdAndar(true, false);
-          break;
-        case 2:
-          this._classeAndar.inverterDirecoesQtdAndar(false, true);
-          break;
-        case 3:
-          this._classeAndar.inverterDirecoesQtdAndar(true, true);
-          break;
+        //todos os obstaculos que colidiram vao morrer
+        info.objsColidiram.forEach(obstBateu => obstBateu.morreu(true));
+        this.morreu(true);
       }
     }
 
@@ -231,30 +191,9 @@ class Obstaculo extends ObjetoTela
     this._formaGeometrica.x += qtdAndar.x;
     this._formaGeometrica.y += qtdAndar.y;
 
-    //se estah dentro da tela, nao deve ser removido do vetor (mesmo que esteja morto)
-    return !Tela.objSaiuTotalmente(this._formaGeometrica);
-  }
-
-  //desenhar
-  get especial()
-  { return this._especial; }
-  set especial(esp)
-  {
-    // se nao vai mudar nada (morreu ou queria mudar para a mesma coisa)
-    if (!this._vivo || this._especial === esp)
-      return;
-
-    //mudar cor
-    if (esp)
-    // nao era especial e agora se tornou
-    {
-      this._corImgNaoEspecial = this._formaGeometrica.corImg;
-      this._formaGeometrica.corImg = this._corImgEspecial;
-    }else
-    // era especial e agora voltou ao normal
-      this._formaGeometrica.corImg = this._corImgNaoEspecial;
-
-    this._especial = esp;
+    //aqui qtdAndar estah com o valor que andou e info.qtdAndar[X ou Y]Padrao estah com o valor padrao
+    //retorna se conseguiu andar tudo
+    return info.qtdAndarXPadrao===qtdAndar.x && info.qtdAndarYPadrao===qtdAndar.y;
   }
 
  //outros...
@@ -294,7 +233,37 @@ class Obstaculo extends ObjetoTela
   {
     //para rotacionar obstaculo
     if (this._anguloRotacionarObst !== undefined)
-      this._formaGeometrica.rotacionar(this._anguloRotacionarObst);
+    {
+      let formaGeomRotacionada = this._formaGeometrica.clone();
+      formaGeomRotacionada.rotacionar(this._anguloRotacionarObst);
+      //obs: nao pode jah rotacionar a formaGeometrica do this, porque dessa forma os objetos que colidirem nao andariam
+
+      let objsColidem = []; //obstaculos serao adicionados ao vetor por passagem por referencia
+      ControladorJogo.controladoresObstaculos.forEach(controladorObsts =>
+        controladorObsts.quaisObstColidemOutroParado(this, objsColidem, formaGeomRotacionada));
+      if (ControladorJogo.pers.interseccao(formaGeomRotacionada))
+        objsColidem.push(ControladorJogo.pers);
+
+      const precisaMorrer = objsColidem.reduce((resultado, objColide) =>
+        {
+          const qtdAndar = Interseccao.menorQtdObjColidePararColidir(formaGeomRotacionada, objColide.formaGeometrica);
+
+          //tentar fazer com que esse objeto (obstaculo ou personagem) ande todo o necessario
+          let conseguiuAndarTudo;
+          if (objColide instanceof Obstaculo)
+            conseguiuAndarTudo = objColide._mudarXY(qtdAndar);
+          else
+            conseguiuAndarTudo = objColide.mudarXY(qtdAndar.x, qtdAndar.y);
+
+          return !resultado || !conseguiuAndarTudo;
+        }, false);
+
+      //this._formaGeometrica nao foi rotacionada mas sim formaGeomRotacionada, entao colocar forma geometrica rotacionada na forma geometrica do this
+      this._formaGeometrica = formaGeomRotacionada;
+
+      if (precisaMorrer)
+        this.morreu(true);
+    }
 
     return super.draw();
   }
@@ -303,14 +272,14 @@ class Obstaculo extends ObjetoTela
 // OBSTACULO COM VIDA
 class InfoObstaculoComVida extends InfoObstaculo
 {
-  constructor(formaGeometrica, infoImgVivo, infoImgMorto, corImgEspecial, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers, vida, anguloRotacionarObst)
+  constructor(formaGeometrica, infoImgVivo, infoImgMorto, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers, vida, anguloRotacionarObst)
   {
-    super(formaGeometrica, infoImgVivo, infoImgMorto, corImgEspecial, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers, anguloRotacionarObst);
+    super(formaGeometrica, infoImgVivo, infoImgMorto, infoAndar, qtdTiraVidaNaoConsegueEmpurrarPers, anguloRotacionarObst);
     this.vida = vida;
   }
 
   clone()
-  { return new InfoObstaculoComVida(this.formaGeometrica, this.infoImgVivo.clone(), this.infoImgMorto.clone(), AuxInfo.cloneImgCor(this.corImgEspecial), this.infoAndar.clone(), this.qtdTiraVidaNaoConsegueEmpurrarPers, this.vida, this.anguloRotacionarObst); }
+  { return new InfoObstaculoComVida(this.formaGeometrica, this.infoImgVivo.clone(), this.infoImgMorto.clone(), this.infoAndar.clone(), this.qtdTiraVidaNaoConsegueEmpurrarPers, this.vida, this.anguloRotacionarObst); }
 }
 class ObstaculoComVida extends Obstaculo
 {
@@ -343,23 +312,24 @@ class ObstaculoComVida extends Obstaculo
 //CONTROLADOR OBSTACULOS
 class ControladorObstaculos
 {
-  constructor(indexContr, infoObstaculoPadrao, infoObjAparecendoPadrao)
+  constructor(infoObstaculoPadrao, infoObjAparecendoPadrao)
   {
     //padrao
     this._infoObstaculoPadrao = infoObstaculoPadrao.clone();
 
-    //index controlador
-    this._indexContr = indexContr;
-
     // obstaculos que interagem com o meio
-    this._obstaculos = [];
+    this._obstaculos = new List();
     // obstaculos que NAO interagem com o meio (soh sao printados). para ObjetosTelaAparecendo:
-    this._obstaculosSurgindo = []; //fila
+    this._obstaculosSurgindo = new List(); //fila
     this._infoObjAparecendoPadrao = infoObjAparecendoPadrao;
 
     //para remocao:
     this._indexesRemover = [];
   }
+
+  //setter
+  set indexContr(indexContr)
+  { this._indexContr = indexContr; }
 
   get infoObstaculoPadrao()
   { return this._infoObstaculoPadrao; }
@@ -460,9 +430,21 @@ class ControladorObstaculos
           ClasseAndar.infoQtdAndarNaoColidir(info, obstAtual, obstQuerAndar, false);
       });
   }
+  //para rotacionar obstaculo
+  quaisObstColidemOutroParado(outroObst, vetorObsts = [], formaGeomOutroObst = outroObst.formaGeometrica)
+  {
+    this._obstaculos.forEach(obstAtual =>
+      {
+        if (obstAtual.vivo &&
+          obstAtual !== outroObst && //se nao eh o mesmo objeto
+          Interseccao.interseccao(obstAtual.formaGeometrica, formaGeomOutroObst))
+          vetorObsts.push(obstAtual);
+      });
+    return vetorObsts;
+  }
 
   //para procCriou do obstaculo
-  vaiColidirOutroObst(obstVaiCriar)
+  colideOutroObstParado(obstVaiCriar)
   {
     return this._obstaculos.some(obstAtual =>
       obstAtual.vivo && Interseccao.interseccao(obstVaiCriar.formaGeometrica, obstAtual.formaGeometrica));

@@ -26,7 +26,7 @@ class InfoObjetoTelaAparecendo extends InfoObjetoTelaSimples
   }
 
   clone()
-  { return new InfoObjetoTelaAparecendo(this.mudarOpacidade, this.mudarTamanho, cloneDicionario(this.qtdAndar), (this.formaGeometrica===undefined)?undefined:this.formaGeometrica.clone(), this.qtdHelices, cloneVetor(this.qtdsRotateDifHelices)); }
+  { return new InfoObjetoTelaAparecendo(this.mudarOpacidade, this.mudarTamanho, cloneDicionario(this.qtdAndar), (this.formaGeometrica===undefined)?undefined:this.formaGeometrica.clone(), this.infoImgVivo.clone(), this.qtdHelices, cloneVetor(this.qtdsRotateDifHelices)); }
 }
 class ObjetoTelaAparecendo extends ObjetoTelaSimples
 {
@@ -88,9 +88,10 @@ class ObjetoTelaAparecendo extends ObjetoTelaSimples
 
     if (ControladorJogo.pers.controladorPocoesPegou.codPocaoSendoUsado === TipoPocao.DeixarTempoMaisLento)
     // PARTE DA EXECUCAO DA POCAO (deixar tempo mais lento do novo objeto aparecendo)
-    {
       this.mudarTempo(porcentagemDeixarTempoLento);
-    }
+
+
+    this._tipoObjeto = tipoObjeto;
   }
 
   draw()
@@ -128,9 +129,9 @@ class ObjetoTelaAparecendo extends ObjetoTelaSimples
 
     //desenha
     if (this._mudarOpacidade)
-      this._formaGeometrica.draw(this._qtdVezesCompletas/this._qtdVezesTotal); //opacidade
+      super.draw(this._qtdVezesCompletas/this._qtdVezesTotal); //opacidade
     else
-      this._formaGeometrica.draw();
+      super.draw();
   }
   _mudarTamanhoFormaGeom(primeiraVez)
   {

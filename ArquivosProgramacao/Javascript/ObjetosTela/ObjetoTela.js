@@ -76,12 +76,14 @@ class ObjetoTelaSimples //recebe apenas uma classe informacao como parametro
       this._formaGeometrica = infoObjetoTelaSimples.formaGeometrica.clone();
 
     //imagens vivo
-    this._vetorImgsVivo = infoObjetoTelaSimples.infoImgVivo.vetorImg;
-    this._qtdVezesPrintarCadaImgVivo = infoObjetoTelaSimples.infoImgVivo.qtdVezesPrintarCadaImg;
-    this._indexImgVivo = infoObjetoTelaSimples.infoImgVivo.indexInicial;
-    if (this instanceof ObjetoTelaAparecendo) console.log(this._indexImgVivo);
-    this._qtdVezesPrintouImgVivo = 0;
-    this._colocarImgVivoAtual();
+    if (infoObjetoTelaSimples.infoImgVivo.vetorImg !== undefined)
+    {
+      this._vetorImgsVivo = infoObjetoTelaSimples.infoImgVivo.vetorImg;
+      this._qtdVezesPrintarCadaImgVivo = infoObjetoTelaSimples.infoImgVivo.qtdVezesPrintarCadaImg;
+      this._indexImgVivo = infoObjetoTelaSimples.infoImgVivo.indexInicial;
+      this._qtdVezesPrintouImgVivo = 0;
+      this._colocarImgVivoAtual();
+    }
   }
 
   //getter
@@ -102,9 +104,9 @@ class ObjetoTelaSimples //recebe apenas uma classe informacao como parametro
     this._formaGeometrica.corImg = this._vetorImgsVivo[this._indexImgVivo];
   }
 
-  draw()
+  draw(opacidade)
   {
-    if (this._vetorImgsVivo.length > 1)
+    if (this._vetorImgsVivo!==undefined && this._vetorImgsVivo.length > 1)
     //se tem mais de uma imagem no vetor de imagens vivo, vai para a proxima
     {
       this._qtdVezesPrintouImgVivo++;
@@ -115,7 +117,7 @@ class ObjetoTelaSimples //recebe apenas uma classe informacao como parametro
       }
     }
 
-    this._formaGeometrica.draw();
+    this._formaGeometrica.draw(opacidade);
   }
 }
 
@@ -175,14 +177,14 @@ class ObjetoTela extends ObjetoTelaSimples //recebe apenas uma classe informacao
         img, this._infoAdicionarImgSec.porcWidth, this._infoAdicionarImgSec.porcLadosCentroImg);
   }
 
-  draw()
+  draw(opacidade)
   //retorna se deve retirar objeto do vetor depois de printa-lo
   {
-    super.draw();
+    super.draw(opacidade);
 
     //se jah estah na ultima posicao, printa a ultima vez e entao retorna true
     let ret = false;
-    if (!this._vivo && !ret) //se jah morreu e ainda nao vai remover objeto, colocar na proxima imagem morto
+    if (!this._vivo) //se jah morreu e ainda nao vai remover objeto, colocar na proxima imagem morto
     {
       this._qtdVezesPrintouImgMortoAtual++;
 

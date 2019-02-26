@@ -44,10 +44,18 @@ class AuxObjetos
   //nao deixar pers em cima de objetoBarra
   //retorna se conseguiu empurrar ou se nem precisou
   {
-    if (Interseccao.interseccao(objetoBarra.formaGeometrica, ControladorJogo.pers.formaGeometrica))
+    if (ControladorJogo.pers.interseccao(objetoBarra.formaGeometrica))
     {
       //verifica qual direcao eh mais facil para o personagem sair de cima do objetoBarra
       const qtdAndar = Interseccao.menorQtdObjColidePararColidir(objetoBarra.formaGeometrica, ControladorJogo.pers.formaGeometrica);
+
+      if (qtdAndar.x===0 && qtdAndar.y===0)
+      //se nao andou nada
+        return true;
+
+      if (objetoBarra instanceof Obstaculo || objetoBarra instanceof Inimigo)
+        ControladorJogo.pers.colidiuObj(objetoBarra);
+
       //tenta empurrar personagem para parar de colidir
       return ControladorJogo.pers.mudarXY(qtdAndar.x, qtdAndar.y);
     }else

@@ -2,10 +2,10 @@
 //quando eu uso um setTimeout ou setInterval, ele nao leva em consideracao se estah pausado (parando de contar o tempo) ou nao, entao isso eh uma solucao para isso
 class Timer
 {
-  constructor(funcao, tempo, ehInterval=false, apenasEmLevelAtual=true, infoMudarTempo)
+  constructor(funcao, tempo, ehInterval=false, apenasEmLevelAtual=true, mudaPers=false, infoMudarTempo)
   //ehInterval: boolean, Timer.ehIntervalFazerAoCriar ou Timer.ehIntervalNaoFazerAoCriar
   //tempo em milisegundo
-  //infoMudarTempo: obj, atr (que a variavel onde tempo restante estah), estahEmMiliseg (se variavel estah em milisegundos)
+  //infoMudarTempo: obj, atr (que a variavel onde tempo restante estah)
   {
     this._funcao = funcao;
     this._freq = tempo*frameRatePadrao/1000;
@@ -37,11 +37,13 @@ class Timer
     if (infoMudarTempo !== undefined)
     {
       this._infoMudarTempo = infoMudarTempo;
-      this._qtdMudarTempoObj = -(this._infoMudarTempo.estahEmMiliseg?1000:1)/frameRatePadrao;
+      this._qtdMudarTempoObj = -1000/frameRatePadrao;
 
       //seta valor inicial do tempo (tempo total)
       this._infoMudarTempo.obj[this._infoMudarTempo.atr] = tempo;
     }
+
+    this._mudaPers = mudaPers;
 
     //jah adiciona o timer
     ConjuntoTimers.adicionarTimer(this);
@@ -94,7 +96,11 @@ class ConjuntoTimers
 {
   //inicializacao
   static inicializar()
-  { ConjuntoTimers._timers = []; }
+  {
+    ConjuntoTimers._timers = [];
+    //para remover
+    ConjuntoTimers._indexesRemover = [];
+  }
 
   //para tirar Timers do ConjuntoTimers agora usar: timer.parar()
 
@@ -108,21 +114,45 @@ class ConjuntoTimers
       {
         const continuaNoVetor = tmrAtual.procDraw();
         if (!continuaNoVetor)
-          ConjuntoTimers._timers.splice(index, 1);
-          //remover 1 elemento a partir de [index]
+          ConjuntoTimers._querRemoverTmr(index);
       });
+
+    ConjuntoTimers._removerTodosTimers(); //nao pode remover dentro do forEach
   }
 
   static excluirTimers()
   { ConjuntoTimers._timers = []; }
   static excluirTimersDoLevel()
   {
-    ConjuntoTimers._timers.forEach((tmrAtual, key) =>
+    ConjuntoTimers._timers.forEach((tmrAtual, index) =>
       {
         // se Timer eh soh daquele level
         if (tmrAtual.apenasEmLevelAtual)
-          delete ConjuntoTimers._timers[key];
+          ConjuntoTimers._querRemoverTmr(index);
       });
+
+    ConjuntoTimers._removerTodosTimers(); //nao pode remover dentro do forEach
+  }
+  static excluirTimersMudamPers()
+  {
+    ConjuntoTimers._timers.forEach((tmrAtual, index) =>
+      {
+        // se Timer muda pers
+        if (tmrAtual.mudaPers)
+          ConjuntoTimers._querRemoverTmr(index);
+      });
+
+    ConjuntoTimers._removerTodosTimers(); //nao pode remover dentro do forEach
+  }
+
+  static _querRemoverTmr(index)
+  {
+    ConjuntoTimers._indexesRemover.push(index);
+  }
+  static _removerTodosTimers(index)
+  {
+    ConjuntoTimers._indexesRemover.forEach((indexRemAtual,i) => ConjuntoTimers._timers.splice(indexRemAtual-i, 1));
+    ConjuntoTimers._indexesRemover = []; //jah removeu todos os timers
   }
 
   //POCAO

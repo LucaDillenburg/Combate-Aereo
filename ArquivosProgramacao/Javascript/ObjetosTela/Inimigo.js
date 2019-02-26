@@ -8,7 +8,7 @@ const absWidthVidaInim = 40;
 const maxRotacionarArmaGiratoriaInim = maxRotacionarArmaGiratoriaPers * 0.3;
 class InfoInimigo extends InfoObjetoComArmas_e_Vida
 {
-  constructor(formaGeometrica, infoImgVivo, infoImgMorto, vida, corVida, mostrarVidaSempre=true, porcentagemTempoVida, qtdTiraVidaPersQndIntersec, infoAndar, rotacionarInimAnguloAnda=false, infoArmas, qtdHelices, qtdsRotateDifHelices, ehInimEssencial)
+  constructor(formaGeometrica, infoImgVivo, infoImgMorto, vida, corVida, mostrarVidaSempre=true, porcentagemTempoVida, qtdTiraVidaBatePers, qtdTiraVidaNaoConsegueEmpurrarPers, infoAndar, rotacionarInimAnguloAnda=false, infoArmas, qtdHelices, qtdsRotateDifHelices, ehInimEssencial)
   //ehInimEssencial: soh o controladorInimigos que coloca
   {
     super(formaGeometrica, infoImgVivo, infoImgMorto, vida, infoArmas, qtdHelices, qtdsRotateDifHelices);
@@ -16,14 +16,15 @@ class InfoInimigo extends InfoObjetoComArmas_e_Vida
     this.mostrarVidaSempre = mostrarVidaSempre;
     if (porcentagemTempoVida !== undefined)
       this.porcentagemTempoVida = porcentagemTempoVida;
-    this.qtdTiraVidaPersQndIntersec = qtdTiraVidaPersQndIntersec;
+    this.qtdTiraVidaBatePers = qtdTiraVidaBatePers;
+    this.qtdTiraVidaNaoConsegueEmpurrarPers = qtdTiraVidaNaoConsegueEmpurrarPers;
     this.infoAndar = infoAndar;
     this.rotacionarInimAnguloAnda = rotacionarInimAnguloAnda;
     this.ehInimEssencial = ehInimEssencial;
   }
 
   clone()
-  { return new InfoInimigo(this.formaGeometrica, this.infoImgVivo.clone(), this.infoImgMorto.clone(), this.vida, AuxInfo.cloneImgCor(this.corVida), this.mostrarVidaSempre, this.porcentagemTempoVida, this.qtdTiraVidaPersQndIntersec, this.infoAndar.clone(), this.rotacionarInimAnguloAnda, cloneVetorComClone(this.infoArmas), this.qtdHelices, cloneVetor(this.qtdsRotateDifHelices), this.ehInimEssencial); }
+  { return new InfoInimigo(this.formaGeometrica, this.infoImgVivo.clone(), this.infoImgMorto.clone(), this.vida, AuxInfo.cloneImgCor(this.corVida), this.mostrarVidaSempre, this.porcentagemTempoVida, this.qtdTiraVidaBatePers, this.qtdTiraVidaNaoConsegueEmpurrarPers, this.infoAndar.clone(), this.rotacionarInimAnguloAnda, cloneVetorComClone(this.infoArmas), this.qtdHelices, cloneVetor(this.qtdsRotateDifHelices), this.ehInimEssencial); }
 }
 class Inimigo extends ObjetoComArmas_e_Vida
 {
@@ -37,8 +38,8 @@ class Inimigo extends ObjetoComArmas_e_Vida
     this._rotacionarInimAnguloAnda = infoInimigo.rotacionarInimAnguloAnda;
 
     //tirar vida pers
-    this._qtdTiraVidaPersQndIntersec = infoInimigo.qtdTiraVidaPersQndIntersec;
-    this._auxTirarVidaPers = 0;
+    this._qtdTiraVidaBatePers = infoInimigo.qtdTiraVidaBatePers;
+    this._qtdTiraVidaNaoConsegueEmpurrarPers = infoInimigo.qtdTiraVidaNaoConsegueEmpurrarPers;
 
     //para desenhar vida
     this._corVida = AuxInfo.cloneImgCor(infoInimigo.corVida);
@@ -65,7 +66,10 @@ class Inimigo extends ObjetoComArmas_e_Vida
 
   //procedimento ao criar: colisao com tiros do pers (nao precisa verificar colidir com o personagem aqui! pois quando ele for andar jah vai colidir jah que Interseccao.vaiTerInterseccao(...) verifica se jah estah intersectando antes)
   procCriou()
-  { ControladorJogo.pers.procObjCriadoColideTiros(this); }
+  {
+    ControladorJogo.pers.procObjCriadoColideTiros(this);
+    this.procVerifColisaoPersInimEstatico();
+  }
 
   //getters e setters andar
   get classeAndar()
@@ -83,9 +87,8 @@ class Inimigo extends ObjetoComArmas_e_Vida
   //se for adicionar set qtdAndar, mudar this._hipotenusaAndarPadrao de acordo com o tipoAndar
 
   //ANDAR
-  andar(indexContrInim, indexInim)
+  andar()
   //retorna se deve continuar no vetor de inimigos
-  //indexContrInim: precisa pra colidir com pers
   {
     if (this._estahCongelado) return true; //se estah congelado nao anda nem atira
 
@@ -103,18 +106,21 @@ class Inimigo extends ObjetoComArmas_e_Vida
     ControladorJogo.pers.procObjVaiAndarColideTiros(this, qtdAndar.x, qtdAndar.y);
 
     //verificar se nao vai intersectar personagem
-    if (this._vivo && Interseccao.vaiTerInterseccao(ControladorJogo.pers.formaGeometrica, this._formaGeometrica, qtdAndar.x, qtdAndar.y))
-      ControladorJogo.pers.colidiuInim(indexContrInim, indexInim, this._qtdTiraVidaPersQndIntersec);
+    let qtdPodeAndar = ControladorJogo.pers.qntPodeAndarAntesIntersecObjAndar(this._formaGeometrica, qtdAndar.x, qtdAndar.y);
+    if (qtdPodeAndar.x!==qtdAndar.x || qtdPodeAndar.y!==qtdAndar.y) //!equals
+    //se nao pode andar tudo o que deve
+      ControladorJogo.pers.colidiuObj(this);
 
-    this._formaGeometrica.x += qtdAndar.x;
-    this._formaGeometrica.y += qtdAndar.y;
+    // soh anda o suficiente para nao colidir com personagem
+    this._formaGeometrica.x += qtdPodeAndar.x;
+    this._formaGeometrica.y += qtdPodeAndar.y;
 
     //soh ve agr pois ele pode ter passado por cima de um personagem e depois saido
     return AuxObjetos.continuaNoVetor(this);
   }
 
   //mudar tamanho
-  mudarTamanho(porcentagem, indexContr, indexInim)
+  mudarTamanho(porcentagem)
   {
     //muda o tamanho de formaGeometrica
     this._formaGeometrica.mudarTamanho(porcentagem);
@@ -123,10 +129,10 @@ class Inimigo extends ObjetoComArmas_e_Vida
     //soh tem que verificar se colidiu com tiros do personagem e personagem
     {
       //verificar colisao com tiros do personagem
-      ControladorJogo.pers.procObjTelaColideCriarTodosContrTiros(this);
+      ControladorJogo.pers.procObjCriadoColideTiros(this);
 
       //verificar colisao com personagem
-      this.procVerifColisaoPersInimEstatico(indexContr, indexInim);
+      this.procVerifColisaoPersInimEstatico();
     }
   }
 
@@ -139,9 +145,12 @@ class Inimigo extends ObjetoComArmas_e_Vida
     super.atirar();
   }
 
-  //tirar vida personagem quando intersecta com inimigo
-  get qtdTiraVidaPersQndIntersec()
-  { return this._qtdTiraVidaPersQndIntersec; }
+  //tirar vida personagem quando colidir com ele
+  get qtdTiraVidaBatePers()
+  { return this._qtdTiraVidaBatePers; }
+  tirarVidaPersNaoConsegueEmpurrar()
+  //tirar vida personagem quando nao consegue empurrar o pesonagem
+  { ControladorJogo.pers.mudarVida(-this._qtdTiraVidaNaoConsegueEmpurrarPers); }
 
   //vida
   mudarVida(qtdMuda, colidiuTiroPers = true)
@@ -185,17 +194,17 @@ class Inimigo extends ObjetoComArmas_e_Vida
   { return this._mostrarVidaSempre; }
 
   //verificar colidir com personagem e fazer devidos procedimentos se colidir
-  procPersAndar(indexContrInim, indexInim, qtdAndarX, qtdAndarY) //quando personagem for andar
-  //indexContrInim: precisa pra colidir com pers
+  qtdPersPodeAndar(infoQtdMudar)
+  { AuxObjetos.qtdPersPodeAndar(this, infoQtdMudar); }
+  procVerifColisaoPersInimEstatico() //quando personagem ou inimigo for aumentar de tamanho
   {
-    if (Interseccao.vaiTerInterseccao(this._formaGeometrica, ControladorJogo.pers.formaGeometrica, qtdAndarX, qtdAndarY))
-      ControladorJogo.pers.colidiuInim(indexContrInim, indexInim, this._qtdTiraVidaPersQndIntersec);
-  }
-  procVerifColisaoPersInimEstatico(indexContrInim, indexInim) //quando personagem ou inimigo for aumentar de tamanho
-  //indexContrInim: precisa pra colidir com pers
-  {
-    if (Interseccao.interseccao(this._formaGeometrica, ControladorJogo.pers.formaGeometrica))
-      ControladorJogo.pers.colidiuInim(indexContrInim, indexInim, this._qtdTiraVidaPersQndIntersec);
+    const conseguiuEmpurrarSePrec = AuxObjetos.procColisaoEstaticaObstComPers(this);
+    if (!conseguiuEmpurrarSePrec)
+    {
+      //obstaculo explode
+      this.morreu();
+      this.tirarVidaPersNaoConsegueEmpurrar();
+    }
   }
 
   // para ControladorInimigos
@@ -298,9 +307,9 @@ class ControladorInimigos
     this._infoInimigoPadrao = infoInimigoPadrao.clone();
 
     // inimigos que interagem com o meio
-    this._inimigos = [];
+    this._inimigos = new List();
     // inimigos que NAO interagem com o meio (soh sao printados). para ObjetosTelaAparecendo:
-    this._inimigosSurgindo = []; //fila
+    this._inimigosSurgindo = new List(); //fila
     this._infoObjAparecendoPadrao = infoObjAparecendoPadrao;
 
     this._ehDeInimigosEssenciais = ehDeInimigosEssenciais;
@@ -411,7 +420,7 @@ class ControladorInimigos
       {
         if (inim.vivo)
         {
-          const continuaNoVetor = inim.andar(this._indexContr, indexInim); //soh retorna que eh para remover se inimigo estah totalmente fora da tela
+          const continuaNoVetor = inim.andar(); //soh retorna que eh para remover se inimigo estah totalmente fora da tela
           if (!continuaNoVetor)
           //inimigo nao aparece na tela
             this._querRemoverInim(indexInim);
@@ -455,23 +464,21 @@ class ControladorInimigos
     return colidiu;
   }
 
-  //verificar colidir com personagem e fazer devidos procedimentos se colidir
-  procPersAndar(qtdAndarX, qtdAndarY) //personagem andou
-  //pers andou colidir com inimigos
+  qtdPersPodeAndar(infoQtdMudar) //personagem quer andar
   {
-    this._inimigos.forEach((inim, indexInim) =>
+    this._inimigos.forEach(inim =>
       {
         if (inim.vivo)
-          inim.procPersAndar(this._indexContr, indexInim, qtdAndarX, qtdAndarY);
+          inim.qtdPersPodeAndar(infoQtdMudar);
       });
   }
   procPersCresceu() //personagem cresceu de tamanho
   //pers andou colidir com inimigos
   {
-    this._inimigos.forEach((inim, indexInim) =>
+    this._inimigos.forEach(inim =>
       {
         if (inim.vivo)
-          inim.procVerifColisaoPersInimEstatico(this._indexContr, indexInim);
+          inim.procVerifColisaoPersInimEstatico();
       });
   }
 
@@ -512,6 +519,16 @@ class ControladorInimigos
     this._inimigos.forEach(inim =>
       inim.procObjVaiAndarColideTiros(objTelaColide, qtdMudarX, qtdMudarY, podeTirarVidaObjTela)
     );
+  }
+
+  //para adicionar pocao
+  pocaoIntersectaInimParado(formaGeomPocao)
+  {
+    return this._inimigos.some(inim =>
+      {
+        if (inim.vivo && inim.classeAndar.ehParado)
+          return Interseccao.interseccaoComoRetangulos(inim.formaGeometrica, formaGeomPocao)
+      });
   }
 
   //POCAO
@@ -613,7 +630,7 @@ class ControladorInimigos
     this._indexesRemover.forEach((indexRemover, i) =>
       {
         const indexRemoverAtualizado = indexRemover-i;
-        this._inimigos[indexRemoverAtualizado].procVaiSerRemovido();
+        this._inimigos.getElem(indexRemoverAtualizado).procVaiSerRemovido();
         this._inimigos.splice(indexRemoverAtualizado, 1);
       });
     //"-i" porque a cada elemento que eh removido proximos elementos decaem uma posicao (e [i] eh o numero de elementos que jah foram removidos)

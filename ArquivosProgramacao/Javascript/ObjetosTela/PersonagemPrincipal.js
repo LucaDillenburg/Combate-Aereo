@@ -25,7 +25,7 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
     this.qtdAndar = infoPersonagemPrincipal.qtdAndar;
 
     //para sistema de colisao com inimigos
-    this.zerarInimigosIntersectados();
+    this.zerarObjsColidiram();
 
     //pocoes do pers
     if (controladorPocoesPegou === undefined)
@@ -35,7 +35,7 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
     //para quando trocar de aviao nao perder as pocoes
     {
       this._controladorPocoesPegou = controladorPocoesPegou;
-      this._controladorPocoesPegou.procPersMudouAviao();
+      this._controladorPocoesPegou.acabarUsarPocaoExecutando();
     }
 
     //numero aviao (pra saber qual aviao eh). Comeca em ZERO
@@ -75,7 +75,7 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
   get indexTiroMelhor() //para Pocao
   { return (this.ehAviaoMaster) ? 1 : 0; }
 
-  //mudar qtdAndar e adicionar qtdAndarEspecial
+  //mudar qtdAndar
   get qtdAndar() { return this._qtdAndar; }
   set qtdAndar(qtdAndar)
   {
@@ -98,7 +98,25 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
   morreu()
   {
     super.morreu();
-    ConjuntoTimers.excluirTimers();
+    this._acabarMudancas();
+    ControladorJogo.persMorreu();
+  }
+  procAcabouImgsMorto()
+  { delete this._formaGeometrica; }
+
+  procGanhou()
+  {
+    this._acabarMudancas();
+    this._armas.forEach(arma => arma.controlador.removerTodosTiros());
+  }
+
+  _acabarMudancas()
+  {
+    //parar de usar a pocao que estava usando
+    this._controladorPocoesPegou.acabarUsarPocaoExecutando();
+
+    //exclui os timers do personagem (que mudariam coisas nele por exemplo)
+    ConjuntoTimers.excluirTimersMudamPers();
   }
 
   //mudar (x,y)
@@ -145,7 +163,7 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
   }
   mudarXY(qtdMudaX, qtdMudaY)
   //soh obstaculo usa diretamente
-  //retorna se pode andar tudo aquilo
+  //retorna andou todo o pedido
   {
     //colisao com:
       // - tiros de inimigos e do jogo => perde vida e mata tiros
@@ -164,42 +182,40 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
       qtdMudarYPadrao: qtdAndarNaoSairY,
       qtdPodeMudarX : qtdAndarNaoSairX,
       qtdPodeMudarY : qtdAndarNaoSairY,
-      objetosBarraram : []
+      objetosBarraram: []
     };
 
     //nao conseguiu andar nada (por colidir com parede)
     if (infoQtdMudar.qtdPodeMudarX === 0 && infoQtdMudar.qtdPodeMudarY === 0)
       return false;
 
-    //colisao com obstaculos e suportesAereos: vai definir quanto pode andar em cada direcao
-    ControladorJogo.controladoresObstaculos.forEach(controladorObsts =>
-      controladorObsts.qtdPersPodeAndar(infoQtdMudar));
+    //colisao com obstaculos, inimigos e suportesAereos: vai definir quanto pode andar em cada direcao
+    //suportesAereos
     ControladorJogo.controladorSuportesAereos.suportesAereos.forEach(suporteAereo => suporteAereo.qtdPersPodeAndar(infoQtdMudar));
 
-    // quando personagem eh barrado, ele perde vida
+    //colisao com inimigos e obstaculos: barram o personagem e tiram vida dele
+    //ps: nao precisa zerarInimigosColididos aqui porque jah vai zerar depois que tirar a vida do personagem (ateh poderia, porem se andar inimigos antes do personagem nao daria erro)
+    ControladorJogo.controladoresInimigos.forEach(controladorInims => //ve se vai colidir com inimigos e adiciona no vetor de inimigos intersectados
+        controladorInims.qtdPersPodeAndar(infoQtdMudar));
+    ControladorJogo.controladoresObstaculos.forEach(controladorObsts =>
+      controladorObsts.qtdPersPodeAndar(infoQtdMudar));
+
+    //adicionar todos os objetos que barraram o pers e tiram vida dele no colidiu
+    //ps: nao poderia jah ter adicionado no colidiu pois se outros objetos barrassem antes, alguns objetos que estariam no vetor de colisao nao teriam colidido
     infoQtdMudar.objetosBarraram.forEach(objBarrou =>
-        {
-          if (objBarrou instanceof Obstaculo)
-            objBarrou.tirarVidaPersBateu();
-        });
+      {
+        if (objBarrou instanceof Obstaculo || objBarrou instanceof Inimigo)
+          this.colidiuObj(objBarrou);
+      });
 
     //nao conseguiu andar nada (por colidir com obstaculo)
     if (infoQtdMudar.qtdPodeMudarX === 0 && infoQtdMudar.qtdPodeMudarY === 0)
       return false;
 
-    //nao precisa zerarInimigosColididos aqui porque jah vai zerar depois que tirar a vida do personagem (ateh poderia, porem se andar inimigos antes do personagem nao daria erro)
-    //inimigos e tiros deles
-    ControladorJogo.controladoresInimigos.forEach(controladorInims =>
-      {
-        //ve se vai colidir com inimigos e adiciona no vetor de inimigos intersectados
-        controladorInims.procPersAndar(infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
-        //ve se vai colidir com tiros dos inimigos e tira vida do pers
-        controladorInims.procObjAndarColidirTirosInims(this, infoQtdMudar.qtdPodeMudarX,
-          infoQtdMudar.qtdPodeMudarY);
-      });
-
-    //tiros sem dono e dos suportesAereos
+    //verifica se colidiu com tiros (sem dono, dos inimigos e dos suportesAereos) e tira vida do personagem
     ControladorJogo.controladorOutrosTirosNaoPers.procObjVaiAndarColideTiros(this, infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
+    ControladorJogo.controladoresInimigos.forEach(controladorInims =>
+        controladorInims.procObjAndarColidirTirosInims(this, infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY));
     ControladorJogo.controladorSuportesAereos.suportesAereos.forEach(suporteAereo =>
       suporteAereo.procObjVaiAndarColideTiros(this, infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY));
 
@@ -207,8 +223,7 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
     ControladorJogo.controladorPocaoTela.verificarPersPegouPocao(infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
 
     //aqui qtdVaiMudarX e qtdVaiMudarY sao os maiores possiveis (a menor distancia que bateu)
-    this._formaGeometrica.x += infoQtdMudar.qtdPodeMudarX;
-    this._formaGeometrica.y += infoQtdMudar.qtdPodeMudarY;
+    this.moverSemColisao(infoQtdMudar.qtdPodeMudarX, infoQtdMudar.qtdPodeMudarY);
 
     // verifica se personagem estah completamente dentro da oficina agora
     if (ControladorJogo.oficina !== undefined)
@@ -217,15 +232,30 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
     //se consegue andar tudo o que deveria
     return infoQtdMudar.qtdPodeMudarX === qtdMudaX && infoQtdMudar.qtdPodeMudarY === qtdMudaY;
   }
+  moverSemColisao(qtdAndarX, qtdAndarY) //chamar direto esse metodo apenas para situacoes muito especificas (normalmente quando nao estah jogando)
+  {
+    this._formaGeometrica.x += qtdAndarX;
+    this._formaGeometrica.y += qtdAndarY;
+  }
+
+  atirar()
+  {
+    if (this._vivo)
+    //se estah morto nao atira mais
+      super.atirar();
+  }
 
   //mudar tamanho
   mudarTamanho(porcentagem)
   {
-    //muda o tamanho de formaGeometrica
-    this._formaGeometrica.mudarTamanho(porcentagem);
-
+    this.aumentarTamanhoSemColisao(porcentagem);
     if (porcentagem > 1) //se aumentou de tamanho (mais de 100%)
       this._aumentouTamanho();
+  }
+  mudarTamanhoSemColisao(porcentagem) //chamar direto esse metodo apenas para situacoes muito especificas (normalmente quando nao estah jogando)
+  {
+    //muda o tamanho de formaGeometrica
+    this._formaGeometrica.mudarTamanho(porcentagem);
   }
   _aumentouTamanho()
   {
@@ -247,33 +277,63 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
   }
 
   //sobre ter intersectar com inimigos
-  zerarInimigosIntersectados()
+  zerarObjsColidiram()
   {
-    this._infoInimsIntersec = [];
-    this._qtdTirarVidaIntersecInim = 0;
+    this._infoObjsColidiram = [];
+    this._qtdTirarVidaBateuObjs = 0;
   }
-  colidiuInim(indexContrInim, indexInim, qtdTiraVidaPersQndIntersec)
-  //indexContrInim: index controlador inimigo colidiu (para saber se jah contou que colidiu ou nao: pois podem colidir no andar do personagem e/ou no andar do inimigo)
+  colidiuObj(objetoColidiu)
   {
-    if (this._jahColidiuInim(indexContrInim, indexInim))
+    if (this._jahColidiuObj(objetoColidiu))
     //se personagem jah adicionou que colidiu nao precisa adicionar de novo
       return;
 
     //inserir no vetor e somar
-    this._infoInimsIntersec.push({indexContrInim: indexContrInim, indexInim: indexInim});
-    this._qtdTirarVidaIntersecInim += qtdTiraVidaPersQndIntersec;
+    this._infoObjsColidiram.push(objetoColidiu);
+    this._qtdTirarVidaBateuObjs += objetoColidiu.qtdTiraVidaBatePers;
   }
-  _jahColidiuInim(indexContrInim, indexInim)
-  //indexContrInim: index controlador inimigo quer saber se colidiu
+  _jahColidiuObj(objetoColidiu)
   {
-    // retorna se jah tem algum info no vetor com o mesmo indexContrInim e indexInim
-    return this._infoInimsIntersec.some(infoInimIntersec =>
-      infoInimIntersec.indexContrInim === indexContrInim && infoInimIntersec.indexInim === indexInim);
+    // retorna se jah tem algum objeto igual no vetor
+    return this._infoObjsColidiram.some(objColidiuAtual => objetoColidiu===objColidiuAtual);
   }
-  procPerderVidaIntersecInim()
+  procPerdeVidaColidiuObjs()
   {
-    this.mudarVida(-this._qtdTirarVidaIntersecInim);
-    this.zerarInimigosIntersectados();
+    this.mudarVida(-this._qtdTirarVidaBateuObjs);
+    this.zerarObjsColidiram();
+  }
+
+  procColidirTiroCriado(tiro)
+  //retorna se colidiu
+  {
+    if (!this._vivo)
+    //se estah morto nao colidiu com nenhum tiro
+      return false;
+
+    return super.procColidirTiroCriado(tiro);
+  }
+
+  //interseccao com personagem (metodos proprios para nao ter que colocar um if pers.vivo em todo lugar que for fazer algum metodo de interseccao/colisao com pers)
+  interseccao(outraFormaGeom)
+  {
+    if (!this._vivo)
+    //se jah morreu nao intersecta/colide com mais nada
+      return false;
+    return Interseccao.interseccao(this._formaGeometrica, outraFormaGeom);
+  }
+  vaiTerInterseccaoObjAndar(outraFormaGeom, qtdAndarX, qtdAndarY)
+  {
+    if (!this._vivo)
+    //se jah morreu nao intersecta/colide nao vai intersectar
+      return false;
+    return Interseccao.vaiTerInterseccao(this._formaGeometrica, outraFormaGeom, qtdAndarX, qtdAndarY);
+  }
+  qntPodeAndarAntesIntersecObjAndar(outraFormaGeom, qtdAndarX, qtdAndarY, andarProporcional)
+  {
+    if (!this._vivo)
+    //se jah morreu nao intersecta/colide pode andar tudo
+      return new Ponto(qtdAndarX, qtdAndarY);
+    return Interseccao.qntPodeAndarAntesIntersec(this._formaGeometrica, outraFormaGeom, qtdAndarX, qtdAndarY, andarProporcional);
   }
 
   //POCOES
@@ -286,28 +346,24 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
   //ps: se for undefined, desenhar os dois
   {
     //parte do ceu
-    if (tipoDrawPers === TipoDrawPersonagem.ParteDoCeu || tipoDrawPers===undefined)
-      this._desenharParteCeu();
+    let ret;
+    if ((tipoDrawPers === TipoDrawPersonagem.ParteDoCeu || tipoDrawPers===undefined) &&
+      this._formaGeometrica!==undefined)
+      ret = super.draw(); //desenha personagem e tiros
 
     //mira arma giratoria
-    if (this.ehAviaoMaster &&
+    if (this.ehAviaoMaster && this._vivo && //quando morrer para de desenhar mira
       (tipoDrawPers === TipoDrawPersonagem.MiraArmaGiratoria || tipoDrawPers===undefined))
       this._desenharMiraArmaGiratoria();
 
     //painel
     if (tipoDrawPers === TipoDrawPersonagem.Painel || tipoDrawPers===undefined)
       this._desenharPainelPers();
+
+    return ret;
   }
 
   //auxiliares draw
-
-    //parte do ceu
-  _desenharParteCeu()
-  //desenhar coisas do personagem que estao no ceu (Personagem, Tiros e MiraArmaGiratoria)
-  {
-    //desenha personagem e tiros
-    super.draw();
-  }
 
     //mira arma giratoria
   _desenharMiraArmaGiratoria()
@@ -368,7 +424,7 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
     this._controladorPocoesPegou.draw();
 
     //retangulos que simbolizam quanto falta para personagem poder atirar com arma nao automatica
-    if (this.ehAviaoMaster && this._controladorPocoesPegou.codPocaoSendoUsado!==TipoPocao.PersComMissil)
+    if (this.ehAviaoMaster && this._vivo && this._controladorPocoesPegou.codPocaoSendoUsado!==TipoPocao.PersComMissil)
       this._desenharFreqArmaNaoAutom();
   }
   _desenharFreqArmaNaoAutom()
@@ -399,7 +455,7 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
     if (ControladorJogo.algumObjetoImportanteNesseEspaco(new Retangulo(x, y + qtdMudaY*(qtdRetangulos-1),
       widthRet, qtdPxlsEntreRet*(qtdRetangulos-1) + heightRet*qtdRetangulos)))
       opacidadeRetangulos = opacidadePainelPersObjsEmBaixo*255;
-    else {} //deixa undefined mesmo
+    //else {} //deixa undefined mesmo
 
     for (let i = 0; i<qtdRetangulos; i++)
     {
@@ -419,28 +475,42 @@ class PersonagemPrincipal extends ObjetoComArmas_e_Vida
       y += qtdMudaY;
     }
 
+    const corTexto = color(0, 0, 0, opacidadeRetangulos);
+    strokeWeight(0.5);
+    stroke(corTexto);
+    fill(corTexto);
+    textAlign(LEFT, TOP);
+    textSize(13);
+    textStyle(ITALIC);
+    text("Arma não automática", x - 2, y - 2);
+
     pop();
   }
   _desenharVida()
   {
     push();
 
+    const tamStroke = 2.3;
+    strokeWeight(tamStroke);
+
     stroke(0);
     fill(255);
-    rect(0, height - heightVidaUsuario, width, heightVidaUsuario);
+    const yVida = height - heightVidaUsuario - tamStroke;
+    const widthVida = width - 2*tamStroke;
+    rect(0.95*tamStroke, yVida, widthVida, heightVidaUsuario);
 
     noStroke(0);
     fill("green");
-    rect(tamStroke, height - heightVidaUsuario + tamStroke,
-      (width - 2*tamStroke)*(this._vida/this._vidaMAX), heightVidaUsuario - 2*tamStroke);
+    rect(1.3*tamStroke, yVida + 0.52*tamStroke,
+      (widthVida - 0.9*tamStroke)*(this._vida/this._vidaMAX), heightVidaUsuario - 0.75*tamStroke);
 
     fill(0);
     const fontSize = 22;
     textSize(fontSize);
-    textAlign(CENTER, LEFT);
+    textAlign(LEFT, CENTER);
     text("Vida: " + (this._vida.toFixed(Operacoes.primAlgoritDpVirgulaEhZero(this._vida)?0:1)) + "/" +
       (this._vidaMAX.toFixed(Operacoes.primAlgoritDpVirgulaEhZero(this._vidaMAX)?0:1)),
-      15, height - heightVidaUsuario + fontSize);
+      5, yVida + fontSize - 4);
 
     pop();
   }

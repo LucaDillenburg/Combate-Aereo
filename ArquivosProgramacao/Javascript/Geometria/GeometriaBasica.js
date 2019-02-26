@@ -399,6 +399,59 @@ class Interseccao
   {
     //ver "Explicacao procCriou(...) obstaculo em relacao a colisao com pers.png"
     // TODO: fazer com outras formasGeometricas (isso soh eh verdadeiro e eficiente com retangulos/quadrados)
+
+    //se nao tem nenhuma formaGeometrica sendo composta, nao precisa fazer nada de especial
+    //if (!(objParado instanceof FormaGeometricaComposta) && !(objVaiAndar instanceof FormaGeometricaComposta)) //AQUI
+      return Interseccao._qtdAndarPararColidirFormasNaoCompost(objParado, objVaiAndar);
+
+    //se objAndar for FormaGeometricaComposta:
+      //fazer Interseccao._qtdAndarPararColidirObjAndarNaoCompost(...) com todas as formas de objAndar que intersectam,
+      //retornar os maiores valores absolutos em ambas as direcoes que alguma forma precisa andar
+    //se objParado for FormaGeometricaComposta: verificar quanto tem que andar comparando
+      //fazer Interseccao._qtdAndarPararColidirFormasNaoCompost(...) com todas as formas de objParado que intersectam a formaNaoComposta de objAndar,
+      //retornar os maiores valores absolutos em ambas as direcoes que alguma forma precisa andar
+    //problema: pode ser que esse metodo retorne um qtdAndar que ainda continue intersectando
+    //TODO: melhorar isso
+    const qtdAndar = Interseccao._qtdAndarPararColidirObjsCompost(objParado, objVaiAndar);
+    let formaAndada = objVaiAndar.clone(objVaiAndar.x + qtdAndar.x, objVaiAndar.y + qtdAndar.y);
+    if (!Interseccao.interseccao(formaAndada, objVaiAndar))
+      return qtdAndar;
+    return Interseccao._qtdAndarPararColidirFormasNaoCompost(objParado, objVaiAndar);
+  }
+  static _qtdAndarPararColidirObjsCompost(objParado, objVaiAndar)
+  {
+    const objVaiAndarEhFormaCompost = objVaiAndar instanceof FormaGeometricaComposta;
+    let formasGeomObjCompost;
+    if (objVaiAndarEhFormaCompost)
+      formasGeomObjCompost = objVaiAndar.formasGeometricas;
+    else
+    {
+      if (objParado instanceof FormaGeometricaComposta)
+        formasGeomObjCompost = objVaiAndar.formasGeometricas;
+      else
+        return Interseccao._qtdAndarPararColidirFormasNaoCompost(objParado, objVaiAndar);
+    }
+
+    const qtdAndar = formasGeomObjCompost.reduce((formaGeom, accumulator) =>
+      {
+        //calcular qtdAndarAtual
+        let qtdAndarAtual;
+        if (objVaiAndarEhFormaCompost)
+          qtdAndarAtual = Interseccao._qtdAndarPararColidirObjsCompost(objParado, formaGeom);
+        else
+          qtdAndarAtual = Interseccao._qtdAndarPararColidirFormasNaoCompost(formaGeom, objVaiAndar);
+
+        //mudar accumulator e retornar
+        if (Math.abs(qtdAndarAtual.x) > Math.abs(accumulator.x))
+          accumulator.x = qtdAndarAtual.x;
+        if (Math.abs(qtdAndarAtual.y) > Math.abs(accumulator.y))
+          accumulator.y = qtdAndarAtual.y;
+        return accumulator;
+      }, new Ponto(0,0));
+    return qtdAndar;
+  }
+  static _qtdAndarPararColidirFormasNaoCompost(objParado, objVaiAndar)
+  {
     const xDireita = {
       valor: objParado.x + objParado.width - objVaiAndar.x,
       dir: Direcao.Direita
@@ -424,23 +477,19 @@ class Interseccao
           return valorDir2;
       }
     const menorValorDir = minDirecao(minDirecao(yBaixo, yCima), minDirecao(xDireita, xEsquerda));
-    let qtdAndar = {};
+    let qtdAndar = new Ponto(0,0);
     switch (menorValorDir.dir)
     {
       case Direcao.Direita:
         qtdAndar.x = menorValorDir.valor + qntNaoColidir;
-        qtdAndar.y = 0;
         break;
       case Direcao.Esquerda:
-        qtdAndar.x = -menorValorDir.valor -qntNaoColidir;
-        qtdAndar.y = 0;
+        qtdAndar.x = -menorValorDir.valor - qntNaoColidir;
         break;
       case Direcao.Baixo:
-        qtdAndar.x = 0;
         qtdAndar.y = menorValorDir.valor + qntNaoColidir;
         break;
       case Direcao.Cima:
-        qtdAndar.x = 0;
         qtdAndar.y = -menorValorDir.valor -qntNaoColidir;
         break;
     }
@@ -483,7 +532,6 @@ class Interseccao
     // daqui pra baixo tem que querer andar alguma coisa...
 
 		let qtdPodeAndar = {x: qtdAndarX, y: qtdAndarY};
-
 
 		//CASO ESPECIAL (simples): se objQuerAndar eh FormaGeometricaSimples e SOH ANDA EM UMA DIRECAO
 		if (objQuerAndar instanceof FormaGeometricaSimples && (qtdAndarX === 0 || qtdAndarY === 0))
@@ -595,15 +643,15 @@ class Interseccao
         else
         if (andarProporcional)
         {
-          if (qtdPodeAndarAtual.x < menorQtdAndar.x)
+          if (Math.abs(qtdPodeAndarAtual.x) < Math.abs(menorQtdAndar.x))
           //nao precisa verificar de qtdPodeAndarAtual.y pois eh proporcional
             menorQtdAndar = qtdPodeAndarAtual;
         }else
         //nao proporcional
         {
-          if (qtdPodeAndarAtual.x < menorQtdAndar.x)
+          if (Math.abs(qtdPodeAndarAtual.x) < Math.abs(menorQtdAndar.x))
             menorQtdAndar.x = qtdPodeAndarAtual.x;
-          if (qtdPodeAndarAtual.y < menorQtdAndar.y)
+          if (Math.abs(qtdPodeAndarAtual.y) < Math.abs(menorQtdAndar.y))
             menorQtdAndar.y = qtdPodeAndarAtual.y;
         }
 
@@ -721,7 +769,8 @@ class Interseccao
         let a, b, c;
         //o que invertera direita e esquerda
         let mult;
-        if ((qtdAndarY < 0) || (qtdAndarY === 0 && qtdAndarX > 0))
+        const andarParaCima = (qtdAndarY < 0) || (qtdAndarY === 0 && qtdAndarX > 0);
+        if (andarParaCima)
         // se (qtdAndarY < 0) e uma opcao de (qtdAndarY === 0): se (qtdAndarX > 0)
         {
           // A: obj.vertices[0], B: obj.vertices[1], C: obj.vertices[2]
@@ -759,43 +808,72 @@ class Interseccao
 
         // Obs: Esquerda da linha: reta.ondePontoEstah(p) < 0. Direita da linha: reta.ondePontoEstah(p) > 0
 
-        // se B' estah a esquerda da linha ou em cima dela
+        // se B' estah a esquerda da linha ou em cima dela (se mult=-1, eh as direcoes se invertem)
         if (linha.ondePontoEstah(b2)*mult <= 0)
         {
-          // se B' estah a direita ou na Reta formada pelos pontos C e C'
-          if (new Reta(c2, c).ondePontoEstah(b2)*mult >= 0)
-            //Paralelogramo: A' - A - C - C'
+          //Paralelogramo 1:
+          if (andarParaCima)
+          //A' - A - C - C' (andarParaCima/normal)
             formasGeomAndar.push(new Paralelogramo(a2, a, c, c2));
           else
+          //C - C' - A' - A (!andarParaCima/contrario)
+            formasGeomAndar.push(new Paralelogramo(c, c2, a2, a));
+
+          // se B' estah a esquerda da Reta formada pelos pontos C e C'
+          if (new Reta(c2, c).ondePontoEstah(b2)*mult < 0)
           {
-            //Paralelogramos (C' eh o vertice central):
-              //1) C' - C - B - B'
-            formasGeomAndar.push(new Paralelogramo(c2, c, b, b2));
-              //2) A' - A - C - C'
-            formasGeomAndar.push(new Paralelogramo(a2, a, c, c2));
+            //(C' eh o vertice central):
+            //Paralelogramo 2:
+            if (andarParaCima)
+            //C' - C - B - B' (andarParaCima/normal)
+              formasGeomAndar.push(new Paralelogramo(c2, c, b, b2));
+            else
+            //B - B' - C' - C (!andarParaCima/contrario)
+              formasGeomAndar.push(new Paralelogramo(b, b2, c2, c));
           }
         }else
-        // se C' estah a direita da linha ou em cima dela
+        // se C' estah a direita da linha ou em cima dela (se mult=-1, eh as direcoes se invertem)
         if (linha.ondePontoEstah(c2)*mult >= 0)
         {
-          if (new Reta(b2, obj.vertices[1]).ondePontoEstah(c2)*mult <= 0)
-            //Paralelogramo: A' - B' - B - A
+          //Paralelogramo 1:
+          if (andarParaCima)
+          //A' - B' - B - A (andarParaCima/normal)
             formasGeomAndar.push(new Paralelogramo(a2, b2, b, a));
           else
+          //B - A - A' - B' (!andarParaCima/contrario)
+            formasGeomAndar.push(new Paralelogramo(b, a, a2, b2));
+
+          // se C' estah a direita da Reta formada pelos pontos B e B'
+          if (new Reta(b2, b).ondePontoEstah(c2)*mult > 0)
           {
-            //Paralelogramos (B' eh o vertice central):
-              //1) A' - B' - B - A
-            formasGeomAndar.push(new Paralelogramo(a2, b2, b, a));
-              //2) B' - C' - C - B
-            formasGeomAndar.push(new Paralelogramo(b2, c2, c, b));
+            //(B' eh o vertice central):
+            //Paralelogramo 2:
+            if (andarParaCima)
+            //B' - C' - C - B (andarParaCima/normal)
+              formasGeomAndar.push(new Paralelogramo(b2, c2, c, b));
+            else
+            //C - B - B' - C' (!andarParaCima/contrario)
+              formasGeomAndar.push(new Paralelogramo(c, b, b2, c2));
           }
         }else
         {
-          //Paralelogramos (A' eh o vertice central):
-            //1) A' - B' - B - A
+          //(A' eh o vertice central):
+
+          //Paralelogramo 1:
+          if (andarParaCima)
+          //A' - B' - B - A (andarParaCima/normal)
             formasGeomAndar.push(new Paralelogramo(a2, b2, b, a));
-            //2) A' - A - C - C'
+          else
+          //B - A - A' - B' (!andarParaCima/contrario)
+            formasGeomAndar.push(new Paralelogramo(b, a, a2, b2));
+
+          //Paralelogramo 2:
+          if (andarParaCima)
+          //A' - A - C - C' (andarParaCima/normal)
             formasGeomAndar.push(new Paralelogramo(a2, a, c, c2));
+          else
+          //C - C' - A' - A (!andarParaCima/contrario)
+            formasGeomAndar.push(new Paralelogramo(c, c2, a2, a));
         }
 				break;
 

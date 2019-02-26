@@ -199,26 +199,31 @@ class Pocao
   executarPocao()
   {
     let tempoPocaoResta = null; //quanto tempo a pocao fica ativo ateh desaparecer de novo (em milisegundos)
+    let pocaoMudaPers; //soh obrigatorio para pocoes que tenham desexecutar
 
     switch(this._codPocao)
     {
       case TipoPocao.DiminuirTamanhoPers:
         tempoPocaoResta = 7500;
+        pocaoMudaPers = true;
         ControladorJogo.pers.mudarTamanho(porcentagemSetTam); //50% do tamanho
         break;
 
       case TipoPocao.MatarObjetos1Tiro:
         //mudanca na propria classe Obstaculo e Inimigo
         tempoPocaoResta = 3000;
+        pocaoMudaPers = false;
         break;
 
       case TipoPocao.RUIMPersPerdeVel:
         tempoPocaoResta = 5000;
+        pocaoMudaPers = true;
         ControladorJogo.pers.mudarVelocidade(porcentagemSetVelRuim);
         break;
 
       case TipoPocao.TiroPersMaisRapidoMortal:
         tempoPocaoResta = 8500;
+        pocaoMudaPers = true;
 
         //porque depende do aviao do personagem, qual o index que vai ter o tiro bom
         const indexTiroMelhor = ControladorJogo.pers.indexTiroMelhor;
@@ -257,6 +262,7 @@ class Pocao
 
       case TipoPocao.DeixarTempoMaisLento:
         tempoPocaoResta = 5000;
+        pocaoMudaPers = false;
         /* para deixar tempo mais lento:
           -> tiros tela. OK
           -> inimigos (incluindo tiros deles, atirar e inimigosSurgindo). OK
@@ -279,6 +285,9 @@ class Pocao
         //obstaculos
         ControladorJogo.controladoresObstaculos.forEach(controladorObsts =>
           controladorObsts.mudarTempo(porcentagemDeixarTempoLento));
+        //escuridao
+        if (ControladorJogo.escuridao !== undefined)
+          ControladorJogo.escuridao.mudarTempo(porcentagemDeixarTempoLento);
         //Timers
         ConjuntoTimers.mudarTempo(porcentagemDeixarTempoLento);
         break;
@@ -300,11 +309,13 @@ class Pocao
 
       case TipoPocao.PersMaisRapido:
         tempoPocaoResta = 7500;
+        pocaoMudaPers = true;
         ControladorJogo.pers.mudarVelocidade(porcentagemSetVel);
         break;
 
       case TipoPocao.PersComMissil:
         tempoPocaoResta = 4500;
+        pocaoMudaPers = true;
 
         //setar novo tiro
         ControladorJogo.pers.getControladorTiros(indexArmaMissilPers).colocarInfoTiroEspecial(ArmazenadorInfoObjetos.infoTiro("TiroMissil", true));
@@ -327,6 +338,7 @@ class Pocao
 
       case TipoPocao.CongelarInimigos:
         tempoPocaoResta = 5000;
+        pocaoMudaPers = false;
         //congelar todos os inimigos
         ControladorJogo.controladoresInimigos.forEach(controladorInims =>
           controladorInims.mudarCongelarTodosInim(true));
@@ -343,13 +355,16 @@ class Pocao
     if (tempoPocaoResta !== null) //se tem que desexecutar depois de um tempo, programa esse Timer (pode ser soh uma acao pontual)
     {
       //programa quando quando vai parar com esse pocao
-      new Timer(() => { this.desexecutarPocao(); }, tempoPocaoResta, false, false /*pocao transcende o level (mesmo se o level acabar ainda vai ter que desexecutar)*/,
-        	{obj: this, atr: "_tempoRestante", estahEmMiliseg: true}); //atualiza quanto tempo falta
+      this._timerDesexecutar = new Timer(() => { this.desexecutarPocao(); }, tempoPocaoResta, false, false /*pocao transcende o level (mesmo se o level acabar ainda vai ter que desexecutar)*/,
+        pocaoMudaPers, {obj: this, atr: "_tempoRestante"}); //atualiza quanto tempo falta
 
       this._tempoTotal = tempoPocaoResta;
       //this._tempoRestante = tempoPocaoResta; nao precisa setar tempoRestante porque Timer jah faz isso
-    }
+    }else
+      delete this._timerDesexecutar;
   }
+  pararTimerDesexecutar()
+  { this._timerDesexecutar.parar(); }
   desexecutarPocao()
   // se sohSaberSeTem, eh soh pra saber se tem ou nao desexecutar (nao desexecuta)
   {
@@ -433,6 +448,9 @@ class Pocao
         //obstaculos
         ControladorJogo.controladoresObstaculos.forEach(controladorObsts =>
           controladorObsts.mudarTempo(porcVoltarTempoNormal));
+        //escuridao
+        if (ControladorJogo.escuridao !== undefined)
+          ControladorJogo.escuridao.mudarTempo(porcVoltarTempoNormal);
         //Timers
         ConjuntoTimers.mudarTempo(porcVoltarTempoNormal);
         break;
@@ -485,9 +503,10 @@ class ObjetoTelaPocao extends ObjetoTelaSimples
   intersectaPers(qtdAndarX, qtdAndarY)
   {
     if (qtdAndarX === undefined && qtdAndarY === undefined)
-      return Interseccao.interseccao(this._formaGeometrica, ControladorJogo.pers.formaGeometrica);
+      return ControladorJogo.pers.interseccao(this._formaGeometrica);
     else
       return Interseccao.vaiTerInterseccao(this._formaGeometrica, ControladorJogo.pers.formaGeometrica, qtdAndarX, qtdAndarY);
+      //aqui eh o personagem que andou entao nao precisa chamar o metodo proprio dele jah que se ele andou ele estah vivo
   }
 
   procMorreu()
@@ -613,19 +632,30 @@ class ControladorPocaoTela
   _pontoPodeColocar(medidasFormaGeom)
   {
     let pontoPode = new Ponto(0, 0);
-    do
+    for(;;)
     {
       pontoPode.x = Math.myrandom(0, width - medidasFormaGeom.width);
       pontoPode.y = Math.myrandom(0, height - heightVidaUsuario - medidasFormaGeom.height);
-    }while(!this._estahLongeSuficientePers(pontoPode, medidasFormaGeom));
+      if (this._pocaoPodeLugar(pontoPode, medidasFormaGeom))
+        break;
+    }
     return pontoPode;
   }
-  _estahLongeSuficientePers(pontoPode, medidasFormaGeom)
+  _pocaoPodeLugar(pontoPode, medidasFormaGeom)
   {
-    //ve se estah intersectando
-    if (Interseccao.interseccaoRetDesmontado(ControladorJogo.pers.formaGeometrica.x, ControladorJogo.pers.formaGeometrica.y,
-      ControladorJogo.pers.formaGeometrica.width, ControladorJogo.pers.formaGeometrica.height,
-      pontoPode.x, pontoPode.y, medidasFormaGeom.width, medidasFormaGeom.height))
+    if (ControladorJogo.pers.formaGeometrica===undefined) //se personagem jah morreu e jah acabou de printar imgs morto
+      return true;
+
+    const formaGeomPocao = new Retangulo(pontoPode.x, pontoPode.y, medidasFormaGeom.width, medidasFormaGeom.height);
+
+    //ver se estah intersectando inimigos parados
+    const intersectaAlgumInim = ControladorJogo.controladoresInimigos.some(controladorInims =>
+      controladorInims.pocaoIntersectaInimParado(formaGeomPocao));
+    if (intersectaAlgumInim)
+      return false;
+
+    //ve se estah intersectando personagem
+    if (Interseccao.interseccaoComoRetangulos(ControladorJogo.pers.formaGeometrica, formaGeomPocao))
       return false;
 
     //calcula distancia do centro de massa do personagem ateh o centro de massa da pocao
@@ -984,12 +1014,15 @@ class ControladorPocoesPers
     this._pocoesPers.forEach(pocaoPers => pocaoPers.arrumarLugar(instrucao, pocaoRemovidaTinhaDesexecutar));
   }
 
-  procPersMudouAviao()
+  acabarUsarPocaoExecutando()
   //para quando trocar de aviao, nao continuar com uma pocao que mudaAviaoPersTemp=true sendo executada as pocoes
   {
     if (this.estahUsandoPocao && this._pocoesPers[0].pocao.mudaAviaoPersTemp)
     //se a primeira pocao estiver sendo usada e for desfazer alteracoes no novo aviao do personagem, remove-la
+    {
+      this._pocoesPers[0].pocao.pararTimerDesexecutar(); //parar timer de desexecutar
       this.acabouUsarPocao(true);
+    }
   }
 
   //desenhar todos as pocoes
@@ -1021,11 +1054,13 @@ class ControladorPocoesPers
     if (this._nomePocaoEscrever !== undefined)
     //nao necessariamente a primeira pocao estara sendo usada (pois se ela fosse instantanea ou muito rapida, nao daria certo)
     {
-      // TODO: design
-      noStroke();
-      textSize(30);
-      textAlign(CENTER, CENTER);
-      text(this._nomePocaoEscrever, width/2, (height - heightVidaUsuario)/2); //escrever nome da pocao
+      push();
+        // TODO: design
+        noStroke();
+        textSize(30);
+        textAlign(CENTER, CENTER);
+        text(this._nomePocaoEscrever, width/2, (height - heightVidaUsuario)/2); //escrever nome da pocao
+      pop();
     }
   }
 }

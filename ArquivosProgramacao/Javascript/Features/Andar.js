@@ -9,10 +9,11 @@ const TipoAndar = {
     //seguir
     "SeguirPers": 3,
     "SeguirInimMaisProx": 4,
+    "SeguirPonto": 5,
 
     //direcao
-    "DirecaoPers": 5,
-    "DirecaoInimMaisProx": 6
+    "DirecaoPers": 6,
+    "DirecaoInimMaisProx": 7
   };
 
 class InfoAndar
@@ -26,6 +27,7 @@ class InfoAndar
         //- maiorAnguloMudanca: maior angulo que pode mudar a rota (para limitar a curva quando for TipoAndar.Seguir...)
         //- porcVelCurva: para ir mais devagar quando for limitado pela curva
         //- primMaiorAngMud: o maior angulo na primeira execucao do andar
+    //para TipoAndar.SeguirPonto: outrasInformacoes.pontoSeguir
     //para TipoAndar.PermanecerEmRetangulo:
       //outrasInformacoes.retangulo: se for undefined, o retangulo serah o ceu inteiro; caso nao seja ({x,y,width,height}), o retangulo deve ser relativo ao centroMassa(como de retangulo) da formaGeometrica e todos os dados devem ser porcentagens de width e height
         //ps: Nesse ultimo caso, se width ou height forem undefined ou NaN nao serah verificado se estah dentro do retangulo nessa direcao
@@ -98,6 +100,9 @@ class ClasseAndar
   get qtdAndarY() { return this._qtdAndarY; }
   get tipoAndar() { return this._tipoAndar; }
 
+  get ehParado()
+  { return this._qtdAndarX===0 && this._qtdAndarY===0; }
+
   //setters basicos
   set qtdAndarX(qtdAndarX)
   {
@@ -109,10 +114,28 @@ class ClasseAndar
     this._qtdAndarY = qtdAndarY;
     this._mudarHipotenusaSePrecisa();
   }
+  mudarQtdAndar(qtdAndar)
+  {
+    this._qtdAndarX = qtdAndar.x;
+    this._qtdAndarY = qtdAndar.y;
+    this._mudarHipotenusaSePrecisa();
+  }
+  inverterDirecoesQtdAndar(horizontal, vertical)
+  {
+    if (horizontal || vertical)
+    {
+      if (horizontal)
+        this._qtdAndarX *= -1;
+      if (vertical)
+        this._qtdAndarY *= -1;
+      this._mudarHipotenusaSePrecisa();
+    }
+  }
   mudarQtdAndar(porcentagem)
   {
-    this.qtdAndarX = this._qtdAndarX*porcentagem;
-    this.qtdAndarY = this._qtdAndarY*porcentagem;
+    this._qtdAndarX *= porcentagem;
+    this._qtdAndarY *= porcentagem;
+    this._mudarHipotenusaSePrecisa();
   }
   setTipoAndar(tipoAndar, formaGeom, outrasInformacoes)
   //formaGeom eh de quem vai andar
@@ -163,6 +186,8 @@ class ClasseAndar
         delete this._ultimoQtdAndar;
       if (this._hipotenusaPadrao !== undefined)
         delete this._hipotenusaPadrao;
+      if (this._inimSeguir !== undefined)
+        delete this._inimSeguir;
 
       if (tipoAndar === TipoAndar.DirecaoPers)
         this._setarQtdAndarTipoDirecao(formaGeom, ControladorJogo.pers);
@@ -180,6 +205,9 @@ class ClasseAndar
     }
 
     if (this._tipoAndar === null) this._tipoAndar = tipoAndar;
+
+    if (this._tipoAndar === TipoAndar.SeguirPonto)
+      this._pontoSeguir = outrasInformacoes.pontoSeguir;
 
     // se o tipoAndar precisa de hipotenusa padrao vai colocar
     if (this._tipoTemHipotenusaPadrao())
@@ -214,13 +242,16 @@ class ClasseAndar
   _setarQtdAndarTipoDirecao(formaGeomVaiAndar, objSeguir)
   //objSeguir eh ObjetoTela
   {
-    //tem que colocar hipotenusa padrao porque this._qtdAndarSeguir vai usar
-    this._colocarHipotenusaPadrao();
+    if (objSeguir.vivo) //se objSeguir nao estah vivo, nao ir na direcao dele
+    {
+      //tem que colocar hipotenusa padrao porque this._qtdAndarSeguir vai usar
+      this._colocarHipotenusaPadrao();
 
-    //ve o qtdAndar
-    const qtdAndar = this._qtdAndarSeguir(formaGeomVaiAndar, objSeguir, true);
-    this._qtdAndarX = qtdAndar.x;
-    this._qtdAndarY = qtdAndar.y;
+      //ve o qtdAndar
+      const qtdAndar = this._qtdAndarSeguir(formaGeomVaiAndar, objSeguir.centroMassa, true);
+      this._qtdAndarX = qtdAndar.x;
+      this._qtdAndarY = qtdAndar.y;
+    }
 
     //vai andar sempre isso
     this.setTipoAndar(TipoAndar.Normal, formaGeomVaiAndar); //tira hipotenusaPadrao
@@ -253,28 +284,31 @@ class ClasseAndar
     return new Ponto(Math.cos(angulo)*hipotenusaPadrao, Math.sin(angulo)*hipotenusaPadrao);
   }
 
+  // metodos diferentes de soh armazenar informacoes
+  mudarAnguloQtdAndar(angulo)
+  // angulo em radianos segundo o Ciclo Trigonometrico
+  //obs: angulo nao precisa ser entre PI e -PI...
+  {
+    const qtdAndarEmAngulo = ClasseAndar.qtdAndarEmAngulo(this.qtdAndarX, this.qtdAndarY, angulo);
+    this._qtdAndarX = qtdAndarEmAngulo.x;
+    this._qtdAndarY = qtdAndarEmAngulo.y;
+    this._mudarHipotenusaSePrecisa();
+  }
+
   procAndar(formaGeom, vaiAndar=true)
   {
     // se quem o objeto estava seguindo morreu
-    if ((this._tipoAndar === TipoAndar.SeguirInimMaisProx && !this._inimSeguir.vivo) ||
-      (this._tipoAndar === TipoAndar.SeguirPers && !ControladorJogo.pers.vivo))
+    const objSeguir = this._getObjSeguir();
+    if (objSeguir !==undefined && !objSeguir.vivo)
     {
       this.mudarQtdAndarParaUltimoAndar();
       this.setTipoAndar(TipoAndar.Normal);
     }
 
-    //objSeguir para this._qtdAndarFromTipo(...)
-    let objSeguir;
-    if (this._tipoAndar === TipoAndar.SeguirPers)
-      objSeguir = ControladorJogo.pers;
-    else
-    if (this._tipoAndar === TipoAndar.SeguirInimMaisProx)
-      objSeguir = this._inimSeguir;
-
     //jah faz procedimentos de inverter qtdAndar(se precisar) e adicionar qtdAndar no ultimoQtdAndar
-    const qtdAndar = this._qtdAndarFromTipo(formaGeom, objSeguir);
+    const qtdAndar = this._qtdAndarFromTipo(formaGeom, vaiAndar);
 
-    if (this._anguloQtdAndar!==undefined)
+    if (this._anguloQtdAndar!==undefined && vaiAndar)
       this._setAnguloQtdAndar(qtdAndar.x, qtdAndar.y);
 
     if (vaiAndar && this._aceleracao !== undefined)
@@ -318,14 +352,13 @@ class ClasseAndar
       this._colocarHipotenusaPadrao();
   }
   _tipoTemHipotenusaPadrao()
-  { return this._tipoAndar === TipoAndar.SeguirPers || this._tipoAndar === TipoAndar.SeguirInimMaisProx; }
+  { return this._tipoAndar === TipoAndar.SeguirPers || this._tipoAndar === TipoAndar.SeguirInimMaisProx || this._tipoAndar === TipoAndar.SeguirPonto; }
   _colocarHipotenusaPadrao()
   { this._hipotenusaPadrao = Operacoes.hipotenusa(this._qtdAndarX, this._qtdAndarY); }
 
   //metodos auxiliares
-  _qtdAndarFromTipo(formaGeomVaiAndar, objPerseguido, fazerProcsInvUlt)
+  _qtdAndarFromTipo(formaGeomVaiAndar, vaiAndar)
   //jah faz procedimentos de inverter qtdAndar e adicionar qtdAndar no ultimoQtdAndar
-  //objPerseguido eh ObjetoTela
   //retorna {x, y}
   {
     switch(this._tipoAndar)
@@ -387,19 +420,36 @@ class ClasseAndar
 
       case TipoAndar.SeguirPers:
       case TipoAndar.SeguirInimMaisProx:
-        const qtdAndar = this._qtdAndarSeguir(formaGeomVaiAndar, objPerseguido);
+      case TipoAndar.SeguirPonto:
+        const qtdAndar = this._qtdAndarSeguir(formaGeomVaiAndar);
 
-        //muda o ultimoQtdAndar se for TipoAnda.Seguir...
-        this._ultimoQtdAndar.x = qtdAndar.x;
-        this._ultimoQtdAndar.y = qtdAndar.y;
-
+        if (vaiAndar && (this._tipoAndar===TipoAndar.SeguirInimMaisProx || this._tipoAndar===TipoAndar.SeguirPers))
+        {
+          //muda o ultimoQtdAndar se for TipoAnda.Seguir...
+          this._ultimoQtdAndar.x = qtdAndar.x;
+          this._ultimoQtdAndar.y = qtdAndar.y;
+        }
         return qtdAndar;
     }
   }
-  _qtdAndarSeguir(formaGeomVaiAndar, objPerseguido, ehTipoDirecao=false)
-  //objPerseguido: ObjetoTela que estah sendo perseguido
+  _getObjSeguir() //objSeguir para this._qtdAndarFromTipo(...)
   {
-    const qtdQuerAndar = objPerseguido.formaGeometrica.centroMassa.menos(formaGeomVaiAndar.centroMassa); // PosicaoFinal - PosicaoInicial
+    if (this._tipoAndar === TipoAndar.SeguirPers)
+      return ControladorJogo.pers;
+    if (this._tipoAndar === TipoAndar.SeguirInimMaisProx)
+      return this._inimSeguir;
+  }
+  _getPontoSeguir()
+  {
+    const objSeguir = this._getObjSeguir();
+    if (objSeguir!==undefined)
+      return objSeguir.formaGeometrica.centroMassa;
+    else
+      return this._pontoSeguir;
+  }
+  _qtdAndarSeguir(formaGeomVaiAndar, pontoSeguir=this._getPontoSeguir(), ehTipoDirecao=false)
+  {
+    const qtdQuerAndar = pontoSeguir.menos(formaGeomVaiAndar.centroMassa); // PosicaoFinal - PosicaoInicial
     // destino deve ser o centroMassa (ps: ClasseAndar.qntAndarParaBater(...) considera as duas formas como retangulos, portanto o algoritmo nao funcionaria se o objeto que vai andar jah estivesse dentro dele)
 
     const hipotenusaQuerAndar = Operacoes.hipotenusa(qtdQuerAndar.x, qtdQuerAndar.y);
@@ -407,7 +457,7 @@ class ClasseAndar
     // verificar se mudar o angulo do sentido mais do que pode
     if (!ehTipoDirecao && this._limitarCurva !== undefined)
     {
-      // se nao quer andar nada (o centroMassa do objVaiAndar jah estah em cima do centroMassa do objPerseguido)
+      // se nao quer andar nada (o centroMassa do objVaiAndar jah estah em cima de pontoSeguir)
       //ps: seguindo o fluxo do programa iria retornar (0,0) tambem mas ia fazer muitas contas desnecessarias
       if (Exatidao.ehQuaseExato(qtdQuerAndar.x, 0) && Exatidao.ehQuaseExato(qtdQuerAndar.y, 0))
         return new Ponto(0,0);

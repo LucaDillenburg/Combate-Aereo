@@ -16,7 +16,11 @@ class Oficina
     this.verificarEstahConsertando();
   }
 
-  verificarEstahConsertando() { this._persEstahConsertando = this._formaGeometrica.contem(ControladorJogo.pers.formaGeometrica); /* se tiver inteiramente dentro */ }
+  verificarEstahConsertando()
+  {
+    this._persEstahConsertando = ControladorJogo.pers.vivo &&
+      this._formaGeometrica.contem(ControladorJogo.pers.formaGeometrica); /* se tiver inteiramente dentro */
+  }
   procVerificarConsertando(level)
   {
     if (this._persEstahConsertando)
