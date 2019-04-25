@@ -8,11 +8,11 @@ FEATURES DIFERENCIAIS:
  - obstaculos empurram os personagens e quando nao conseguem empurrar explodem dando certo dano ao personagem
  - obstaculos com vida (barreiras que tambem sofrem dano)
  - tiros da tela
- - POCOES: que se guardam e que usam na hora (ainda nao implementado)
+ - POCOES: que se guardam e que usam na hora
  - Ao inves de cor, os objetos podem ser imagens (quando um objeto da tela morre/explode/... antes de sair da tela ele eh mostrado mais uma vez com a cor/imagem de morto)
 
  - pode atirar pra qualquer lado, da onde quiser, cada ObjComTiro pode ter mais de um tiro de tipos, frequencias,... diferenciados
  - arma giratoria
  - helices
 
-eu tentei usar o menos possivel de coisas prontas: soh usei p5, javascript array
+eu tentei usar o menos possivel de coisas prontas: soh usei p5
