@@ -1,4 +1,4 @@
-# Combate Aéreo - Aviões de Guerra (Game)
+# Combate Aéreo
 Jogo canvas 2D de aviões de guerra.
 
 ## Objetivo
