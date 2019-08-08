@@ -1,14 +1,34 @@
 # Combate Aéreo
-Jogo canvas 2D de aviões de guerra.
+Jogo 2D top-down de combate entre aviões com armas.
 
-## Objetivo
-Fazer um jogo com colisões de objetos de várias formas geométricas diferentes e usando o mínimo de bibliotecas externas.
+## Jogo
 
-## Diferencial: Sistema de Colisão (autoria própria)
+O jogo consiste em vários levels em que o usuário tem controlar seu avião de combate buscando destruir a tiros os aviões inimigos. Esses aviões também atiram no usuário, que tem que desviar dos mesmos para não sofrer dano. O level termina quando os aviões inimigos mais importantes são destruídos. Ao final de cada level há um local para conserto da aeronave no qual a mesma retoma vida enquanto permanece dentro da área indicada.
+
+Com o passar dos levels, os mesmos terão mais desafios e o usuário terá mais recursos: surgirão obstáculos aéreos e suportes aéreos (objetos estáticos com armas); haverá tempos de tempestades onde pouco se enxergará devido a escuridão e raios; e os aviões inimigos e do usuário se tornarão mais rápidos e fortes e terão mais armas, algumas das quais serão giratórias ou lançadoras de mísseis, os quais seguirão seus respectivos oponentes e terão uma taxa máxima de curva. As armas giratórias do avião do usuário são controladas pelo mouse e já as dos inimigos automaticamente miram no mesmo.
+
+Além disso, aparecerem poderes na tela. Ao passar por cima deles, o poder pode ser colocado em prática imediatamente ou guardado para ser acionado ao comando do usuário. Em levels mais difíceis, há poderes melhores e em mais quantidade.
+<br/>
+
+## Engine
+### - Detecção de Colisão
+O Sistema de Detecção de Colisão da Engine é de autoria 
+
 Breve explicação: O sistema verifica se durante a movimentação de formas geométricas quaisquer formadas apenas por retas (sem linhas curvas) haverá colisão, e, se houver colisão, ele também é calculado quanto a forma geométrica que andar primeiro poderá andar.
 OBS: O resultado é obtido através de um modelo matemático, usando simplesmente operações matemáticas. Nenhum loop é usado (exceto para percorrer cada forma geométrica de uma forma geométrica composta por várias formas).
 
-#### Outras features
+### - Objetos
+* Objeto tiro usuário:
+* Objeto tiro automático:
+* Tiros:
+* Obstáculos:
+* Suportes aéreos:
+##### Partes de Objetos:
+* Hélices
+
+### - Movimentação
+
+### - Outras features
  - Poderes (como: deixar o tempo mais lento,...)
  - Aviões inimigos (tem tiros), obstáculos e suportes aéreos (tem tiros), avião do usuário (tem tiros)
  - Momentos de escuridão e raios
@@ -19,11 +39,6 @@ OBS: O resultado é obtido através de um modelo matemático, usando simplesment
  - Criação de um Timer que só leva em consideração o tempo enquanto se está jogando (não pausado)
  - Outras operações com formas geométricas: rotação de formas geométricas,...
  - Classes muito bem pensadas e divididas
-
-#### Autor
-Luca Assumpção Dillenburg
-
-
 
 
 
