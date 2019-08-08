@@ -11,10 +11,12 @@ Além disso, aparecerem poderes na tela. Ao passar por cima deles, o poder pode 
 <br/>
 
 ## Engine
-### - Detecção de Colisão
-O Sistema de Detecção de Colisão da Engine é de autoria 
+A Engine foi desenvolvido por mim (Luca Dillenburg) sem base ou pesquisa sobre engines de jogos 2D.
 
-Breve explicação: O sistema verifica se durante a movimentação de formas geométricas quaisquer formadas apenas por retas (sem linhas curvas) haverá colisão, e, se houver colisão, ele também é calculado quanto a forma geométrica que andar primeiro poderá andar.
+### - Detecção de Colisão
+O Sistema de Detecção de Colisão verifica se N formas geométricas (poliédricas ou não) que sejam formadas apenas por retas (sem linhas curvas)
+
+se durante a movimentação de formas geométricas quaisquer formadas apenas por retas  haverá colisão, e, se houver colisão, ele também é calculado quanto a forma geométrica que andar primeiro poderá andar.
 OBS: O resultado é obtido através de um modelo matemático, usando simplesmente operações matemáticas. Nenhum loop é usado (exceto para percorrer cada forma geométrica de uma forma geométrica composta por várias formas).
 
 ### - Objetos
