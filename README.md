@@ -11,17 +11,18 @@ Além disso, aparecerem poderes na tela. Ao passar por cima deles, o poder pode 
 <br/>
 
 ## Engine
-A Engine foi desenvolvido por mim (Luca Dillenburg) sem base ou pesquisa sobre engines de jogos 2D.
+A Engine foi desenvolvido por mim sem base ou pesquisa sobre engines de jogos 2D.
 
 ### - Detecção de Colisão
-O Sistema de Detecção de Colisão verifica se N formas geométricas (poliédricas ou não) que sejam formadas apenas por retas (sem linhas curvas)
+O Sistema de Detecção de Colisão da minha Engine verifica se quaisquer N formas geométricas poliédricas formadas apenas por retas (sem linhas curvas) se colidirão após se deslocarem para qualquer direção. O algoritmo feito tem complexidade linear - <i>O(n)<\i> sendo <i>n</i> a soma do número lados de cada forma geométrica menos dois.
 
-se durante a movimentação de formas geométricas quaisquer formadas apenas por retas  haverá colisão, e, se houver colisão, ele também é calculado quanto a forma geométrica que andar primeiro poderá andar.
-OBS: O resultado é obtido através de um modelo matemático, usando simplesmente operações matemáticas. Nenhum loop é usado (exceto para percorrer cada forma geométrica de uma forma geométrica composta por várias formas).
+O resultado é obtido através de um modelo matemático, usando simplesmente operações matemáticas. O algoritmo é baseado na afirmação de que o caminho percorrido (até a nova posição) por qualquer movimento de um triângulo forma 1 ou 2 paralelogramos. Dessa forma, como todo poliedro sem linhas curvas pode ser transformado em triângulos, é possível verificar se os paralelogramos formados pelo caminho dos triângulos se colidem.
+
+<b>IMAGEM PARALELOGRAMOS FROM MOVIMENTO TRIÂNGULO</b>
 
 ### - Objetos
-* Objeto tiro usuário:
-* Objeto tiro automático:
+* Objeto comandado:
+* Objeto automático:
 * Tiros:
 * Obstáculos:
 * Suportes aéreos:
@@ -29,6 +30,7 @@ OBS: O resultado é obtido através de um modelo matemático, usando simplesment
 * Hélices
 
 ### - Movimentação
+TODO
 
 ### - Outras features
  - Poderes (como: deixar o tempo mais lento,...)
@@ -44,6 +46,7 @@ OBS: O resultado é obtido através de um modelo matemático, usando simplesment
 
 
 
+TODO
 
 
 FEATURES DIFERENCIAIS:
