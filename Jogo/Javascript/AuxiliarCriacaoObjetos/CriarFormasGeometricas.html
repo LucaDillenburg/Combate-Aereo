@@ -1,0 +1,257 @@
+<!--
+  Explicacao:
+
+  "r": retangulo
+  "q": quadrado
+  "t": triangulo
+  "k": quadrilatero
+  "p": paralelogramo
+  "x": composta
+
+  Click nos lugares desejados para gerar o codigo da forma geometrica correspondente.
+  Obs: site auxiliar e com imperfeicoes
+-->
+
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <script src="../../Javascript/p5/p5.min.js"></script>
+    <script src="../../Javascript/Geometria/FormasGeometricas.js"></script>
+    <script src="../../Javascript/Geometria/GeometriaBasica.js"></script>
+  </head>
+  <body>
+    NomeImg: <input type="text" id="nomeImg"> <br>
+    Forma: <input type="text" id="qualForma">
+    Formas(composta): <input type="text" id="formasFormaComposta"> <br>
+    Tamanho: <input type="text" id="tamanho"> <br>
+    <button id="comecar" onclick="comecar()"> Comecar </button>
+    <button id="proporcoes" onclick="printarProporcoes()"> Proporcoes </button> </br>
+    <button id="clickBorda" onclick="clickBorda()"> ClickBorda </button>
+    <input type="text" id="qualBorda">
+
+    <script type="text/javascript" onload="setup()">
+      function setup()
+      {
+        const widthCanvas = window.innerWidth - 20;
+        const heightCanvas = window.innerHeight - 125;
+        createCanvas(widthCanvas, heightCanvas);
+        background(0);
+      }
+
+      function nClicks(letraPadrao)
+      {
+        switch(letraPadrao)
+        {
+          case "t": return 3;
+
+          case "q":
+          case "r":
+            return 2;
+
+          default: return 4;
+        }
+      }
+
+      let pontosForma, img, tamanho, qtdPontosUsados, formasGeometricas, caminhoImg, agoraX;
+      function comecar()
+      {
+        let numPontos;
+        if (document.getElementById("qualForma").value == "x")
+        {
+          numPontos = 0;
+          let formasGeom = document.getElementById("formasFormaComposta").value;
+          for (let i = 0; i<formasGeom.length; i++)
+            numPontos += nClicks(formasGeom[i]);
+        }else
+          numPontos = nClicks(document.getElementById("qualForma").value);
+
+        pontosForma = new Array(numPontos);
+        qtdPontosUsados = 0;
+        agoraX = true;
+
+        caminhoImg = "Imagens/" + document.getElementById("nomeImg").value;
+        img = loadImage("../../"+caminhoImg);
+        console.log(caminhoImg);
+        tamanho = document.getElementById("tamanho").value;
+        formasGeometricas = undefined;
+
+        document.getElementById("defaultCanvas0").onclick = click;
+      }
+
+      function clickBorda()
+      {
+        switch (document.getElementById("qualBorda").value)
+        {
+          case "c": clicou(undefined, yGrande); break;
+          case "b": clicou(undefined, yGrande+hGrande); break;
+          case "e": clicou(xGrande, undefined); break;
+          case "d": clicou(xGrande+wGrande, undefined); break;
+        }
+      }
+      function click()
+      { clicou(mouseX, mouseY); }
+      function clicou(mouseX, mouseY)
+      {
+        if (agoraX)
+          pontosForma[qtdPontosUsados] = new Ponto(mouseX, undefined);
+        else
+        {
+          pontosForma[qtdPontosUsados].y = mouseY;
+          qtdPontosUsados++;
+        }
+        agoraX = !agoraX;
+
+        console.log(qtdPontosUsados + " e " + pontosForma.length);
+
+        if (qtdPontosUsados === pontosForma.length)
+        {
+          console.log("todos os pontos");
+
+          // cria formasGeometricas
+          formasGeometricas = [];
+          if (document.getElementById("qualForma").value == "x")
+          {
+            let formasGeom = document.getElementById("formasFormaComposta").value;
+            let numPontos = 0;
+            for (let i = 0; i<formasGeom.length; i++)
+            {
+              formasGeometricas[i] = criarFormaGeometrica(numPontos, formasGeom[i]);
+              numPontos += nClicks(formasGeom[i]);
+            }
+          }else
+            formasGeometricas[0] = criarFormaGeometrica(0, document.getElementById("qualForma").value);
+        }
+      }
+      function criarFormaGeometrica(nClicks, letraForma)
+      {
+        switch (letraForma)
+        {
+          case "r":
+            return new Retangulo(pontosForma[nClicks].x, pontosForma[nClicks].y,
+              pontosForma[nClicks+1].x - pontosForma[nClicks].x,
+              pontosForma[nClicks+1].y - pontosForma[nClicks].y, {fill: "green"});
+          case "t":
+            return new Triangulo(pontosForma[nClicks], pontosForma[nClicks+1],
+              pontosForma[nClicks+2], {fill: "green"});
+          case "k":
+            return new Quadrilatero(pontosForma[nClicks], pontosForma[nClicks+1],
+              pontosForma[nClicks+2], pontosForma[nClicks+3], {fill: "green"});
+          case "p":
+            return new Paralelogramo(pontosForma[nClicks], pontosForma[nClicks+1],
+              pontosForma[nClicks+2], pontosForma[nClicks+3], {fill: "green"});
+        }
+      }
+
+      function printarProporcoes()
+      {
+        const constante = maiorWidth(); // TAMANHO BASEADO NO MAIOR WIDTH SENDO 1
+
+        let menorX, menorY;
+        formasGeometricas.forEach(forma => {
+          if (menorX == undefined || forma.menorX < menorX)
+            menorX = forma.menorX;
+          if (menorY == undefined || forma.menorY < menorY)
+            menorY = forma.menorY;
+        });
+
+        let str = "const tamanho = " + document.getElementById("tamanho").value + ";\n";
+        if (formasGeometricas.length > 1)
+          str += "const formaGeometrica = new FormaGeometricaComposta(undefined,undefined, \n"
+            + "[\n";
+        formasGeometricas.forEach(forma => {
+          if (forma instanceof Retangulo)
+          {
+            if (formasGeometricas.length > 1)
+              str += "  new Retangulo("+ ((forma.menorX - menorX)/constante) +"*tamanho,"+ ((forma.menorY - menorY)/constante) +"*tamanho, "+(forma.width/constante)+"*tamanho, "+(forma.height/constante)+"*tamanho)";
+            else
+              str += "  new Retangulo(undefined, undefined,"+(forma.width/constante)+"*tamanho, "+(forma.height/constante)+"*tamanho)";
+          }
+          else
+          {
+            let p = new Ponto(menorX, menorY);
+
+            let a = forma._a.menos(p).dividido(constante);
+            let b = forma._b.menos(p).dividido(constante);
+            let c = forma._c.menos(p).dividido(constante);
+
+            let funct = function(p) { return "new Ponto("+p.x+", "+p.y+")"; }
+
+            if (forma instanceof Triangulo)
+              str += "  new Triangulo("+funct(a)+".multiplicado(tamanho), "+funct(b)+".multiplicado(tamanho), "+funct(c)+".multiplicado(tamanho))";
+            else
+            {
+              let d = forma._d.menos(p).dividido(constante);
+
+              if (forma instanceof Quadrilatero)
+                str += "  new Quadrilatero("+funct(a)+".multiplicado(tamanho), "+funct(b)+".multiplicado(tamanho), "+funct(c)+".multiplicado(tamanho), "
+                  +funct(d)+".multiplicado(tamanho))";
+              else
+              if (forma instanceof Paralelogramo)
+                str += "  new Paralelogramo("+funct(a)+".multiplicado(tamanho), "+funct(b)+".multiplicado(tamanho), "+funct(c)+".multiplicado(tamanho), "
+                  +funct(d)+".multiplicado(tamanho))";
+            }
+          }
+          if (formasGeometricas.length > 1)
+            str += ",\n";
+          else
+            str += ";";
+        });
+        if (formasGeometricas.length > 1)
+          str += "]);";
+
+        console.log(str);
+      }
+      function maiorWidth()
+      {
+        let maiorWidth = 0;
+        formasGeometricas.forEach(forma => {
+          if (forma.width > maiorWidth)
+            maiorWidth = forma.width;
+        });
+        return maiorWidth;
+      }
+
+      const xGrande = 5;
+      const yGrande = 5;
+      let wGrande, hGrande;
+      function draw()
+      {
+        background(0);
+
+        //imagem grande
+        if (img !== undefined)
+        {
+          const tamW = 680;
+          const tamH = 500;
+          if (img.width > img.height && tamW*img.height/img.width <= tamH)
+          {
+            wGrande = tamW;
+            hGrande = tamW*img.height/img.width;
+          }else
+          {
+            hGrande = tamH;
+            wGrande = tamH*img.width/img.height;
+          }
+          image(img, xGrande, yGrande, wGrande, hGrande);
+
+          //da pra mudar o tamanho que a imagem vai ser printada mudando img.width e img.height (mudar mas manter as proporcoes)
+        }
+
+        //imagem do tamanho desejado
+        if (img !== undefined)
+          image(img, wGrande + 20, 250, tamanho, tamanho*img.height/img.width);
+
+        //formasGeometricas
+        if (formasGeometricas !== undefined)
+        {
+          //desenhar formasGeometricas
+          formasGeometricas.forEach(forma => {
+            forma.draw();
+          });
+        }
+      }
+    </script>
+  </body>
+</html>

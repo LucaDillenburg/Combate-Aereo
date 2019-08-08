@@ -1,6 +1,0 @@
-﻿Funcionalidades:
- - Obstaculo que congela o personagem por alguns segundos
-
-Visual:
- - Como melhorar o design?? ir inclinando personagem principal para o lado (paralelograma) gradativamente
-quando estiver andando para um lado e para o outro...
