@@ -1,10 +1,19 @@
-# Combate Aéreo
-Jogo 2D top-down de combate entre aviões com armas.
+# Engine-2D-Jogo-de-Tiro
+Engine para jogo de tiro 2D top-down. Suporta colisão entre quaisquer N polígonos sem lados curvos, além de disponibilizar objetos que seguem outros (ex: mísseis teleguiados), poderes (como desacelerar o tempo ou congelar os inimigos).
+
+## Objetivo
+Criar uma engine utilizando apenas JavaScript puro (sem bibliotecas externas) e sem conhecimento sobre como prévio de como engines eram desenvolvidas. Assim pude entender em parte a complexidade de se criar uma engine.
 
 ## Exemplo de Jogo
 ![Exemplo jogo](exemplo-jogo.gif)
-
-<br/>
+Para desenvolver o exemplo acima usei somente a engine desenvolida nesse repositório e a biblioteca p5 para desenhar no canvas.
+###### Para jogar exemplo:
+```sh
+git clone https://github.com/LucaDillenburg/Engine-2D-Jogo-de-Tiro.git
+cd Engine-2D-Jogo-de-Tiro
+sudo python3 -m http.server 8080 # iniciar um web server (pode ser qualquer web server)
+firefox http://0.0.0.0:8080/Jogo/ # abrir no navegador (pode ser qualquer navegador)
+```
 
 # Engine
 A Engine foi desenvolvido por mim sem base ou pesquisa sobre engines de jogos 2D.
@@ -36,7 +45,3 @@ O resultado é obtido através de um modelo matemático, usando simplesmente ope
 * Timer que só leva em consideração o tempo enquanto se está jogando (não pausado)
 * Arma giratória
 * Rotação de formas geométricas
-
-# Instalação
-- Para usar a Engine: apenas clone o repositorio e importe os arquivos necessários.
-- Para jogar o jogo de exemplo: inicie um web-server e abra Jogo/index.html no browser.
