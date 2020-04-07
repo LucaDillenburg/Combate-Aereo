@@ -68,7 +68,7 @@ class ArmazenadorInfoObjetos {
 		// atirar do pers
 		let infoArma = new InfoArma();
 		infoArma.infoTiroPadrao = ArmazenadorInfoObjetos.infoTiro("TiroMedio", true);
-		infoArma.freqAtirar = frequenciaAtirar(4)
+		infoArma.freqAtirar = frequenciaAtirar(3)
 		infoArma.direcaoSairTiro = Direcao.Cima;
 		infoArma.porcPraDentroObj = 0.255;
 		infoArma.ehTiroDuplo = true;
@@ -91,7 +91,7 @@ class ArmazenadorInfoObjetos {
 			]);
 		infoPersonagemPrincipal.infoImgVivo = new InfoImgVivo([ArmazenadorInfoObjetos.getImagem("Personagem/AviaoMaster")]);
 		infoPersonagemPrincipal.infoImgMorto = new InfoImgMorto([{ fill: "black" }], 4);
-		infoPersonagemPrincipal.vida = vida(3);
+		infoPersonagemPrincipal.vida = vida(4.5);
 		infoPersonagemPrincipal.qtdAndar = velocidade(1.65);
 		infoPersonagemPrincipal.numeroAviao = numeroAviaoMasterPers;
 
@@ -968,7 +968,7 @@ const velPadrao = 200 / frameRatePadrao;
 function velocidade(nivel) { return nivel * velPadrao; }
 
 //frequencia atirar
-const freqAtirarPadrao = 2
+const freqAtirarPadrao = 2.7
 function frequenciaAtirar(nivel) { return nivel * freqAtirarPadrao; }
 
 //vida

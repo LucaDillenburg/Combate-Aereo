@@ -502,7 +502,7 @@ class ObjetoTelaPocao extends ObjetoTelaSimples {
 }
 
 const distanciaMinPersPocao = 350; //calculado a distancia entre os centro-de-massas
-const tempoVaiFicarTela = 7000;
+const tempoVaiFicarTela = 11000;
 const qtdPocoesUltimosLvs = 5; //se certa probabilidade vai escolher uma pocao dentro os 5 ultimos
 const levelJahTem2Pocoes = 9;
 class ControladorPocaoTela {
@@ -534,7 +534,7 @@ class ControladorPocaoTela {
 		}
 
 		//dividir o tempo em qtdPocoesFaltaAdd vezes e deixar uma pocao para cada parcela desse tempo
-		this._intervaloCadaPocao = ControladorJogo.tempoEstimadoLevel(ControladorJogo.level) / this._qtdPocoesFaltaProgramar * 1000/*para jah ficar em milisegundos*/;
+		this._intervaloCadaPocao = ControladorJogo.tempoEstimadoLevel(ControladorJogo.level) / this._qtdPocoesFaltaProgramar * 1000;
 
 		this._precisaSetarProgramarPocoes = this._jahProgramouDeixarPocaoTela;
 		//se jah deixou programado de colocar uma pocao na tela e ainda nao tirou da tela, tem que esperar ela sair para programar de colocar a proxima pocao
@@ -649,11 +649,9 @@ class ControladorPocaoTela {
 		//os mais legais
 		{
 			pocoesPossiveis.push(TipoPocao.DeixarTempoMaisLento);
+			pocoesPossiveis.push(TipoPocao.DeixarTempoMaisLento);
 			pocoesPossiveis.push(TipoPocao.CongelarInimigos);
 			pocoesPossiveis.push(TipoPocao.ReverterTirosJogoInimSeguirInim);
-			pocoesPossiveis.push(TipoPocao.PersComMissil);
-			pocoesPossiveis.push(TipoPocao.MatarObjetos1Tiro);
-			pocoesPossiveis.push(TipoPocao.GanharMuitaVida);
 		} else
 		//por level
 		{
@@ -715,7 +713,9 @@ class ControladorPocaoTela {
 		}
 	}
 	static _maxPocoesFromLevel(level) {
-		if (ControladorJogo.previaJogo || ControladorJogo.level >= levelJahTem2Pocoes)
+		if (ControladorJogo.previaJogo)
+			return 4;
+		if (ControladorJogo.level >= levelJahTem2Pocoes)
 			return 2;
 		return 1;
 	}
