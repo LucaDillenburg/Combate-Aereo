@@ -45,3 +45,7 @@ O resultado é obtido através de um modelo matemático, usando simplesmente ope
 * Timer que só leva em consideração o tempo enquanto se está jogando (não pausado)
 * Arma giratória
 * Outras operações com formas geométricas: rotação de formas geométricas,...
+
+# Instalação
+- Para usar a Engine: apenas clone o repositorio e importe os arquivos necessários.
+- Para jogar o jogo de exemplo: inicie um web-server e abra Jogo/index.html no browser.
