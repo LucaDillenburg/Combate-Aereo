@@ -11,12 +11,12 @@ Para desenvolver o exemplo acima usei somente a engine desenvolida nesse reposit
 ```sh
 git clone https://github.com/LucaDillenburg/Engine-2D-Jogo-de-Tiro.git
 cd Engine-2D-Jogo-de-Tiro
-sudo python3 -m http.server 8080 # iniciar um web server (pode ser qualquer web server)
-firefox http://0.0.0.0:8080/Jogo/ # abrir no navegador (pode ser qualquer navegador)
+sudo python3 -m http.server 8081 # iniciar um web server (pode ser qualquer web server)
 ```
+*Depois basta abrir a seguinte url em algum navegador: http://localhost:8081/Jogo/*
 
 # Engine
-A Engine foi desenvolvido por mim sem base ou pesquisa sobre engines de jogos 2D.
+A Engine foi desenvolvida usando apenas JavaScript puro (sem bibliotecas externas).
 
 ### Detecção de Colisão
 O Sistema de Detecção de Colisão da minha Engine verifica se quaisquer N polígonos convexos formadas apenas por retas (sem linhas curvas) se colidirão após se deslocarem para qualquer direção. Não é feita nenhuma aproximação e o resultado é 100% preciso. O algoritmo feito tem complexidade linear - <i>O(n)</i> sendo <i>n</i> o total de triângulos não sobrepostos que podem ser formados em cada um das formas geometricas, isto é, a soma do número de lados de cada forma geométrica menos dois de cada forma.
